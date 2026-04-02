@@ -85,7 +85,7 @@ jobs:
 
       - name: Instalar dependencias
         working-directory: ${{ env.WORKING_DIR }}
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Verificar vulnerabilidades en dependencias
         working-directory: ${{ env.WORKING_DIR }}
@@ -109,7 +109,7 @@ jobs:
 
       - name: Instalar dependencias
         working-directory: ${{ env.WORKING_DIR }}
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Ejecutar ESLint
         working-directory: ${{ env.WORKING_DIR }}
@@ -146,7 +146,7 @@ jobs:
 
       - name: Instalar dependencias
         working-directory: ${{ env.WORKING_DIR }}
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Verificar formato con Prettier
         working-directory: ${{ env.WORKING_DIR }}
@@ -183,7 +183,7 @@ jobs:
 
       - name: Instalar dependencias
         working-directory: ${{ env.WORKING_DIR }}
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Ejecutar tests
         working-directory: ${{ env.WORKING_DIR }}
@@ -251,7 +251,7 @@ jobs:
 
       - name: Instalar dependencias
         working-directory: ${{ env.WORKING_DIR }}
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Ejecutar build
         working-directory: ${{ env.WORKING_DIR }}
