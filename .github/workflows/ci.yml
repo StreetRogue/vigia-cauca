@@ -10,6 +10,7 @@ on:
 env:
   NODE_VERSION: '20.x'
   CACHE_NAME: npm-cache-${{ github.sha }}
+  WORKING_DIR: ./Frontend-Vigia
 
 jobs:
   # Job 1: Validar estructura y cambios
@@ -31,6 +32,7 @@ jobs:
           echo "✅ Rama válida"
 
       - name: Validar estructura de carpetas (Atomic Design + Hexagonal)
+        working-directory: ${{ env.WORKING_DIR }}
         run: |
           # Verificar que existen directorios clave
           required_dirs=(
@@ -55,7 +57,6 @@ jobs:
       - name: Validar commits (Conventional Commits)
         if: github.event_name == 'pull_request'
         run: |
-          # Validar que los commits sigan conventional commits
           echo "Validando commits en PR..."
           git log origin/develop..HEAD --format="%B" | while read line; do
             if [[ $line =~ ^(feat|fix|docs|style|refactor|test|chore|perf)(\(.+\))?:.+ ]]; then
@@ -80,11 +81,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: 'Frontend-Vigia/package-lock.json'
 
       - name: Instalar dependencias
+        working-directory: ${{ env.WORKING_DIR }}
         run: npm ci
 
       - name: Verificar vulnerabilidades en dependencias
+        working-directory: ${{ env.WORKING_DIR }}
         run: npm audit --audit-level=moderate || true
 
   # Job 3: Linting
@@ -101,11 +105,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: 'Frontend-Vigia/package-lock.json'
 
       - name: Instalar dependencias
+        working-directory: ${{ env.WORKING_DIR }}
         run: npm ci
 
       - name: Ejecutar ESLint
+        working-directory: ${{ env.WORKING_DIR }}
         run: npm run lint
         continue-on-error: false
 
@@ -135,11 +142,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: 'Frontend-Vigia/package-lock.json'
 
       - name: Instalar dependencias
+        working-directory: ${{ env.WORKING_DIR }}
         run: npm ci
 
       - name: Verificar formato con Prettier
+        working-directory: ${{ env.WORKING_DIR }}
         run: npm run format:check
         continue-on-error: false
 
@@ -169,21 +179,25 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: 'Frontend-Vigia/package-lock.json'
 
       - name: Instalar dependencias
+        working-directory: ${{ env.WORKING_DIR }}
         run: npm ci
 
       - name: Ejecutar tests
+        working-directory: ${{ env.WORKING_DIR }}
         run: npm test
 
       - name: Generar cobertura
+        working-directory: ${{ env.WORKING_DIR }}
         run: npm run test:coverage
         continue-on-error: true
 
       - name: Subir cobertura a Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: ./coverage/coverage-final.json
+          files: ./Frontend-Vigia/coverage/coverage-final.json
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false
@@ -193,27 +207,31 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const fs = require('fs');
-            const coverage = require('./coverage/coverage-summary.json');
-            const lines = coverage.total.lines.pct;
-            const branches = coverage.total.branches.pct;
-            const functions = coverage.total.functions.pct;
-            const statements = coverage.total.statements.pct;
-            
-            const body = `📊 **Cobertura de Tests:**
-            - Lines: ${lines}%
-            - Branches: ${branches}%
-            - Functions: ${functions}%
-            - Statements: ${statements}%
-            
-            ${lines >= 80 ? '✅' : '⚠️'} Cobertura general`;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            })
+            try {
+              const fs = require('fs');
+              const coverage = require('./Frontend-Vigia/coverage/coverage-summary.json');
+              const lines = coverage.total.lines.pct;
+              const branches = coverage.total.branches.pct;
+              const functions = coverage.total.functions.pct;
+              const statements = coverage.total.statements.pct;
+              
+              const body = `📊 **Cobertura de Tests:**
+              - Lines: ${lines}%
+              - Branches: ${branches}%
+              - Functions: ${functions}%
+              - Statements: ${statements}%
+              
+              ${lines >= 80 ? '✅' : '⚠️'} Cobertura general`;
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              })
+            } catch (e) {
+              console.log('No coverage report found');
+            }
 
   # Job 6: Build
   build:
@@ -229,16 +247,20 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: 'Frontend-Vigia/package-lock.json'
 
       - name: Instalar dependencias
+        working-directory: ${{ env.WORKING_DIR }}
         run: npm ci
 
       - name: Ejecutar build
+        working-directory: ${{ env.WORKING_DIR }}
         run: npm run build
         env:
           VITE_API_URL: https://api.example.com
 
       - name: Verificar tamaño de bundle
+        working-directory: ${{ env.WORKING_DIR }}
         run: |
           SIZE=$(du -sh dist/ | cut -f1)
           echo "📦 Tamaño del bundle: $SIZE"
@@ -250,7 +272,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: dist/
+          path: Frontend-Vigia/dist/
           retention-days: 5
 
   # Job 7: Resumen
