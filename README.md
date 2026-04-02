@@ -1,7 +1,7 @@
 # 🛡️ Vigía Cauca - Sistema de Visualización Georreferenciada de Incidentes y Alertas
 
-[![Estado del Proyecto](https://img.shields.io/badge/Estado-En%20Desarrollo-brightgreen)](https://github.com/bitnova-unicauca/vigia-cauca)
-[![Metodología](https://img.shields.io/badge/Metodolog%C3%ADa-AUP%20%2B%20Scrum-blue)](https://github.com/bitnova-unicauca/vigia-cauca)
+[![Estado del Proyecto](https://img.shields.io/badge/Estado-En%20Desarrollo-brightgreen)](https://github.com/StreetRogue/vigia-cauca)
+[![Metodología](https://img.shields.io/badge/Metodolog%C3%ADa-AUP%20%2B%20Scrum-blue)](https://github.com/StreetRogue/vigia-cauca)
 [![Universidad](https://img.shields.io/badge/Universidad-del%20Cauca-orange)](https://www.unicauca.edu.co)
 
 > **Plataforma web para la gestión, visualización y análisis de incidentes de seguridad en el departamento del Cauca**
