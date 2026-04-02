@@ -1,0 +1,51 @@
+name: "CodeQL Análisis de Seguridad"
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ develop ]
+  schedule:
+    - cron: '0 0 * * 0'  # Ejecutar cada domingo a medianoche
+
+jobs:
+  analyze:
+    name: Análisis CodeQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'javascript' ]
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Inicializar CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-and-quality
+
+      - name: Autoload (JavaScript)
+        uses: github/codeql-action/autobuild@v2
+
+      - name: Ejecutar análisis CodeQL
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: "/language:${{ matrix.language }}"
+
+      - name: Comentar vulnerabilidades en PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            console.log('CodeQL análisis completado. Revisa los resultados en la pestaña Security.');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🔒 **CodeQL completó el análisis de seguridad.** Revisa los resultados en la pestaña "Security" → "Code scanning alerts".'
+            })
