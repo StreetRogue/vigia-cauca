@@ -1,0 +1,108 @@
+server:
+  port: ${PORT:5003}
+
+spring:
+  application:
+    name: micro-novedades
+
+  datasource:
+    url: ${NOVEDADES_DB_URL:jdbc:postgresql://localhost:5432/novedades_db}
+    username: ${NOVEDADES_DB_USER:postgres}
+    password: ${NOVEDADES_DB_PASS:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
+    properties:
+      hibernate:
+        format_sql: true
+
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+    virtual-host: /
+
+    # Conexión
+    connection-timeout: 10000
+
+    # Listener
+    listener:
+      simple:
+        acknowledge-mode: manual
+        concurrency: 3
+        max-concurrency: 10
+        prefetch: 1
+        retry:
+          enabled: true
+          initial-interval: 1000
+          max-attempts: 3
+          max-interval: 10000
+          multiplier: 2.0
+
+    # Template
+    template:
+      retry:
+        enabled: true
+        initial-interval: 1000
+        max-attempts: 3
+        max-interval: 10000
+        multiplier: 2.0
+
+# Eureka Service Discovery (habilitar cuando se agregue spring-cloud-starter-netflix-eureka-client al pom.xml)
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka}
+#    register-with-eureka: true
+#    fetch-registry: true
+#  instance:
+#    hostname: localhost
+#    prefer-ip-address: true
+#    instance-id: ${spring.application.name}:${random.uuid}
+
+# Resilience4j (habilitar cuando se agregue resilience4j-spring-boot3 al pom.xml)
+#resilience4j:
+#  circuitbreaker:
+#    instances:
+#      usuariosService:
+#        registerHealthIndicator: true
+#        slidingWindowSize: 10
+#        failureRateThreshold: 50
+#        waitDurationInOpenState: 5s
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Clientes REST
+clients:
+  usuarios:
+    base-url: ${CLIENTS_USUARIOS_BASE_URL:http://localhost:8081}
+
+# RabbitMQ Queue
+rabbitmq:
+  queue:
+    name: ${RABBITMQ_QUEUE_NAME:cola.novedades.notificaciones}
+
+# Logging
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    co.edu.unicauca.micronovedades: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.springframework.amqp: DEBUG
