@@ -1,0 +1,226 @@
+{
+  "info": {
+    "_postman_id": "cf5d8a8f-3dc1-4814-9b26-73a3ab9802d7",
+    "name": "Microservicio Reportes - Dashboard y Estadísticas",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "43216293"
+  },
+  "item": [
+    {
+      "name": "01 - Estadísticas Dashboard",
+      "item": [
+        {
+          "name": "01.1 Dashboard Completo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/estadisticas/dashboard?anio={{anio}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "estadisticas",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "anio",
+                  "value": "{{anio}}"
+                }
+              ]
+            },
+            "description": "Retorna todos los datos del dashboard en un solo JSON."
+          },
+          "response": []
+        },
+        {
+          "name": "01.2 Resumen KPIs (Cards)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Role",
+                "value": "OPERADOR"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/estadisticas/resumen?anio={{anio}}&municipio=Popayan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "estadisticas",
+                "resumen"
+              ],
+              "query": [
+                {
+                  "key": "anio",
+                  "value": "{{anio}}"
+                },
+                {
+                  "key": "municipio",
+                  "value": "Popayan"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "01.3 Serie Temporal (Gráfico Línea)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/estadisticas/serie-temporal?anio={{anio}}&municipio=Popayan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "estadisticas",
+                "serie-temporal"
+              ],
+              "query": [
+                {
+                  "key": "anio",
+                  "value": "{{anio}}"
+                },
+                {
+                  "key": "municipio",
+                  "value": "Popayan"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 - Documentos y Reportes",
+      "item": [
+        {
+          "name": "02.1 Previsualizar Reporte (Tabla)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documentos/previsualizar?anio={{anio}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos",
+                "previsualizar"
+              ],
+              "query": [
+                {
+                  "key": "anio",
+                  "value": "{{anio}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02.2 Descargar Excel",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documentos/descargar?anio={{anio}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos",
+                "descargar"
+              ],
+              "query": [
+                {
+                  "key": "anio",
+                  "value": "{{anio}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 - SSE (Tiempo Real)",
+      "item": [
+        {
+          "name": "02.3 Status SSE",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sse/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sse",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01.4 Mapa de Calor (Municipios)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/estadisticas/mapa-calor?anio={{anio}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "estadisticas",
+            "mapa-calor"
+          ],
+          "query": [
+            {
+              "key": "anio",
+              "value": "{{anio}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5004/api/v1/reportes"
+    },
+    {
+      "key": "anio",
+      "value": "2026"
+    }
+  ]
+}
