@@ -8,5 +8,6 @@ public enum GrupoPoblacional {
     INDIGENA,
     AFRODESCENDIENTE,
     CAMPESINO,
+    DISCAPACIDAD,
     OTRO
 }

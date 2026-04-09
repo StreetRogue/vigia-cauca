@@ -3,7 +3,9 @@ package co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion;
 import co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -41,10 +43,9 @@ public class NovedadDTOPeticion {
     @NotNull(message = "La categoría es obligatoria")
     private CategoriaEvento categoria;
 
-    @NotNull(message = "El actor principal es obligatorio")
-    private Actor actor1;
-
-    private Actor actor2;
+    @NotEmpty(message = "Debe indicarse al menos un actor")
+    @Size(max = 10, message = "Se permiten máximo 10 actores")
+    private List<Actor> actores;
 
     private String infraestructuraAfectada;
 

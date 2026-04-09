@@ -110,8 +110,13 @@ public class NovedadServiceImpl implements INovedadService {
         existente.setMunicipio(peticion.getMunicipio());
         existente.setLocalidadEspecifica(peticion.getLocalidadEspecifica());
         existente.setCategoria(peticion.getCategoria());
-        existente.setActor1(peticion.getActor1());
-        existente.setActor2(peticion.getActor2());
+        // Actores: sincronizar lista y derivar actor1/actor2
+        if (peticion.getActores() != null && !peticion.getActores().isEmpty()) {
+            existente.getActores().clear();
+            existente.getActores().addAll(peticion.getActores());
+            existente.setActor1(peticion.getActores().get(0));
+            existente.setActor2(peticion.getActores().size() > 1 ? peticion.getActores().get(1) : null);
+        }
         existente.setInfraestructuraAfectada(peticion.getInfraestructuraAfectada());
         existente.setAccionInstitucional(peticion.getAccionInstitucional());
         existente.setDescripcionHecho(peticion.getDescripcionHecho());
@@ -166,19 +171,18 @@ public class NovedadServiceImpl implements INovedadService {
     public void eliminarNovedad(UUID novedadId, UUID usuarioIdSolicitante) {
         NovedadEntity existente = buscarNovedadOFallar(novedadId);
 
-        // Registrar auditoría desvinculada antes de eliminar
-        AuditoriaNovedadEntity auditoria = AuditoriaNovedadEntity.builder()
-                .novedad(null)
-                .usuarioId(usuarioIdSolicitante)
-                .accion(AccionAuditoria.DELETE)
-                .datosAnteriores(serializarParaAuditoria(existente))
-                .cambios("Novedad eliminada: " + novedadId)
-                .build();
-        auditoriaRepository.save(auditoria);
+        existente.setOculto(true);
+        existente.setUsuarioActualizacion(usuarioIdSolicitante.toString());
+        novedadRepository.save(existente);
 
+        // Auditoría
+        registrarAuditoria(existente, usuarioIdSolicitante, AccionAuditoria.DELETE, null, null);
+
+        // Mandamos el evento NOVEDAD_ELIMINADA (que para nosotros es oculta)
+        // Agregamos el campo "oculto" al mensaje de RabbitMQ
         publicarEvento("NOVEDAD_ELIMINADA", existente);
-        novedadRepository.delete(existente);
-        log.info("Novedad eliminada con ID: {}", novedadId);
+
+        log.info("Novedad marcada como OCULTA con ID: {}", novedadId);
     }
 
     // ==========================================
@@ -186,6 +190,13 @@ public class NovedadServiceImpl implements INovedadService {
     // ==========================================
 
     private void validarReglasNegocio(NovedadDTOPeticion peticion) {
+        if (peticion.getActores() == null || peticion.getActores().isEmpty()) {
+            throw new BadRequestException("Debe indicarse al menos un actor");
+        }
+        if (peticion.getActores().size() > 10) {
+            throw new BadRequestException("Se permiten máximo 10 actores");
+        }
+
         if (peticion.getHoraFin() != null && peticion.getHoraInicio() != null
                 && peticion.getHoraFin().isBefore(peticion.getHoraInicio())) {
             throw new BadRequestException("La hora de fin no puede ser anterior a la hora de inicio");
@@ -256,8 +267,9 @@ public class NovedadServiceImpl implements INovedadService {
                     .municipio(entity.getMunicipio())
                     .localidadEspecifica(entity.getLocalidadEspecifica())
                     .categoria(entity.getCategoria())
-                    .actor1(entity.getActor1())
-                    .actor2(entity.getActor2())
+                    .actores(entity.getActores() != null
+                            ? new java.util.ArrayList<>(entity.getActores())
+                            : java.util.Collections.emptyList())
                     .infraestructuraAfectada(entity.getInfraestructuraAfectada())
                     .accionInstitucional(entity.getAccionInstitucional())
                     .descripcionHecho(entity.getDescripcionHecho())
@@ -286,6 +298,9 @@ public class NovedadServiceImpl implements INovedadService {
                 .categoria(original.getCategoria())
                 .actor1(original.getActor1())
                 .actor2(original.getActor2())
+                .actores(original.getActores() != null
+                        ? new java.util.HashSet<>(original.getActores())
+                        : new java.util.HashSet<>())
                 .infraestructuraAfectada(original.getInfraestructuraAfectada())
                 .accionInstitucional(original.getAccionInstitucional())
                 .descripcionHecho(original.getDescripcionHecho())
@@ -303,6 +318,7 @@ public class NovedadServiceImpl implements INovedadService {
         try {
             Map<String, Object> evento = new HashMap<>();
             evento.put("tipo", tipo);
+            evento.put("oculto", novedad.getOculto());
             evento.put("novedadId", novedad.getNovedadId().toString());
             evento.put("usuarioId", novedad.getUsuarioId().toString());
             evento.put("municipio", novedad.getMunicipio());
@@ -312,8 +328,13 @@ public class NovedadServiceImpl implements INovedadService {
             evento.put("nivelVisibilidad", novedad.getNivelVisibilidad().name());
             evento.put("localidadEspecifica", novedad.getLocalidadEspecifica());
             evento.put("descripcionHecho", novedad.getDescripcionHecho());
-            evento.put("actor1", novedad.getActor1().name());
+            evento.put("actor1", novedad.getActor1() != null ? novedad.getActor1().name() : null);
             evento.put("actor2", novedad.getActor2() != null ? novedad.getActor2().name() : null);
+            // Lista completa de actores para compatibilidad futura
+            if (novedad.getActores() != null && !novedad.getActores().isEmpty()) {
+                evento.put("actores", novedad.getActores().stream()
+                        .map(Enum::name).collect(java.util.stream.Collectors.toList()));
+            }
             evento.put("timestamp", LocalDateTime.now().toString());
 
             if (novedad.getAfectacionHumana() != null) {

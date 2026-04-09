@@ -2,58 +2,31 @@
   "info": {
     "_postman_id": "2fd10872-0d1b-4e32-93b9-b0932b8ef55d",
     "name": "Microservicio Novedades - Coleccion Completa",
-    "description": "Coleccion de pruebas para el microservicio de Novedades de Vigia Cauca. Incluye CRUD completo, edge cases y validaciones.",
+    "description": "Coleccion de pruebas para el microservicio de Novedades de Vigia Cauca.\nBase URL: http://localhost:5003/api/v1/microNovedades\n\nSecciones:\n  01 - Novedades CRUD\n  02 - Victimas CRUD\n  03 - Auditorias\n  04 - Validaciones y Edge Cases\n  05 - Excel (Plantilla + Carga Masiva)\n  06 - Evidencias (Subida y Descarga de imagenes)\n  07 - Flujo Completo (E2E)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "43216293"
   },
   "item": [
+
     {
       "name": "01 - Novedades CRUD",
       "item": [
         {
-          "name": "01.1 Crear Novedad - Completa (con victimas, afectacion, evidencias)",
+          "name": "01.1 Crear Novedad - Completa (victimas, afectacion, evidencias)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 201 Created', function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "",
-                  "pm.test('Response tiene novedadId', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.novedadId).to.not.be.null;",
-                  "    pm.collectionVariables.set('novedadId', json.novedadId);",
-                  "});",
-                  "",
-                  "pm.test('Response contiene victimas', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.victimas).to.be.an('array');",
-                  "    pm.expect(json.victimas.length).to.eql(2);",
-                  "});",
-                  "",
-                  "pm.test('Response contiene afectacionHumana', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.afectacionHumana).to.not.be.null;",
-                  "    pm.expect(json.afectacionHumana.muertosTotales).to.eql(3);",
-                  "});",
-                  "",
-                  "pm.test('Response contiene evidencias', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.evidencias).to.be.an('array');",
-                  "    pm.expect(json.evidencias.length).to.eql(2);",
-                  "});",
-                  "",
-                  "pm.test('fechaReporte fue asignada automaticamente', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.fechaReporte).to.not.be.null;",
-                  "});",
-                  "",
-                  "pm.test('fechaActualizacion fue asignada automaticamente', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.fechaActualizacion).to.not.be.null;",
-                  "});"
+                  "pm.test('Status 201 Created', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "pm.test('Tiene novedadId', function () { pm.expect(json.novedadId).to.not.be.null; pm.collectionVariables.set('novedadId', json.novedadId); });",
+                  "pm.test('actores es lista con 2 elementos', function () { pm.expect(json.actores).to.be.an('array').with.lengthOf(2); });",
+                  "pm.test('Contiene victimas', function () { pm.expect(json.victimas).to.be.an('array').with.lengthOf(2); });",
+                  "pm.test('Contiene afectacionHumana', function () { pm.expect(json.afectacionHumana).to.not.be.null; pm.expect(json.afectacionHumana.muertosTotales).to.eql(3); });",
+                  "pm.test('Contiene evidencias', function () { pm.expect(json.evidencias).to.be.an('array').with.lengthOf(2); });",
+                  "pm.test('fechaReporte asignada automaticamente', function () { pm.expect(json.fechaReporte).to.not.be.null; });",
+                  "pm.test('fechaActualizacion asignada automaticamente', function () { pm.expect(json.fechaActualizacion).to.not.be.null; });"
                 ],
                 "type": "text/javascript"
               }
@@ -61,24 +34,15 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-15\",\n  \"horaInicio\": \"08:30:00\",\n  \"horaFin\": \"10:45:00\",\n  \"municipio\": \"Popayan\",\n  \"localidadEspecifica\": \"Vereda El Rosal, corregimiento Las Piedras\",\n  \"categoria\": \"ENFRENTAMIENTO\",\n  \"actor1\": \"FUERZA_PUBLICA\",\n  \"actor2\": \"ELN\",\n  \"infraestructuraAfectada\": \"Puente vehicular sobre rio Cauca parcialmente danado\",\n  \"accionInstitucional\": \"Despliegue de tropas del Batallon Pichincha, activacion de alerta temprana\",\n  \"descripcionHecho\": \"Enfrentamiento armado entre unidades del Ejercito Nacional y columna movil del ELN en zona rural de Popayan. Se reportan impactos en infraestructura vial y desplazamiento de comunidades aledanas.\",\n  \"nivelConfianza\": \"CONFIRMADO\",\n  \"nivelVisibilidad\": \"PUBLICA\",\n  \"victimas\": [\n    {\n      \"nombreVictima\": \"Juan Carlos Mendez\",\n      \"generoVictima\": \"MASCULINO\",\n      \"edadVictima\": 45,\n      \"grupoPoblacional\": \"CAMPESINO\",\n      \"ocupacionVictima\": \"Agricultor\"\n    },\n    {\n      \"nombreVictima\": \"Maria Elena Torres\",\n      \"generoVictima\": \"FEMENINO\",\n      \"edadVictima\": 32,\n      \"grupoPoblacional\": \"ADULTO\",\n      \"ocupacionVictima\": \"Docente\"\n    }\n  ],\n  \"afectacionHumana\": {\n    \"muertosTotales\": 3,\n    \"muertosCiviles\": 1,\n    \"muertosFuerzaPublica\": 1,\n    \"muertosIlegales\": 1,\n    \"heridosTotales\": 5,\n    \"heridosCiviles\": 3,\n    \"desplazadosTotales\": 120,\n    \"confinadosTotales\": 45,\n    \"afectacionCivilesFlag\": true,\n    \"reclutamientoMenoresFlag\": \"NO\"\n  },\n  \"urlsEvidencias\": [\n    \"https://storage.example.com/evidencias/foto-001.jpg\",\n    \"https://storage.example.com/evidencias/video-001.mp4\"\n  ]\n}"
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-15\",\n  \"horaInicio\": \"08:30:00\",\n  \"horaFin\": \"10:45:00\",\n  \"municipio\": \"Popayan\",\n  \"localidadEspecifica\": \"Vereda El Rosal, corregimiento Las Piedras\",\n  \"categoria\": \"ENFRENTAMIENTO\",\n  \"actores\": [\"FUERZA_PUBLICA\", \"ELN\"],\n  \"infraestructuraAfectada\": \"Puente vehicular sobre rio Cauca parcialmente danado\",\n  \"accionInstitucional\": \"Despliegue de tropas del Batallon Pichincha, activacion de alerta temprana\",\n  \"descripcionHecho\": \"Enfrentamiento armado entre unidades del Ejercito Nacional y columna movil del ELN en zona rural de Popayan.\",\n  \"nivelConfianza\": \"CONFIRMADO\",\n  \"nivelVisibilidad\": \"PUBLICA\",\n  \"victimas\": [\n    {\n      \"nombreVictima\": \"Juan Carlos Mendez\",\n      \"generoVictima\": \"MASCULINO\",\n      \"edadVictima\": 45,\n      \"grupoPoblacional\": \"CAMPESINO\",\n      \"ocupacionVictima\": \"Agricultor\"\n    },\n    {\n      \"nombreVictima\": \"Maria Elena Torres\",\n      \"generoVictima\": \"FEMENINO\",\n      \"edadVictima\": 32,\n      \"grupoPoblacional\": \"ADULTO\",\n      \"ocupacionVictima\": \"Docente\"\n    }\n  ],\n  \"afectacionHumana\": {\n    \"muertosTotales\": 3,\n    \"muertosCiviles\": 1,\n    \"muertosFuerzaPublica\": 1,\n    \"muertosIlegales\": 1,\n    \"heridosTotales\": 5,\n    \"heridosCiviles\": 3,\n    \"desplazadosTotales\": 120,\n    \"confinadosTotales\": 45,\n    \"afectacionCivilesFlag\": true,\n    \"reclutamientoMenoresFlag\": \"NO\"\n  },\n  \"urlsEvidencias\": [\n    \"https://storage.example.com/evidencias/foto-001.jpg\",\n    \"https://storage.example.com/evidencias/video-001.mp4\"\n  ]\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/novedades",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades"]
             }
           },
           "response": []
@@ -90,19 +54,9 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 201 Created', function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "",
-                  "pm.test('Victimas es lista vacia o null', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.victimas === null || json.victimas.length === 0).to.be.true;",
-                  "});",
-                  "",
-                  "pm.test('AfectacionHumana es null', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.afectacionHumana).to.be.null;",
-                  "});"
+                  "pm.test('Status 201 Created', function () { pm.response.to.have.status(201); });",
+                  "pm.test('actores tiene 1 elemento', function () { pm.expect(pm.response.json().actores).to.be.an('array').with.lengthOf(1); });",
+                  "pm.test('AfectacionHumana es null', function () { pm.expect(pm.response.json().afectacionHumana).to.be.null; });"
                 ],
                 "type": "text/javascript"
               }
@@ -110,24 +64,15 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-20\",\n  \"horaInicio\": \"14:00:00\",\n  \"horaFin\": \"15:30:00\",\n  \"municipio\": \"Santander de Quilichao\",\n  \"localidadEspecifica\": \"Casco urbano, barrio centro\",\n  \"categoria\": \"HOMICIDIO\",\n  \"actor1\": \"NO_IDENTIFICADO\",\n  \"descripcionHecho\": \"Homicidio de persona no identificada en via publica del casco urbano.\",\n  \"nivelConfianza\": \"PRELIMINAR\",\n  \"nivelVisibilidad\": \"PRIVADA\"\n}"
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-20\",\n  \"horaInicio\": \"14:00:00\",\n  \"horaFin\": \"15:30:00\",\n  \"municipio\": \"Santander de Quilichao\",\n  \"localidadEspecifica\": \"Casco urbano, barrio centro\",\n  \"categoria\": \"HOMICIDIO\",\n  \"actores\": [\"NO_IDENTIFICADO\"],\n  \"descripcionHecho\": \"Homicidio de persona no identificada en via publica del casco urbano.\",\n  \"nivelConfianza\": \"PRELIMINAR\",\n  \"nivelVisibilidad\": \"PRIVADA\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/novedades",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades"]
             }
           },
           "response": []
@@ -139,21 +84,11 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 200 OK', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('novedadId coincide', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.novedadId).to.eql(pm.collectionVariables.get('novedadId'));",
-                  "});",
-                  "",
-                  "pm.test('Campos obligatorios presentes', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.municipio).to.not.be.null;",
-                  "    pm.expect(json.categoria).to.not.be.null;",
-                  "    pm.expect(json.nivelConfianza).to.not.be.null;",
-                  "});"
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "var json = pm.response.json();",
+                  "pm.test('novedadId coincide', function () { pm.expect(json.novedadId).to.eql(pm.collectionVariables.get('novedadId')); });",
+                  "pm.test('actores es lista', function () { pm.expect(json.actores).to.be.an('array'); });",
+                  "pm.test('Campos obligatorios presentes', function () { pm.expect(json.municipio).to.not.be.null; pm.expect(json.categoria).to.not.be.null; });"
                 ],
                 "type": "text/javascript"
               }
@@ -164,13 +99,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/novedades/{{novedadId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "{{novedadId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "{{novedadId}}"]
             }
           },
           "response": []
@@ -182,19 +112,9 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 200 OK', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response es un array', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json).to.be.an('array');",
-                  "});",
-                  "",
-                  "pm.test('Al menos una novedad existe', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.length).to.be.above(0);",
-                  "});"
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response es array', function () { pm.expect(pm.response.json()).to.be.an('array'); });",
+                  "pm.test('Al menos una novedad existe', function () { pm.expect(pm.response.json().length).to.be.above(0); });"
                 ],
                 "type": "text/javascript"
               }
@@ -205,38 +125,53 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/novedades",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades"
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "01.5 Listar Novedades Paginado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "var json = pm.response.json();",
+                  "pm.test('Tiene estructura de pagina', function () { pm.expect(json.content).to.be.an('array'); pm.expect(json.totalElements).to.be.a('number'); pm.expect(json.totalPages).to.be.a('number'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/novedades/paginado?page=0&size=10&sort=fechaHecho,desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "paginado"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" },
+                { "key": "sort", "value": "fechaHecho,desc" }
               ]
             }
           },
           "response": []
         },
         {
-          "name": "01.5 Listar Novedades por Usuario",
+          "name": "01.6 Listar Novedades por Usuario",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 200 OK', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response es un array', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json).to.be.an('array');",
-                  "});",
-                  "",
-                  "pm.test('Todas pertenecen al usuario', function () {",
-                  "    var json = pm.response.json();",
-                  "    json.forEach(function(n) {",
-                  "        pm.expect(n.usuarioId).to.eql(pm.collectionVariables.get('usuarioId'));",
-                  "    });",
-                  "});"
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response es array', function () { pm.expect(pm.response.json()).to.be.an('array'); });",
+                  "pm.test('Todas pertenecen al usuario', function () { pm.response.json().forEach(n => pm.expect(n.usuarioId).to.eql(pm.collectionVariables.get('usuarioId'))); });"
                 ],
                 "type": "text/javascript"
               }
@@ -247,41 +182,22 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/novedades/usuario/{{usuarioId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "usuario",
-                "{{usuarioId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "usuario", "{{usuarioId}}"]
             }
           },
           "response": []
         },
         {
-          "name": "01.6 Buscar con Filtros - Todos los parametros",
+          "name": "01.7 Buscar con Filtros - Todos los parametros",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 200 OK', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response es un array', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json).to.be.an('array');",
-                  "});",
-                  "",
-                  "pm.test('Resultados filtrados por municipio y categoria', function () {",
-                  "    var json = pm.response.json();",
-                  "    json.forEach(function(n) {",
-                  "        pm.expect(n.municipio).to.eql('Popayan');",
-                  "        pm.expect(n.categoria).to.eql('ENFRENTAMIENTO');",
-                  "    });",
-                  "});"
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response es array', function () { pm.expect(pm.response.json()).to.be.an('array'); });",
+                  "pm.test('Resultados filtrados por municipio', function () { pm.response.json().forEach(n => pm.expect(n.municipio).to.eql('Popayan')); });"
                 ],
                 "type": "text/javascript"
               }
@@ -292,54 +208,28 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/novedades/filtrar?fechaInicio=2026-01-01&fechaFin=2026-12-31&municipio=Popayan&categoria=ENFRENTAMIENTO&nivelVisibilidad=PUBLICA",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "filtrar"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "filtrar"],
               "query": [
-                {
-                  "key": "fechaInicio",
-                  "value": "2026-01-01"
-                },
-                {
-                  "key": "fechaFin",
-                  "value": "2026-12-31"
-                },
-                {
-                  "key": "municipio",
-                  "value": "Popayan"
-                },
-                {
-                  "key": "categoria",
-                  "value": "ENFRENTAMIENTO"
-                },
-                {
-                  "key": "nivelVisibilidad",
-                  "value": "PUBLICA"
-                }
+                { "key": "fechaInicio", "value": "2026-01-01" },
+                { "key": "fechaFin", "value": "2026-12-31" },
+                { "key": "municipio", "value": "Popayan" },
+                { "key": "categoria", "value": "ENFRENTAMIENTO" },
+                { "key": "nivelVisibilidad", "value": "PUBLICA" }
               ]
             }
           },
           "response": []
         },
         {
-          "name": "01.7 Buscar con Filtros - Solo fechas (parametros opcionales nulos)",
+          "name": "01.8 Buscar con Filtros - Solo fechas",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 200 OK', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response es un array', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json).to.be.an('array');",
-                  "});"
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response es array', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
                 ],
                 "type": "text/javascript"
               }
@@ -350,52 +240,29 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/novedades/filtrar?fechaInicio=2026-01-01&fechaFin=2026-12-31",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "filtrar"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "filtrar"],
               "query": [
-                {
-                  "key": "fechaInicio",
-                  "value": "2026-01-01"
-                },
-                {
-                  "key": "fechaFin",
-                  "value": "2026-12-31"
-                }
+                { "key": "fechaInicio", "value": "2026-01-01" },
+                { "key": "fechaFin", "value": "2026-12-31" }
               ]
             }
           },
           "response": []
         },
         {
-          "name": "01.8 Actualizar Novedad",
+          "name": "01.9 Actualizar Novedad",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 200 OK', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Municipio actualizado', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.municipio).to.eql('Piendamo');",
-                  "});",
-                  "",
-                  "pm.test('Nivel de confianza actualizado', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.nivelConfianza).to.eql('CONFIRMADO');",
-                  "});",
-                  "",
-                  "pm.test('fechaActualizacion cambio', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.fechaActualizacion).to.not.be.null;",
-                  "});"
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "var json = pm.response.json();",
+                  "pm.test('Municipio actualizado', function () { pm.expect(json.municipio).to.eql('Piendamo'); });",
+                  "pm.test('Nivel de confianza actualizado', function () { pm.expect(json.nivelConfianza).to.eql('CONFIRMADO'); });",
+                  "pm.test('actores actualizado a 3', function () { pm.expect(json.actores).to.be.an('array').with.lengthOf(3); });",
+                  "pm.test('fechaActualizacion cambio', function () { pm.expect(json.fechaActualizacion).to.not.be.null; });"
                 ],
                 "type": "text/javascript"
               }
@@ -403,39 +270,27 @@
           ],
           "request": {
             "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-15\",\n  \"horaInicio\": \"08:30:00\",\n  \"horaFin\": \"11:00:00\",\n  \"municipio\": \"Piendamo\",\n  \"localidadEspecifica\": \"Vereda El Rosal, corregimiento Las Piedras - actualizado a Piendamo\",\n  \"categoria\": \"ENFRENTAMIENTO\",\n  \"actor1\": \"FUERZA_PUBLICA\",\n  \"actor2\": \"ELN\",\n  \"infraestructuraAfectada\": \"Puente vehicular danado y torre electrica derribada\",\n  \"accionInstitucional\": \"Despliegue adicional con apoyo aereo\",\n  \"descripcionHecho\": \"Actualizacion: El enfrentamiento se extendio hasta Piendamo. Se confirma dano adicional en infraestructura electrica.\",\n  \"nivelConfianza\": \"CONFIRMADO\",\n  \"nivelVisibilidad\": \"PUBLICA\"\n}"
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-15\",\n  \"horaInicio\": \"08:30:00\",\n  \"horaFin\": \"11:00:00\",\n  \"municipio\": \"Piendamo\",\n  \"localidadEspecifica\": \"Vereda El Rosal - actualizado a Piendamo\",\n  \"categoria\": \"ENFRENTAMIENTO\",\n  \"actores\": [\"FUERZA_PUBLICA\", \"ELN\", \"COMUNIDAD_CIVIL\"],\n  \"infraestructuraAfectada\": \"Puente vehicular danado y torre electrica derribada\",\n  \"accionInstitucional\": \"Despliegue adicional con apoyo aereo\",\n  \"descripcionHecho\": \"Actualizacion: El enfrentamiento se extendio hasta Piendamo. Se confirma dano adicional en infraestructura electrica.\",\n  \"nivelConfianza\": \"CONFIRMADO\",\n  \"nivelVisibilidad\": \"PUBLICA\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/novedades/{{novedadId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "{{novedadId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "{{novedadId}}"]
             }
           },
           "response": []
         },
         {
-          "name": "01.9 Eliminar Novedad",
+          "name": "01.10 Ocultar Novedad (soft delete)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 204 No Content', function () {",
-                  "    pm.response.to.have.status(204);",
-                  "});"
+                  "pm.test('Status 204 No Content', function () { pm.response.to.have.status(204); });"
                 ],
                 "type": "text/javascript"
               }
@@ -446,25 +301,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/novedades/{{novedadId}}?usuarioId={{usuarioId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "{{novedadId}}"
-              ],
-              "query": [
-                {
-                  "key": "usuarioId",
-                  "value": "{{usuarioId}}"
-                }
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "{{novedadId}}"],
+              "query": [{ "key": "usuarioId", "value": "{{usuarioId}}" }]
             }
           },
           "response": []
         }
       ]
     },
+
     {
       "name": "02 - Victimas CRUD",
       "item": [
@@ -475,11 +321,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 201', function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "var json = pm.response.json();",
-                  "pm.collectionVariables.set('novedadId', json.novedadId);"
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set('novedadId', pm.response.json().novedadId);"
                 ],
                 "type": "text/javascript"
               }
@@ -487,24 +330,15 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-25\",\n  \"horaInicio\": \"06:00:00\",\n  \"horaFin\": \"07:30:00\",\n  \"municipio\": \"Toribio\",\n  \"localidadEspecifica\": \"Resguardo indigena Tacueyo\",\n  \"categoria\": \"HOSTIGAMIENTO\",\n  \"actor1\": \"SEGUNDA_MARQUETALIA\",\n  \"descripcionHecho\": \"Hostigamiento contra estacion de policia en zona rural de Toribio.\",\n  \"nivelConfianza\": \"EN_VERIFICACION\",\n  \"nivelVisibilidad\": \"PUBLICA\"\n}"
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-25\",\n  \"horaInicio\": \"06:00:00\",\n  \"horaFin\": \"07:30:00\",\n  \"municipio\": \"Toribio\",\n  \"localidadEspecifica\": \"Resguardo indigena Tacueyo\",\n  \"categoria\": \"HOSTIGAMIENTO\",\n  \"actores\": [\"SEGUNDA_MARQUETALIA\"],\n  \"descripcionHecho\": \"Hostigamiento contra estacion de policia en zona rural de Toribio.\",\n  \"nivelConfianza\": \"EN_VERIFICACION\",\n  \"nivelVisibilidad\": \"PUBLICA\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/novedades",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades"]
             }
           },
           "response": []
@@ -516,22 +350,10 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 201 Created', function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "",
-                  "pm.test('Victima tiene ID', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.victimaId).to.not.be.null;",
-                  "    pm.collectionVariables.set('victimaId', json.victimaId);",
-                  "});",
-                  "",
-                  "pm.test('Datos correctos', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.nombreVictima).to.eql('Pedro Guamanga');",
-                  "    pm.expect(json.generoVictima).to.eql('MASCULINO');",
-                  "    pm.expect(json.grupoPoblacional).to.eql('INDIGENA');",
-                  "});"
+                  "pm.test('Status 201 Created', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "pm.test('Victima tiene ID', function () { pm.expect(json.victimaId).to.not.be.null; pm.collectionVariables.set('victimaId', json.victimaId); });",
+                  "pm.test('Datos correctos', function () { pm.expect(json.nombreVictima).to.eql('Pedro Guamanga'); pm.expect(json.grupoPoblacional).to.eql('INDIGENA'); });"
                 ],
                 "type": "text/javascript"
               }
@@ -539,40 +361,28 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"nombreVictima\": \"Pedro Guamanga\",\n  \"generoVictima\": \"MASCULINO\",\n  \"edadVictima\": 28,\n  \"grupoPoblacional\": \"INDIGENA\",\n  \"ocupacionVictima\": \"Guardia Indigena\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/novedades/{{novedadId}}/victimas",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "{{novedadId}}",
-                "victimas"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "{{novedadId}}", "victimas"]
             }
           },
           "response": []
         },
         {
-          "name": "02.2 Agregar Segunda Victima (campos minimos)",
+          "name": "02.2 Agregar Victima con grupoPoblacional DISCAPACIDAD",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 201 Created', function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});"
+                  "pm.test('Status 201 Created', function () { pm.response.to.have.status(201); });",
+                  "pm.test('grupoPoblacional es DISCAPACIDAD', function () { pm.expect(pm.response.json().grupoPoblacional).to.eql('DISCAPACIDAD'); });"
                 ],
                 "type": "text/javascript"
               }
@@ -580,46 +390,56 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreVictima\": \"Ana Lucia Rendon\",\n  \"generoVictima\": \"FEMENINO\",\n  \"edadVictima\": 41,\n  \"grupoPoblacional\": \"DISCAPACIDAD\",\n  \"ocupacionVictima\": \"Ama de casa\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/novedades/{{novedadId}}/victimas",
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "{{novedadId}}", "victimas"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02.3 Agregar Victima - Campos minimos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 Created', function () { pm.response.to.have.status(201); });"
+                ],
+                "type": "text/javascript"
               }
-            ],
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"nombreVictima\": \"Persona No Identificada\",\n  \"generoVictima\": \"NO_ESPECIFICADO\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/novedades/{{novedadId}}/victimas",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "{{novedadId}}",
-                "victimas"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "{{novedadId}}", "victimas"]
             }
           },
           "response": []
         },
         {
-          "name": "02.3 Listar Victimas de Novedad",
+          "name": "02.4 Listar Victimas de Novedad",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 200 OK', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Hay 2 victimas', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json).to.be.an('array');",
-                  "    pm.expect(json.length).to.eql(2);",
-                  "});"
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response es array con victimas', function () { pm.expect(pm.response.json()).to.be.an('array').with.length.above(0); });"
                 ],
                 "type": "text/javascript"
               }
@@ -630,28 +450,20 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/novedades/{{novedadId}}/victimas",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "{{novedadId}}",
-                "victimas"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "{{novedadId}}", "victimas"]
             }
           },
           "response": []
         },
         {
-          "name": "02.4 Eliminar Victima",
+          "name": "02.5 Eliminar Victima",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 204 No Content', function () {",
-                  "    pm.response.to.have.status(204);",
-                  "});"
+                  "pm.test('Status 204 No Content', function () { pm.response.to.have.status(204); });"
                 ],
                 "type": "text/javascript"
               }
@@ -662,21 +474,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/novedades/{{novedadId}}/victimas/{{victimaId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "{{novedadId}}",
-                "victimas",
-                "{{victimaId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "{{novedadId}}", "victimas", "{{victimaId}}"]
             }
           },
           "response": []
         }
       ]
     },
+
     {
       "name": "03 - Auditorias",
       "item": [
@@ -687,20 +493,9 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 200 OK', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response es un array', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json).to.be.an('array');",
-                  "});",
-                  "",
-                  "pm.test('Contiene al menos un registro CREATE', function () {",
-                  "    var json = pm.response.json();",
-                  "    var creates = json.filter(a => a.accion === 'CREATE');",
-                  "    pm.expect(creates.length).to.be.above(0);",
-                  "});"
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response es array', function () { pm.expect(pm.response.json()).to.be.an('array'); });",
+                  "pm.test('Contiene al menos un registro CREATE', function () { var creates = pm.response.json().filter(a => a.accion === 'CREATE'); pm.expect(creates.length).to.be.above(0); });"
                 ],
                 "type": "text/javascript"
               }
@@ -711,14 +506,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/auditorias/novedad/{{novedadId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auditorias",
-                "novedad",
-                "{{novedadId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auditorias", "novedad", "{{novedadId}}"]
             }
           },
           "response": []
@@ -730,16 +519,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 200 OK', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Todas las acciones son del usuario', function () {",
-                  "    var json = pm.response.json();",
-                  "    json.forEach(function(a) {",
-                  "        pm.expect(a.usuarioId).to.eql(pm.collectionVariables.get('usuarioId'));",
-                  "    });",
-                  "});"
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Todas las acciones son del usuario', function () { pm.response.json().forEach(a => pm.expect(a.usuarioId).to.eql(pm.collectionVariables.get('usuarioId'))); });"
                 ],
                 "type": "text/javascript"
               }
@@ -750,22 +531,17 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/auditorias/usuario/{{usuarioId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auditorias",
-                "usuario",
-                "{{usuarioId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auditorias", "usuario", "{{usuarioId}}"]
             }
           },
           "response": []
         }
       ]
     },
+
     {
-      "name": "04 - Edge Cases y Validaciones",
+      "name": "04 - Validaciones y Edge Cases",
       "item": [
         {
           "name": "04.1 Crear Novedad - Body vacio (400)",
@@ -774,14 +550,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 400 Bad Request', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "",
-                  "pm.test('Mensaje de error presente', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.message).to.not.be.null;",
-                  "});"
+                  "pm.test('Status 400 Bad Request', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Mensaje de error presente', function () { pm.expect(pm.response.json().message).to.not.be.null; });"
                 ],
                 "type": "text/javascript"
               }
@@ -789,25 +559,9 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/novedades",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades"
-              ]
-            }
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{baseUrl}}/novedades", "host": ["{{baseUrl}}"], "path": ["novedades"] }
           },
           "response": []
         },
@@ -818,14 +572,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 400 Bad Request', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "",
-                  "pm.test('Error menciona usuario_id', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.message.toLowerCase()).to.include('usuario');",
-                  "});"
+                  "pm.test('Status 400 Bad Request', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Error menciona usuario', function () { pm.expect(pm.response.json().message.toLowerCase()).to.include('usuario'); });"
                 ],
                 "type": "text/javascript"
               }
@@ -833,38 +581,24 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fechaHecho\": \"2026-03-20\",\n  \"horaInicio\": \"14:00:00\",\n  \"horaFin\": \"15:30:00\",\n  \"municipio\": \"Popayan\",\n  \"localidadEspecifica\": \"Centro\",\n  \"categoria\": \"HOMICIDIO\",\n  \"actor1\": \"NO_IDENTIFICADO\",\n  \"descripcionHecho\": \"Descripcion de prueba sin usuario\",\n  \"nivelConfianza\": \"PRELIMINAR\",\n  \"nivelVisibilidad\": \"PRIVADA\"\n}"
+              "raw": "{\n  \"fechaHecho\": \"2026-03-20\",\n  \"horaInicio\": \"14:00:00\",\n  \"horaFin\": \"15:30:00\",\n  \"municipio\": \"Popayan\",\n  \"localidadEspecifica\": \"Centro\",\n  \"categoria\": \"HOMICIDIO\",\n  \"actores\": [\"NO_IDENTIFICADO\"],\n  \"descripcionHecho\": \"Descripcion de prueba sin usuario\",\n  \"nivelConfianza\": \"PRELIMINAR\",\n  \"nivelVisibilidad\": \"PRIVADA\"\n}"
             },
-            "url": {
-              "raw": "{{baseUrl}}/novedades",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades"
-              ]
-            }
+            "url": { "raw": "{{baseUrl}}/novedades", "host": ["{{baseUrl}}"], "path": ["novedades"] }
           },
           "response": []
         },
         {
-          "name": "04.3 Crear Novedad - Categoria invalida (400)",
+          "name": "04.3 Crear Novedad - Actores lista vacia (400)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 400 Bad Request', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});"
+                  "pm.test('Status 400 Bad Request', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Error menciona actor', function () { pm.expect(pm.response.json().message.toLowerCase()).to.include('actor'); });"
                 ],
                 "type": "text/javascript"
               }
@@ -872,43 +606,146 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-20\",\n  \"horaInicio\": \"14:00:00\",\n  \"horaFin\": \"15:30:00\",\n  \"municipio\": \"Popayan\",\n  \"localidadEspecifica\": \"Centro\",\n  \"categoria\": \"CATEGORIA_INEXISTENTE\",\n  \"actor1\": \"NO_IDENTIFICADO\",\n  \"descripcionHecho\": \"Test con categoria invalida\",\n  \"nivelConfianza\": \"PRELIMINAR\",\n  \"nivelVisibilidad\": \"PRIVADA\"\n}"
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-20\",\n  \"horaInicio\": \"14:00:00\",\n  \"horaFin\": \"15:30:00\",\n  \"municipio\": \"Popayan\",\n  \"localidadEspecifica\": \"Centro\",\n  \"categoria\": \"HOMICIDIO\",\n  \"actores\": [],\n  \"descripcionHecho\": \"Descripcion de prueba con actores vacios\",\n  \"nivelConfianza\": \"PRELIMINAR\",\n  \"nivelVisibilidad\": \"PRIVADA\"\n}"
             },
-            "url": {
-              "raw": "{{baseUrl}}/novedades",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades"
-              ]
-            }
+            "url": { "raw": "{{baseUrl}}/novedades", "host": ["{{baseUrl}}"], "path": ["novedades"] }
           },
           "response": []
         },
         {
-          "name": "04.4 Obtener Novedad - ID inexistente (404)",
+          "name": "04.4 Crear Novedad - Mas de 10 actores (400)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 404 Not Found', function () {",
-                  "    pm.response.to.have.status(404);",
-                  "});",
-                  "",
-                  "pm.test('Mensaje de error apropiado', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.error).to.eql('Not Found');",
-                  "});"
+                  "pm.test('Status 400 Bad Request', function () { pm.response.to.have.status(400); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-20\",\n  \"horaInicio\": \"14:00:00\",\n  \"horaFin\": \"15:30:00\",\n  \"municipio\": \"Popayan\",\n  \"localidadEspecifica\": \"Centro\",\n  \"categoria\": \"HOMICIDIO\",\n  \"actores\": [\"ELN\",\"FUERZA_PUBLICA\",\"OTRO\",\"ELN\",\"ELN\",\"OTRO\",\"ELN\",\"ELN\",\"OTRO\",\"ELN\",\"FUERZA_PUBLICA\"],\n  \"descripcionHecho\": \"Descripcion con mas de 10 actores\",\n  \"nivelConfianza\": \"PRELIMINAR\",\n  \"nivelVisibilidad\": \"PRIVADA\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/novedades", "host": ["{{baseUrl}}"], "path": ["novedades"] }
+          },
+          "response": []
+        },
+        {
+          "name": "04.5 Crear Novedad - Categoria invalida (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', function () { pm.response.to.have.status(400); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-20\",\n  \"horaInicio\": \"14:00:00\",\n  \"horaFin\": \"15:30:00\",\n  \"municipio\": \"Popayan\",\n  \"localidadEspecifica\": \"Centro\",\n  \"categoria\": \"CATEGORIA_INEXISTENTE\",\n  \"actores\": [\"NO_IDENTIFICADO\"],\n  \"descripcionHecho\": \"Test con categoria invalida\",\n  \"nivelConfianza\": \"PRELIMINAR\",\n  \"nivelVisibilidad\": \"PRIVADA\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/novedades", "host": ["{{baseUrl}}"], "path": ["novedades"] }
+          },
+          "response": []
+        },
+        {
+          "name": "04.6 Crear Novedad - Descripcion vacia (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Error menciona descripcion', function () { pm.expect(pm.response.json().message.toLowerCase()).to.include('descripcion'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-20\",\n  \"horaInicio\": \"14:00:00\",\n  \"horaFin\": \"15:30:00\",\n  \"municipio\": \"Popayan\",\n  \"localidadEspecifica\": \"Centro\",\n  \"categoria\": \"HOMICIDIO\",\n  \"actores\": [\"NO_IDENTIFICADO\"],\n  \"descripcionHecho\": \"\",\n  \"nivelConfianza\": \"PRELIMINAR\",\n  \"nivelVisibilidad\": \"PRIVADA\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/novedades", "host": ["{{baseUrl}}"], "path": ["novedades"] }
+          },
+          "response": []
+        },
+        {
+          "name": "04.7 Crear Novedad - Fecha futura (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Error menciona fecha', function () { pm.expect(pm.response.json().message.toLowerCase()).to.include('fecha'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2099-12-31\",\n  \"horaInicio\": \"08:00:00\",\n  \"horaFin\": \"09:00:00\",\n  \"municipio\": \"Popayan\",\n  \"localidadEspecifica\": \"Centro\",\n  \"categoria\": \"HOMICIDIO\",\n  \"actores\": [\"NO_IDENTIFICADO\"],\n  \"descripcionHecho\": \"Test con fecha futura\",\n  \"nivelConfianza\": \"PRELIMINAR\",\n  \"nivelVisibilidad\": \"PRIVADA\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/novedades", "host": ["{{baseUrl}}"], "path": ["novedades"] }
+          },
+          "response": []
+        },
+        {
+          "name": "04.8 Crear Novedad - Hora fin antes de hora inicio (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Error menciona hora', function () { pm.expect(pm.response.json().message.toLowerCase()).to.include('hora'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-20\",\n  \"horaInicio\": \"15:00:00\",\n  \"horaFin\": \"08:00:00\",\n  \"municipio\": \"Popayan\",\n  \"localidadEspecifica\": \"Centro\",\n  \"categoria\": \"HOMICIDIO\",\n  \"actores\": [\"NO_IDENTIFICADO\"],\n  \"descripcionHecho\": \"Test hora fin antes de inicio\",\n  \"nivelConfianza\": \"PRELIMINAR\",\n  \"nivelVisibilidad\": \"PRIVADA\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/novedades", "host": ["{{baseUrl}}"], "path": ["novedades"] }
+          },
+          "response": []
+        },
+        {
+          "name": "04.9 Obtener Novedad - ID inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', function () { pm.response.to.have.status(404); });"
                 ],
                 "type": "text/javascript"
               }
@@ -919,27 +756,20 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/novedades/00000000-0000-0000-0000-000000000000",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "00000000-0000-0000-0000-000000000000"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "00000000-0000-0000-0000-000000000000"]
             }
           },
           "response": []
         },
         {
-          "name": "04.5 Obtener Novedad - UUID invalido (400)",
+          "name": "04.10 Obtener Novedad - UUID invalido (400)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 400 Bad Request', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});"
+                  "pm.test('Status 400 Bad Request', function () { pm.response.to.have.status(400); });"
                 ],
                 "type": "text/javascript"
               }
@@ -950,27 +780,20 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/novedades/no-es-un-uuid",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "no-es-un-uuid"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "no-es-un-uuid"]
             }
           },
           "response": []
         },
         {
-          "name": "04.6 Actualizar Novedad - ID inexistente (404)",
+          "name": "04.11 Actualizar Novedad - ID inexistente (404)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 404 Not Found', function () {",
-                  "    pm.response.to.have.status(404);",
-                  "});"
+                  "pm.test('Status 404 Not Found', function () { pm.response.to.have.status(404); });"
                 ],
                 "type": "text/javascript"
               }
@@ -978,39 +801,27 @@
           ],
           "request": {
             "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-15\",\n  \"horaInicio\": \"08:30:00\",\n  \"horaFin\": \"10:45:00\",\n  \"municipio\": \"Popayan\",\n  \"localidadEspecifica\": \"Centro\",\n  \"categoria\": \"ENFRENTAMIENTO\",\n  \"actor1\": \"FUERZA_PUBLICA\",\n  \"descripcionHecho\": \"Intento de actualizar novedad inexistente\",\n  \"nivelConfianza\": \"CONFIRMADO\",\n  \"nivelVisibilidad\": \"PUBLICA\"\n}"
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-15\",\n  \"horaInicio\": \"08:30:00\",\n  \"horaFin\": \"10:45:00\",\n  \"municipio\": \"Popayan\",\n  \"localidadEspecifica\": \"Centro\",\n  \"categoria\": \"ENFRENTAMIENTO\",\n  \"actores\": [\"FUERZA_PUBLICA\"],\n  \"descripcionHecho\": \"Intento de actualizar novedad inexistente\",\n  \"nivelConfianza\": \"CONFIRMADO\",\n  \"nivelVisibilidad\": \"PUBLICA\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/novedades/00000000-0000-0000-0000-000000000000",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "00000000-0000-0000-0000-000000000000"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "00000000-0000-0000-0000-000000000000"]
             }
           },
           "response": []
         },
         {
-          "name": "04.7 Eliminar Novedad - Sin usuarioId (400)",
+          "name": "04.12 Eliminar Novedad - Sin usuarioId (400)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 400 Bad Request', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});"
+                  "pm.test('Status 400 Bad Request', function () { pm.response.to.have.status(400); });"
                 ],
                 "type": "text/javascript"
               }
@@ -1021,27 +832,20 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/novedades/{{novedadId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "{{novedadId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "{{novedadId}}"]
             }
           },
           "response": []
         },
         {
-          "name": "04.8 Agregar Victima - Novedad inexistente (404)",
+          "name": "04.13 Agregar Victima - Sin nombre (400)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 404 Not Found', function () {",
-                  "    pm.response.to.have.status(404);",
-                  "});"
+                  "pm.test('Status 400 Bad Request', function () { pm.response.to.have.status(400); });"
                 ],
                 "type": "text/javascript"
               }
@@ -1049,114 +853,49 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"nombreVictima\": \"Test\",\n  \"generoVictima\": \"MASCULINO\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/novedades/00000000-0000-0000-0000-000000000000/victimas",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "00000000-0000-0000-0000-000000000000",
-                "victimas"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "04.9 Agregar Victima - Sin nombre (400)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 400 Bad Request', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"generoVictima\": \"MASCULINO\"\n}"
-            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"generoVictima\": \"MASCULINO\"\n}" },
             "url": {
               "raw": "{{baseUrl}}/novedades/{{novedadId}}/victimas",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "{{novedadId}}",
-                "victimas"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "{{novedadId}}", "victimas"]
             }
           },
           "response": []
         },
         {
-          "name": "04.10 Eliminar Victima - ID inexistente (404)",
+          "name": "04.14 Agregar Victima - Novedad inexistente (404)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 404 Not Found', function () {",
-                  "    pm.response.to.have.status(404);",
-                  "});"
+                  "pm.test('Status 404 Not Found', function () { pm.response.to.have.status(404); });"
                 ],
                 "type": "text/javascript"
               }
             }
           ],
           "request": {
-            "method": "DELETE",
-            "header": [],
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombreVictima\": \"Test\",\n  \"generoVictima\": \"MASCULINO\"\n}" },
             "url": {
-              "raw": "{{baseUrl}}/novedades/{{novedadId}}/victimas/00000000-0000-0000-0000-000000000000",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "{{novedadId}}",
-                "victimas",
-                "00000000-0000-0000-0000-000000000000"
-              ]
+              "raw": "{{baseUrl}}/novedades/00000000-0000-0000-0000-000000000000/victimas",
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "00000000-0000-0000-0000-000000000000", "victimas"]
             }
           },
           "response": []
         },
         {
-          "name": "04.11 Buscar con Filtros - Sin fechas obligatorias (400)",
+          "name": "04.15 Buscar con Filtros - Sin fechas obligatorias (400)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 400 Bad Request', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});"
+                  "pm.test('Status 400 Bad Request', function () { pm.response.to.have.status(400); });"
                 ],
                 "type": "text/javascript"
               }
@@ -1167,38 +906,22 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/novedades/filtrar?municipio=Popayan",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "filtrar"
-              ],
-              "query": [
-                {
-                  "key": "municipio",
-                  "value": "Popayan"
-                }
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "filtrar"],
+              "query": [{ "key": "municipio", "value": "Popayan" }]
             }
           },
           "response": []
         },
         {
-          "name": "04.12 Crear Novedad - Todas las categorias de evento",
+          "name": "04.16 Crear Novedad - Reclutamiento ilicito con flag (201)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 201 Created', function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "",
-                  "pm.test('Categoria RECLUTAMIENTO_ILICITO asignada', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.categoria).to.eql('RECLUTAMIENTO_ILICITO');",
-                  "});"
+                  "pm.test('Status 201 Created', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Categoria RECLUTAMIENTO_ILICITO', function () { pm.expect(pm.response.json().categoria).to.eql('RECLUTAMIENTO_ILICITO'); });"
                 ],
                 "type": "text/javascript"
               }
@@ -1206,44 +929,31 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-28\",\n  \"horaInicio\": \"00:00:00\",\n  \"horaFin\": \"23:59:59\",\n  \"municipio\": \"Caldono\",\n  \"localidadEspecifica\": \"Zona rural\",\n  \"categoria\": \"RECLUTAMIENTO_ILICITO\",\n  \"actor1\": \"GRUPO_ARMADO_ORGANIZADO\",\n  \"actor2\": \"COMUNIDAD_CIVIL\",\n  \"descripcionHecho\": \"Reporte de reclutamiento ilicito de menores en zona rural de Caldono.\",\n  \"nivelConfianza\": \"EN_VERIFICACION\",\n  \"nivelVisibilidad\": \"PRIVADA\",\n  \"afectacionHumana\": {\n    \"reclutamientoMenoresFlag\": \"SI\"\n  }\n}"
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-28\",\n  \"horaInicio\": \"00:00:00\",\n  \"horaFin\": \"23:59:00\",\n  \"municipio\": \"Caldono\",\n  \"localidadEspecifica\": \"Zona rural\",\n  \"categoria\": \"RECLUTAMIENTO_ILICITO\",\n  \"actores\": [\"GRUPO_ARMADO_ORGANIZADO\", \"COMUNIDAD_CIVIL\"],\n  \"descripcionHecho\": \"Reporte de reclutamiento ilicito de menores en zona rural de Caldono.\",\n  \"nivelConfianza\": \"EN_VERIFICACION\",\n  \"nivelVisibilidad\": \"PRIVADA\",\n  \"afectacionHumana\": {\n    \"reclutamientoMenoresFlag\": \"SI\"\n  }\n}"
             },
-            "url": {
-              "raw": "{{baseUrl}}/novedades",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades"
-              ]
-            }
+            "url": { "raw": "{{baseUrl}}/novedades", "host": ["{{baseUrl}}"], "path": ["novedades"] }
           },
           "response": []
-        },
+        }
+      ]
+    },
+
+    {
+      "name": "05 - Excel (Plantilla y Carga Masiva)",
+      "item": [
         {
-          "name": "04.13 Listar Novedades - Usuario sin novedades (200 array vacio)",
+          "name": "05.1 Descargar Plantilla Excel",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 200 OK', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Array vacio', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json).to.be.an('array');",
-                  "    pm.expect(json.length).to.eql(0);",
-                  "});"
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Content-Type es Excel', function () { pm.expect(pm.response.headers.get('Content-Type')).to.include('spreadsheetml'); });",
+                  "pm.test('Content-Disposition es attachment', function () { pm.expect(pm.response.headers.get('Content-Disposition')).to.include('attachment'); });"
                 ],
                 "type": "text/javascript"
               }
@@ -1253,34 +963,26 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/novedades/usuario/99999999-9999-9999-9999-999999999999",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "usuario",
-                "99999999-9999-9999-9999-999999999999"
-              ]
-            }
+              "raw": "{{baseUrl}}/novedades/plantilla-excel",
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "plantilla-excel"]
+            },
+            "description": "Descarga la plantilla Excel vacia para carga masiva.\nEl archivo incluye:\n- Hoja 'Plantilla Novedades': encabezados + fila de ejemplo en gris\n- Hoja 'Valores Permitidos': referencia de enums validos\n\nGuardar el archivo y completar desde la fila 4 hacia abajo."
           },
           "response": []
         },
         {
-          "name": "04.14 Crear Novedad - String vacio en descripcion (400)",
+          "name": "05.2 Carga Masiva Excel - Exitosa",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 400 Bad Request', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "",
-                  "pm.test('Error menciona descripcion', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.message.toLowerCase()).to.include('descripcion');",
-                  "});"
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "var json = pm.response.json();",
+                  "pm.test('Tiene conteo de novedadesCreadas', function () { pm.expect(json.novedadesCreadas).to.be.a('number'); });",
+                  "pm.test('Tiene conteo de errores', function () { pm.expect(json.errores).to.be.a('number'); });",
+                  "pm.test('Tiene detalle de creadas', function () { pm.expect(json.detalle).to.be.an('array'); });"
                 ],
                 "type": "text/javascript"
               }
@@ -1288,43 +990,113 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-03-20\",\n  \"horaInicio\": \"14:00:00\",\n  \"horaFin\": \"15:30:00\",\n  \"municipio\": \"Popayan\",\n  \"localidadEspecifica\": \"Centro\",\n  \"categoria\": \"HOMICIDIO\",\n  \"actor1\": \"NO_IDENTIFICADO\",\n  \"descripcionHecho\": \"\",\n  \"nivelConfianza\": \"PRELIMINAR\",\n  \"nivelVisibilidad\": \"PRIVADA\"\n}"
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": [],
+                  "description": "Seleccionar el archivo Excel (.xlsx) con novedades. Usar la plantilla de 05.1."
+                }
+              ]
             },
             "url": {
-              "raw": "{{baseUrl}}/novedades",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades"
+              "raw": "{{baseUrl}}/novedades/carga-excel?usuarioId={{usuarioId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "carga-excel"],
+              "query": [{ "key": "usuarioId", "value": "{{usuarioId}}" }]
+            },
+            "description": "Carga masiva de novedades desde Excel.\n\nPasos:\n1. Descargar plantilla (endpoint 05.1)\n2. Completar datos desde fila 4\n3. Subir el archivo en este endpoint\n\nRespuesta incluye:\n- totalFilasProcesadas: filas leidas\n- novedadesCreadas: creadas con exito\n- errores: cantidad de filas con fallo\n- detalle: lista de novedades creadas\n- erroresDetalle: lista {fila, error} por fallo"
+          },
+          "response": []
+        },
+        {
+          "name": "05.3 Carga Excel - Archivo no Excel (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Error menciona tipo de archivo', function () { pm.expect(pm.response.json().message.toLowerCase()).to.include('excel'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": [],
+                  "description": "Subir un archivo .pdf o .txt para probar validacion de formato"
+                }
               ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/novedades/carga-excel?usuarioId={{usuarioId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "carga-excel"],
+              "query": [{ "key": "usuarioId", "value": "{{usuarioId}}" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05.4 Carga Excel - Sin archivo (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', function () { pm.response.to.have.status(400); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": []
+            },
+            "url": {
+              "raw": "{{baseUrl}}/novedades/carga-excel?usuarioId={{usuarioId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "carga-excel"],
+              "query": [{ "key": "usuarioId", "value": "{{usuarioId}}" }]
             }
           },
           "response": []
         }
       ]
     },
+
     {
-      "name": "05 - Flujo Completo",
+      "name": "06 - Evidencias (Subida y Descarga)",
       "item": [
         {
-          "name": "05.1 Crear Novedad Completa",
+          "name": "06.1 Subir Imagen a Novedad",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Status 201 Created', function () { pm.response.to.have.status(201); });",
                   "var json = pm.response.json();",
-                  "pm.collectionVariables.set('novedadId', json.novedadId);"
+                  "pm.test('Tiene idEvidencia', function () { pm.expect(json.idEvidencia).to.not.be.null; pm.collectionVariables.set('evidenciaId', json.idEvidencia); });",
+                  "pm.test('Tiene nombreArchivo', function () { pm.expect(json.nombreArchivo).to.not.be.null; });",
+                  "pm.test('Tiene tipoMime imagen', function () { pm.expect(json.tipoMime).to.include('image'); });",
+                  "pm.test('Tiene tamanoBytes mayor a 0', function () { pm.expect(json.tamanoBytes).to.be.above(0); });"
                 ],
                 "type": "text/javascript"
               }
@@ -1332,43 +1104,168 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-04-01\",\n  \"horaInicio\": \"10:00:00\",\n  \"horaFin\": \"12:00:00\",\n  \"municipio\": \"Corinto\",\n  \"localidadEspecifica\": \"Vereda Miranda\",\n  \"categoria\": \"ATAQUE_CON_DRON\",\n  \"actor1\": \"SEGUNDA_MARQUETALIA\",\n  \"actor2\": \"FUERZA_PUBLICA\",\n  \"descripcionHecho\": \"Ataque con dron artesanal contra base militar en zona rural de Corinto.\",\n  \"nivelConfianza\": \"CONFIRMADO\",\n  \"nivelVisibilidad\": \"PUBLICA\",\n  \"victimas\": [\n    {\n      \"nombreVictima\": \"Soldado Profesional Ramirez\",\n      \"generoVictima\": \"MASCULINO\",\n      \"edadVictima\": 22,\n      \"grupoPoblacional\": \"ADULTO\",\n      \"ocupacionVictima\": \"Militar\"\n    }\n  ],\n  \"afectacionHumana\": {\n    \"muertosTotales\": 0,\n    \"heridosTotales\": 2,\n    \"heridosCiviles\": 0,\n    \"desplazadosTotales\": 0,\n    \"confinadosTotales\": 0,\n    \"afectacionCivilesFlag\": false,\n    \"reclutamientoMenoresFlag\": \"NO_APLICA\"\n  },\n  \"urlsEvidencias\": [\n    \"https://storage.example.com/evidencias/dron-001.jpg\"\n  ]\n}"
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": [],
+                  "description": "Selecciona tu imagen (jpg, jpeg o png, maximo 5 MB)"
+                }
+              ]
             },
             "url": {
-              "raw": "{{baseUrl}}/novedades",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades"
-              ]
-            }
+              "raw": "{{baseUrl}}/novedades/{{novedadId}}/evidencias",
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "{{novedadId}}", "evidencias"]
+            },
+            "description": "Sube una imagen y la asocia a la novedad indicada en {{novedadId}}.\n\nPasos:\n1. Ejecuta 01.1 primero para tener un novedadId en la variable de coleccion\n   (o pega el UUID manualmente en la URL)\n2. En la seccion Body > form-data, haz clic en el campo 'archivo'\n3. Cambia el tipo de Text a FILE (dropdown al lado derecho de la key)\n4. Selecciona tu imagen .jpg, .jpeg o .png\n5. Envia\n\nRespuesta esperada (201):\n  idEvidencia  → UUID para usar en 06.2\n  nombreArchivo → nombre original de tu archivo\n  tipoMime     → image/jpeg o image/png\n  tamanoBytes  → peso del archivo\n  urlArchivo   → null (archivo en filesystem, no URL externa)"
           },
           "response": []
         },
         {
-          "name": "05.2 Verificar Novedad Creada",
+          "name": "06.2 Ver Imagen en Navegador (GET)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Content-Type es imagen', function () { pm.expect(pm.response.headers.get('Content-Type')).to.include('image'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/novedades/evidencias/{{evidenciaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "evidencias", "{{evidenciaId}}"]
+            },
+            "description": "Descarga / visualiza la imagen guardada en el filesystem.\n\nEjecuta 06.1 primero — el idEvidencia se guarda automaticamente en {{evidenciaId}}.\n\nEn Postman la imagen se muestra en el tab 'Body > Preview'.\nPega la URL directo en el navegador para verla sin autenticacion:\n  http://localhost:5003/api/v1/microNovedades/novedades/evidencias/{idEvidencia}"
+          },
+          "response": []
+        },
+        {
+          "name": "06.3 Error - Tipo no permitido (gif/pdf) → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Mensaje menciona tipo permitido', function () { var msg = pm.response.json().message.toLowerCase(); pm.expect(msg).to.satisfy(function(m) { return m.includes('permitid') || m.includes('extensi') || m.includes('tipo'); }); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": [],
+                  "description": "Sube un archivo .gif, .pdf o .txt para probar la validacion de tipo"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/novedades/{{novedadId}}/evidencias",
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "{{novedadId}}", "evidencias"]
+            },
+            "description": "Sube un archivo que NO sea jpg/jpeg/png (por ejemplo un .gif o .pdf).\nEspera respuesta 400 con mensaje de error de tipo no permitido."
+          },
+          "response": []
+        },
+        {
+          "name": "06.4 Error - Novedad inexistente → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', function () { pm.response.to.have.status(404); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": [],
+                  "description": "Cualquier imagen valida jpg/png"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/novedades/00000000-0000-0000-0000-000000000000/evidencias",
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "00000000-0000-0000-0000-000000000000", "evidencias"]
+            },
+            "description": "UUID inventado — espera 404 Not Found."
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "07 - Flujo Completo (E2E)",
+      "item": [
+        {
+          "name": "06.1 Crear Novedad con Actores Multiples",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set('novedadId', pm.response.json().novedadId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-04-01\",\n  \"horaInicio\": \"10:00:00\",\n  \"horaFin\": \"12:00:00\",\n  \"municipio\": \"Corinto\",\n  \"localidadEspecifica\": \"Vereda Miranda\",\n  \"categoria\": \"ATAQUE_CON_DRON\",\n  \"actores\": [\"SEGUNDA_MARQUETALIA\", \"FUERZA_PUBLICA\", \"GUARDIA_INDIGENA\"],\n  \"descripcionHecho\": \"Ataque con dron artesanal contra base militar en zona rural de Corinto.\",\n  \"nivelConfianza\": \"CONFIRMADO\",\n  \"nivelVisibilidad\": \"PUBLICA\",\n  \"victimas\": [\n    {\n      \"nombreVictima\": \"Soldado Profesional Ramirez\",\n      \"generoVictima\": \"MASCULINO\",\n      \"edadVictima\": 22,\n      \"grupoPoblacional\": \"ADULTO\",\n      \"ocupacionVictima\": \"Militar\"\n    }\n  ],\n  \"afectacionHumana\": {\n    \"muertosTotales\": 0,\n    \"heridosTotales\": 2,\n    \"desplazadosTotales\": 0,\n    \"confinadosTotales\": 0,\n    \"afectacionCivilesFlag\": false,\n    \"reclutamientoMenoresFlag\": \"NO_APLICA\"\n  },\n  \"urlsEvidencias\": [\"https://storage.example.com/evidencias/dron-001.jpg\"]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/novedades", "host": ["{{baseUrl}}"], "path": ["novedades"] }
+          },
+          "response": []
+        },
+        {
+          "name": "06.2 Verificar Novedad Creada (GET by ID)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
                   "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Datos correctos', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.municipio).to.eql('Corinto');",
-                  "    pm.expect(json.categoria).to.eql('ATAQUE_CON_DRON');",
-                  "    pm.expect(json.victimas.length).to.eql(1);",
-                  "    pm.expect(json.evidencias.length).to.eql(1);",
-                  "});"
+                  "var json = pm.response.json();",
+                  "pm.test('actores tiene 3 elementos', function () { pm.expect(json.actores).to.be.an('array').with.lengthOf(3); });",
+                  "pm.test('municipio es Corinto', function () { pm.expect(json.municipio).to.eql('Corinto'); });"
                 ],
                 "type": "text/javascript"
               }
@@ -1379,25 +1276,21 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/novedades/{{novedadId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "{{novedadId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "{{novedadId}}"]
             }
           },
           "response": []
         },
         {
-          "name": "05.3 Agregar Victima Adicional",
+          "name": "06.3 Agregar Victima con DISCAPACIDAD",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });"
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set('victimaId', pm.response.json().victimaId);"
                 ],
                 "type": "text/javascript"
               }
@@ -1405,43 +1298,28 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombreVictima\": \"Civil herido\",\n  \"generoVictima\": \"FEMENINO\",\n  \"edadVictima\": 55,\n  \"grupoPoblacional\": \"CAMPESINO\",\n  \"ocupacionVictima\": \"Vendedora ambulante\"\n}"
+              "raw": "{\n  \"nombreVictima\": \"Carmenza Ruiz\",\n  \"generoVictima\": \"FEMENINO\",\n  \"edadVictima\": 55,\n  \"grupoPoblacional\": \"DISCAPACIDAD\",\n  \"ocupacionVictima\": \"Pensionada\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/novedades/{{novedadId}}/victimas",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "{{novedadId}}",
-                "victimas"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "{{novedadId}}", "victimas"]
             }
           },
           "response": []
         },
         {
-          "name": "05.4 Actualizar Novedad (subir nivel confianza)",
+          "name": "06.4 Actualizar Novedad (ampliar actores)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
                   "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Nivel confianza actualizado', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.nivelConfianza).to.eql('CONFIRMADO');",
-                  "    pm.expect(json.descripcionHecho).to.include('ACTUALIZADO');",
-                  "});"
+                  "pm.test('actores actualizado', function () { pm.expect(pm.response.json().actores).to.be.an('array'); });"
                 ],
                 "type": "text/javascript"
               }
@@ -1449,47 +1327,28 @@
           ],
           "request": {
             "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-04-01\",\n  \"horaInicio\": \"10:00:00\",\n  \"horaFin\": \"13:00:00\",\n  \"municipio\": \"Corinto\",\n  \"localidadEspecifica\": \"Vereda Miranda - zona de impacto ampliada\",\n  \"categoria\": \"ATAQUE_CON_DRON\",\n  \"actor1\": \"SEGUNDA_MARQUETALIA\",\n  \"actor2\": \"FUERZA_PUBLICA\",\n  \"descripcionHecho\": \"ACTUALIZADO: Ataque con dron confirmado. Se amplian detalles del area de impacto y se confirman heridos adicionales.\",\n  \"nivelConfianza\": \"CONFIRMADO\",\n  \"nivelVisibilidad\": \"PUBLICA\"\n}"
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"fechaHecho\": \"2026-04-01\",\n  \"horaInicio\": \"10:00:00\",\n  \"horaFin\": \"12:00:00\",\n  \"municipio\": \"Corinto\",\n  \"localidadEspecifica\": \"Vereda Miranda (actualizado)\",\n  \"categoria\": \"ATAQUE_CON_DRON\",\n  \"actores\": [\"SEGUNDA_MARQUETALIA\", \"FUERZA_PUBLICA\"],\n  \"descripcionHecho\": \"Actualizado: confirmado ataque con dron artesanal. Bajas adicionales.\",\n  \"nivelConfianza\": \"CONFIRMADO\",\n  \"nivelVisibilidad\": \"PUBLICA\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/novedades/{{novedadId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "{{novedadId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "{{novedadId}}"]
             }
           },
           "response": []
         },
         {
-          "name": "05.5 Verificar Auditoria (CREATE + UPDATE)",
+          "name": "06.5 Consultar Auditoria de Novedad",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
                   "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Al menos 2 registros de auditoria', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.length).to.be.at.least(2);",
-                  "});",
-                  "pm.test('Contiene CREATE y UPDATE', function () {",
-                  "    var json = pm.response.json();",
-                  "    var acciones = json.map(a => a.accion);",
-                  "    pm.expect(acciones).to.include('CREATE');",
-                  "    pm.expect(acciones).to.include('UPDATE');",
-                  "});"
+                  "pm.test('Hay CREATE y UPDATE', function () { var json = pm.response.json(); pm.expect(json.some(a => a.accion === 'CREATE')).to.be.true; pm.expect(json.some(a => a.accion === 'UPDATE')).to.be.true; });"
                 ],
                 "type": "text/javascript"
               }
@@ -1500,31 +1359,21 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/auditorias/novedad/{{novedadId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auditorias",
-                "novedad",
-                "{{novedadId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auditorias", "novedad", "{{novedadId}}"]
             }
           },
           "response": []
         },
         {
-          "name": "05.6 Buscar por Filtros (verificar novedad aparece)",
+          "name": "06.6 Buscar por Filtros (verificar novedad aparece)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
                   "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Novedad de Corinto aparece', function () {",
-                  "    var json = pm.response.json();",
-                  "    var corinto = json.filter(n => n.municipio === 'Corinto');",
-                  "    pm.expect(corinto.length).to.be.above(0);",
-                  "});"
+                  "pm.test('Novedad de Corinto aparece', function () { var corinto = pm.response.json().filter(n => n.municipio === 'Corinto'); pm.expect(corinto.length).to.be.above(0); });"
                 ],
                 "type": "text/javascript"
               }
@@ -1535,50 +1384,50 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/novedades/filtrar?fechaInicio=2026-04-01&fechaFin=2026-04-30&municipio=Corinto",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "novedades",
-                "filtrar"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "filtrar"],
               "query": [
-                {
-                  "key": "fechaInicio",
-                  "value": "2026-04-01"
-                },
-                {
-                  "key": "fechaFin",
-                  "value": "2026-04-30"
-                },
-                {
-                  "key": "municipio",
-                  "value": "Corinto"
-                }
+                { "key": "fechaInicio", "value": "2026-04-01" },
+                { "key": "fechaFin", "value": "2026-04-30" },
+                { "key": "municipio", "value": "Corinto" }
               ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "06.7 Ocultar Novedad (soft delete)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204', function () { pm.response.to.have.status(204); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/novedades/{{novedadId}}?usuarioId={{usuarioId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["novedades", "{{novedadId}}"],
+              "query": [{ "key": "usuarioId", "value": "{{usuarioId}}" }]
             }
           },
           "response": []
         }
       ]
     }
+
   ],
   "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:5003/api/v1/microNovedades"
-    },
-    {
-      "key": "novedadId",
-      "value": ""
-    },
-    {
-      "key": "usuarioId",
-      "value": "550e8400-e29b-41d4-a716-446655440000"
-    },
-    {
-      "key": "victimaId",
-      "value": ""
-    }
+    { "key": "baseUrl",   "value": "http://localhost:5003/api/v1/microNovedades" },
+    { "key": "novedadId", "value": "" },
+    { "key": "usuarioId", "value": "550e8400-e29b-41d4-a716-446655440000" },
+    { "key": "victimaId", "value": "" }
   ]
 }

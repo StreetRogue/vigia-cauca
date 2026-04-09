@@ -33,6 +33,12 @@ public interface NovedadRepository extends JpaRepository<NovedadEntity, UUID> {
     // Filtrar por nivel de visibilidad
     List<NovedadEntity> findByNivelVisibilidad(NivelVisibilidad nivelVisibilidad);
 
+    @Query("SELECT n FROM NovedadEntity n WHERE n.oculto = false")
+    List<NovedadEntity> findAllVisible();
+
+    @Query("SELECT n FROM NovedadEntity n WHERE n.usuarioId = :usuarioId AND n.oculto = false")
+    List<NovedadEntity> findByUsuarioIdVisible(@Param("usuarioId") UUID usuarioId);
+
     // Búsqueda avanzada para reportes con filtros opcionales
     @Query("SELECT n FROM NovedadEntity n " +
             "WHERE n.fechaHecho BETWEEN :fechaInicio AND :fechaFin " +

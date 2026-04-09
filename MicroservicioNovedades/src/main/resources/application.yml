@@ -5,6 +5,11 @@ spring:
   application:
     name: micro-novedades
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
+
   datasource:
     url: ${NOVEDADES_DB_URL:jdbc:postgresql://localhost:5432/novedades_db}
     username: ${NOVEDADES_DB_USER:postgres}
@@ -87,6 +92,12 @@ management:
   endpoint:
     health:
       show-details: always
+
+# Almacenamiento de evidencias en filesystem
+# Sobreescribir con: EVIDENCIAS_PATH=/data/evidencias
+evidencias:
+  storage:
+    path: ${EVIDENCIAS_PATH:./uploads/evidencias}
 
 # Clientes REST
 clients:

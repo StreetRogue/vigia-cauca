@@ -1,6 +1,7 @@
 package co.edu.unicauca.micronovedades.fachadaServices.mapper;
 
 import co.edu.unicauca.micronovedades.capaAccesoDatos.models.*;
+import co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.*;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion.AfectacionHumanaDTOPeticion;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion.NovedadDTOPeticion;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion.VictimaDTOPeticion;
@@ -25,6 +26,12 @@ public class NovedadMapper {
     // ==========================================
 
     public NovedadEntity toEntity(NovedadDTOPeticion dto) {
+        // actor1/actor2 se derivan de la lista actores para compatibilidad con eventos/snapshot
+        Actor actor1 = (dto.getActores() != null && !dto.getActores().isEmpty())
+                ? dto.getActores().get(0) : null;
+        Actor actor2 = (dto.getActores() != null && dto.getActores().size() > 1)
+                ? dto.getActores().get(1) : null;
+
         NovedadEntity entity = NovedadEntity.builder()
                 .usuarioId(dto.getUsuarioId())
                 .fechaHecho(dto.getFechaHecho())
@@ -33,8 +40,11 @@ public class NovedadMapper {
                 .municipio(dto.getMunicipio())
                 .localidadEspecifica(dto.getLocalidadEspecifica())
                 .categoria(dto.getCategoria())
-                .actor1(dto.getActor1())
-                .actor2(dto.getActor2())
+                .actor1(actor1)
+                .actor2(actor2)
+                .actores(dto.getActores() != null
+                        ? new java.util.HashSet<>(dto.getActores())
+                        : new java.util.HashSet<>())
                 .infraestructuraAfectada(dto.getInfraestructuraAfectada())
                 .accionInstitucional(dto.getAccionInstitucional())
                 .descripcionHecho(dto.getDescripcionHecho())
@@ -82,8 +92,9 @@ public class NovedadMapper {
                 .municipio(entity.getMunicipio())
                 .localidadEspecifica(entity.getLocalidadEspecifica())
                 .categoria(entity.getCategoria())
-                .actor1(entity.getActor1())
-                .actor2(entity.getActor2())
+                .actores(entity.getActores() != null
+                        ? new java.util.ArrayList<>(entity.getActores())
+                        : java.util.Collections.emptyList())
                 .infraestructuraAfectada(entity.getInfraestructuraAfectada())
                 .accionInstitucional(entity.getAccionInstitucional())
                 .descripcionHecho(entity.getDescripcionHecho())
@@ -127,9 +138,13 @@ public class NovedadMapper {
                 .build();
     }
 
-    public List<VictimaDTORespuesta> toVictimaDTOList(List<VictimaEntity> entities) {
+
+    // Cambiamos List por java.util.Collection en el parámetro
+    public List<VictimaDTORespuesta> toVictimaDTOList(java.util.Collection<VictimaEntity> entities) {
         if (entities == null) return Collections.emptyList();
-        return entities.stream().map(this::toVictimaDTO).collect(Collectors.toList());
+        return entities.stream()
+                .map(this::toVictimaDTO)
+                .collect(Collectors.toList());
     }
 
     // ==========================================
@@ -191,12 +206,18 @@ public class NovedadMapper {
         return EvidenciaDTORespuesta.builder()
                 .idEvidencia(entity.getIdEvidencia())
                 .urlArchivo(entity.getUrlArchivo())
+                .nombreArchivo(entity.getNombreArchivo())
+                .tipoMime(entity.getTipoMime())
+                .tamanoBytes(entity.getTamanoBytes())
                 .build();
     }
 
-    public List<EvidenciaDTORespuesta> toEvidenciaDTOList(List<EvidenciaEntity> entities) {
+    // Cambiamos List por java.util.Collection en el parámetro
+    public List<EvidenciaDTORespuesta> toEvidenciaDTOList(java.util.Collection<EvidenciaEntity> entities) {
         if (entities == null) return Collections.emptyList();
-        return entities.stream().map(this::toEvidenciaDTO).collect(Collectors.toList());
+        return entities.stream()
+                .map(this::toEvidenciaDTO)
+                .collect(Collectors.toList());
     }
 
     // ==========================================
