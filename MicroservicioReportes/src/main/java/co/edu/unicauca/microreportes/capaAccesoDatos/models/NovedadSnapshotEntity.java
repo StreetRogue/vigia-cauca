@@ -70,6 +70,10 @@ public class NovedadSnapshotEntity {
     @Column(name = "nivel_visibilidad", nullable = false)
     private NivelVisibilidad nivelVisibilidad;
 
+    @Column(name = "oculto")
+    @Builder.Default
+    private Boolean oculto = false;
+
     // Métricas de afectación humana (denormalizadas)
     @Column(name = "muertos_totales")
     @Builder.Default
