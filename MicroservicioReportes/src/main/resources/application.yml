@@ -1,0 +1,100 @@
+server:
+  port: ${PORT:5004}
+
+spring:
+  application:
+    name: micro-reportes
+
+  datasource:
+    url: ${REPORTES_DB_URL:jdbc:postgresql://localhost:5432/estadisticas_db}
+    username: ${REPORTES_DB_USER:postgres}
+    password: ${REPORTES_DB_PASS:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 10000
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 20
+        jdbc:
+          batch_size: 30
+        order_inserts: true
+        order_updates: true
+
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+    virtual-host: /
+    connection-timeout: 10000
+    listener:
+      simple:
+        acknowledge-mode: manual
+        concurrency: 2
+        max-concurrency: 5
+        prefetch: 5
+        retry:
+          enabled: true
+          initial-interval: 1000
+          max-attempts: 3
+          max-interval: 10000
+          multiplier: 2.0
+
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=60s
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,caches
+  endpoint:
+    health:
+      show-details: always
+
+# RabbitMQ Queues
+rabbitmq:
+  queue:
+    novedades: ${RABBITMQ_QUEUE_NOVEDADES:cola.novedades.estadisticas}
+  exchange:
+    novedades: ${RABBITMQ_EXCHANGE_NOVEDADES:exchange.novedades}
+  routing-key:
+    novedades: ${RABBITMQ_RK_NOVEDADES:rk.novedades.estadisticas}
+
+# Cliente REST a microservicio de novedades (fallback para enriquecer eventos)
+clients:
+  novedades:
+    base-url: ${CLIENTS_NOVEDADES_BASE_URL:http://localhost:5003}
+
+# SSE
+sse:
+  heartbeat-interval-ms: 30000
+  timeout-ms: 300000
+
+# Reportes
+reportes:
+  temp-dir: ${REPORTES_TEMP_DIR:/tmp/reportes}
+
+# Logging
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    co.edu.unicauca.microreportes: DEBUG
+    org.springframework.amqp: INFO
