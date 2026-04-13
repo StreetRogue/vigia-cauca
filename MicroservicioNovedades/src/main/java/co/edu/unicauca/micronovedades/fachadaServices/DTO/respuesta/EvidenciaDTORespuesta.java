@@ -14,5 +14,12 @@ import java.util.UUID;
 public class EvidenciaDTORespuesta {
 
     private UUID idEvidencia;
+    /** URL externa (legacy) o null si el archivo está almacenado en filesystem. */
     private String urlArchivo;
+    /** Nombre original del archivo (solo para evidencias subidas por archivo). */
+    private String nombreArchivo;
+    /** MIME type del archivo (ej: image/jpeg). */
+    private String tipoMime;
+    /** Tamaño en bytes. */
+    private Long tamanoBytes;
 }

@@ -28,8 +28,7 @@ public class NovedadDTORespuesta {
     private String municipio;
     private String localidadEspecifica;
     private CategoriaEvento categoria;
-    private Actor actor1;
-    private Actor actor2;
+    private List<Actor> actores;
     private String infraestructuraAfectada;
     private String accionInstitucional;
     private String descripcionHecho;

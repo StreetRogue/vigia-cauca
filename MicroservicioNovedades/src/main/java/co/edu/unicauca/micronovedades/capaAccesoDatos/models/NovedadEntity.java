@@ -8,9 +8,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
-
+import java.util.Set;
+import java.util.HashSet;
 @Entity
 @Table(name = "NOVEDAD")
 @Data
@@ -61,6 +63,15 @@ public class NovedadEntity {
     @Column(name = "actor_2")
     private Actor actor2;
 
+    /** Lista dinámica de actores (mínimo 1, máximo 10). */
+    // 1. Para Actores
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "novedad_actores", joinColumns = @JoinColumn(name = "novedad_id"))
+    @Column(name = "actor")
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private Set<Actor> actores = new HashSet<>(); // Cambiado a Set
+
     @Column(name = "infraestructura_afectada")
     private String infraestructuraAfectada;
 
@@ -89,19 +100,19 @@ public class NovedadEntity {
     @Builder.Default
     private Boolean reporteVictimas = false;
 
-    // ==========================================
-    // RELACIONES
-    // ==========================================
+    @Column(name = "oculto", nullable = false)
+    @Builder.Default
+    private Boolean oculto = false; // Por defecto no está oculto
 
     // ==========================================
-    // RELACIONES (Modificado para evitar bucles)
+    // RELACIONES
     // ==========================================
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "novedad", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
-    private List<VictimaEntity> victimas = new ArrayList<>();
+    private Set<VictimaEntity> victimas = new HashSet<>();
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
@@ -112,13 +123,13 @@ public class NovedadEntity {
     @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "novedad", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
-    private List<EvidenciaEntity> evidencias = new ArrayList<>();
+    private Set<EvidenciaEntity> evidencias = new HashSet<>();
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "novedad", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @Builder.Default
-    private List<AuditoriaNovedadEntity> auditorias = new ArrayList<>();
+    private Set<AuditoriaNovedadEntity> auditorias = new HashSet<>();
 
     // ==========================================
     // MÉTODOS DE DOMINIO
