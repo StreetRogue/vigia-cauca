@@ -1,0 +1,33 @@
+name: Backend CI - Novedades
+
+on:
+  push:
+    branches: [ develop, main ]
+    paths:
+      - 'MicroservicioNovedades/**'
+  pull_request:
+    branches: [ develop, main ]
+    paths:
+      - 'MicroservicioNovedades/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Compilar y empaquetar con Maven
+        # Se usa -DskipTests mientras se implementan los mocks
+        run: mvn -pl MicroservicioNovedades -am clean package -DskipTests
+
+      - name: Verificar artefacto generado
+        run: ls -l MicroservicioNovedades/target/*.jar
