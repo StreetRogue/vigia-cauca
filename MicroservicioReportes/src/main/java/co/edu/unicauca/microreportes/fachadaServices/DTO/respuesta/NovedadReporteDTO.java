@@ -21,9 +21,14 @@ public class NovedadReporteDTO {
     private CategoriaEvento categoria;
     private Actor actor1;
     private Actor actor2;
+    /** Representación legible de los actores para mostrar en reportes */
+    private String actoresDisplay;
     private NivelConfianza nivelConfianza;
     private Integer muertosTotales;
+    private Integer muertosCiviles;
+    private Integer muertosFuerzaPublica;
     private Integer heridosTotales;
+    private Integer heridosCiviles;
     private Integer desplazadosTotales;
     private Integer confinadosTotales;
     private String descripcionHecho;
