@@ -24,6 +24,7 @@ import java.util.Map;
 public class NovedadEventoDTO {
     private String tipo;
     private String novedadId;
+    private Boolean oculto;
     private String usuarioId;
     private String municipio;
     private String categoria;

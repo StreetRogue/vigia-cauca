@@ -113,31 +113,23 @@ public class ProyeccionServiceImpl implements IProyeccionService {
     @Override
     @Transactional
     public void procesarNovedadEliminada(NovedadEventoDTO evento) {
-        String idempotencyKey = generarIdempotencyKey(evento);
-        if (yaFueProcesado(idempotencyKey)) {
-            log.warn("Evento duplicado ignorado: {}", idempotencyKey);
-            return;
-        }
-
         UUID novedadId = UUID.fromString(evento.getNovedadId());
         Optional<NovedadSnapshotEntity> existenteOpt = snapshotRepository.findById(novedadId);
 
         if (existenteOpt.isPresent()) {
             NovedadSnapshotEntity existente = existenteOpt.get();
 
-            // 1. Decrementar stats
-            actualizarAgregacion(existente, false);
+            // NO llamamos a actualizarAgregacion(existente, false) porque queremos que
+            // la estadística SIGA CONTANDO este evento.
 
-            // 2. Eliminar snapshot
-            snapshotRepository.delete(existente);
-        } else {
-            log.warn("Snapshot no encontrado para eliminación: {}", novedadId);
+            // Solo marcamos el snapshot como oculto para los reportes
+            existente.setOculto(true);
+            snapshotRepository.save(existente);
         }
 
-        registrarEventoProcesado(evento, TipoEvento.NOVEDAD_ELIMINADA, idempotencyKey);
+        registrarEventoProcesado(evento, TipoEvento.NOVEDAD_ELIMINADA, generarIdempotencyKey(evento));
         invalidarCaches();
-
-        log.info("Proyección ELIMINADA para novedad: {}", evento.getNovedadId());
+        log.info("Snapshot marcado como OCULTO: {}", novedadId);
     }
 
     // ==========================================
