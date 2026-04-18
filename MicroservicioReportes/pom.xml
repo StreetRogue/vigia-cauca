@@ -12,9 +12,9 @@
     </parent>
 
     <groupId>co.edu.unicauca</groupId>
-    <artifactId>micro-reportes</artifactId>
+    <artifactId>MicroservicioReportes</artifactId>
     <version>1.0.0</version>
-    <name>micro-reportes</name>
+    <name>MicroservicioReportes</name>
     <description>Microservicio de Reportes y Estadísticas - Vigía Cauca</description>
 
     <properties>
