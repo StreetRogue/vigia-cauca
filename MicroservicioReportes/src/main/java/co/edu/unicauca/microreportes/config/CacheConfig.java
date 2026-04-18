@@ -26,7 +26,7 @@ public class CacheConfig {
     @Bean
     public CacheManager cacheManager() {
         CaffeineCacheManager manager = new CaffeineCacheManager(
-                "kpis", "serieTemporal", "mapaCalor", "dashboard"
+                "kpis", "serieTemporal", "mapaCalor", "dashboard", "victimasEstadisticas"
         );
         manager.setCaffeine(Caffeine.newBuilder()
                 .maximumSize(500)
