@@ -26,8 +26,7 @@ jobs:
           cache: 'maven'
 
       - name: Compilar y empaquetar con Maven
-        # Se omiten los tests (-DskipTests) por dependencia de PostgreSQL y RabbitMQ
-        run: mvn -pl MicroservicioReportes -am clean package -DskipTests
+        run: mvn -f MicroservicioReportes/pom.xml clean package -DskipTests
 
       - name: Verificar artefacto generado
         run: ls -l MicroservicioReportes/target/*.jar
