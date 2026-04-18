@@ -26,8 +26,7 @@ jobs:
           cache: 'maven'
 
       - name: Compilar y empaquetar con Maven
-        # Se usa -DskipTests mientras se implementan los mocks
-        run: mvn -pl MicroservicioNovedades -am clean package -DskipTests
+        run: mvn -f MicroservicioNovedades/pom.xml clean package -DskipTests
 
       - name: Verificar artefacto generado
         run: ls -l MicroservicioNovedades/target/*.jar
