@@ -274,7 +274,7 @@ export function NovedadesScreen() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   const menuItems = [
-    { label: 'DASHBOARD', icon: <img src={dashboardIcon} alt="" />, to: '/' },
+    { label: 'DASHBOARD', icon: <img src={dashboardIcon} alt="" /> },
     { label: 'NOVEDADES', icon: <img src={novedadesIcon} alt="" />, to: '/novedades' },
     { label: 'USUARIOS', icon: <img src={usuariosIcon} alt="" />, to: '/usuarios' },
     { label: 'REPORTES', icon: <img src={reportesIcon} alt="" /> },
