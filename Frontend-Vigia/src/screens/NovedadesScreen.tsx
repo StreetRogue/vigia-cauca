@@ -283,7 +283,7 @@ export function NovedadesScreen() {
         }}
       />
 
-      <Sidebar />
+      <Sidebar title="VIGIA CAUCA" subtitle="GESTION INTEGRAL" />
       <main className="main-content">
         <header className="main-header">
           <div className="breadcrumb">

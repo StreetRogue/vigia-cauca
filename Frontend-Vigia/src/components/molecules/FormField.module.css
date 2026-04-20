@@ -1,0 +1,30 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #5f6880;
+  font-weight: 700;
+}
+
+.labelError {
+  color: #e74c3c;
+}
+
+.supportContainer {
+  min-height: 1.2em;
+  font-size: 10px;
+}
+
+.hint {
+  color: #8e97aa;
+}
+
+.error {
+  color: #e74c3c;
+}

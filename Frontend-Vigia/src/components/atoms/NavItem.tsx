@@ -1,20 +1,23 @@
-import { IconType } from 'react-icons';
+import type { ReactNode } from "react";
+import styles from "./NavItem.module.css";
 
 interface NavItemProps {
   label: string;
   isSelected: boolean;
   onClick: () => void;
-  icon?: IconType;
+  icon?: ReactNode;
 }
 
-export function NavItem({ label, isSelected, onClick, icon: Icon }: NavItemProps) {
+export function NavItem({ label, isSelected, onClick, icon }: NavItemProps) {
   return (
     <button
-      className={`nav-item ${isSelected ? 'selected' : ''}`}
+      className={[styles.navItem, isSelected ? styles.selected : ""].filter(Boolean).join(" ")}
       onClick={onClick}
+      type="button"
+      aria-current={isSelected ? "page" : undefined}
     >
-      {Icon && <Icon className="nav-icon" />}
-      <span className="nav-label">{label}</span>
+      <span className={styles.navIcon} aria-hidden="true">{icon}</span>
+      <span className={styles.navLabel}>{label}</span>
     </button>
   );
 }

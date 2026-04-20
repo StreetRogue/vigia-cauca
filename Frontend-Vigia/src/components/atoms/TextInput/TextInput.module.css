@@ -1,0 +1,40 @@
+.input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 40px;
+  border: 1px solid var(--color-border-medium);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: var(--color-surface-body);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 0.9375rem;
+  line-height: 1;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input:hover {
+  border-color: var(--color-primary-400);
+}
+
+.input:focus-visible {
+  outline: none;
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px var(--color-primary-ring);
+}
+
+.input:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.invalid {
+  border-color: var(--color-danger-500);
+}

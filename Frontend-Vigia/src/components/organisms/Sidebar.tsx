@@ -1,19 +1,27 @@
-import { NavMenu } from '../molecules/NavMenu';
-import { UserCard } from '../molecules/UserCard';
+import type { ReactNode } from "react";
+import styles from "./Sidebar.module.css";
 
-export function Sidebar() {
+export interface SidebarProps {
+  title: string;
+  subtitle: string;
+  mark?: string;
+  nav?: ReactNode;
+  footer?: ReactNode;
+}
+
+export function Sidebar({ title, subtitle, mark = "VC", nav, footer }: SidebarProps) {
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
-        <h1 className="sidebar-title">VIGIA CAUCA</h1>
-        <span className="sidebar-subtitle">GESTION INTEGRAL</span>
+    <aside className={styles.sidebar}>
+      <div className={styles.sidebarGrid} aria-hidden="true" />
+      <div className={styles.sidebarHeader}>
+        <div className={styles.markBox}>{mark}</div>
+        <div>
+          <h1 className={styles.sidebarTitle}>{title}</h1>
+          <span className={styles.sidebarSubtitle}>{subtitle}</span>
+        </div>
       </div>
-      <div className="sidebar-content">
-        <NavMenu />
-      </div>
-      <div className="sidebar-footer">
-        <UserCard name="Actual_user" role="Admin Rol" />
-      </div>
+      {nav ? <div className={styles.sidebarContent}>{nav}</div> : null}
+      {footer ? <div className={styles.sidebarFooter}>{footer}</div> : null}
     </aside>
   );
 }
