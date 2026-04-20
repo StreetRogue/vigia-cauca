@@ -7,9 +7,9 @@ import {
   resolveAppRole,
   type AppRole,
   type KeycloakTokenLike,
-} from '../constants/menuConfig';
-import { NavMenu } from '../components/molecules/NavMenu';
-import { UserCard } from '../components/molecules/UserCard';
+} from '../../constants/menuConfig';
+import { NavMenu } from '../molecules/NavMenu';
+import { UserCard } from '../molecules/UserCard';
 
 export interface User {
   name: string;

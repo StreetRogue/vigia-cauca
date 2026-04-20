@@ -1,29 +1,32 @@
-import { useState } from 'react';
-import { NavItem } from '../atoms/NavItem';
-import { MdDashboard, MdReport, MdSettings, MdPeople } from 'react-icons/md';
-import { FaRegNewspaper } from 'react-icons/fa';
+import { useState } from "react";
+import type { ReactNode } from "react";
+import { NavItem } from "../atoms/NavItem";
+import styles from "./NavMenu.module.css";
 
-export function NavMenu() {
-  const [selectedItem, setSelectedItem] = useState('DASHBOARD');
+export interface NavMenuProps {
+  items: Array<{ label: string; icon?: ReactNode }>;
+  selectedItem?: string;
+  onItemSelect?: (label: string) => void;
+}
 
-  const menuItems = [
-    { label: 'DASHBOARD', icon: MdDashboard },
-    { label: 'NOVEDADES', icon: FaRegNewspaper },
-    { label: 'USUARIOS', icon: MdPeople },
-    { label: 'REPORTES', icon: MdReport },
-    { label: 'CONFIGURACION', icon: MdSettings },
-  ];
+export function NavMenu({ items, selectedItem: initialSelected = "", onItemSelect }: NavMenuProps) {
+  const [selectedItem, setSelectedItem] = useState(initialSelected);
+
+  const handleItemClick = (label: string) => {
+    setSelectedItem(label);
+    onItemSelect?.(label);
+  };
 
   return (
-    <nav className="nav-menu">
-      <ul className="nav-list">
-        {menuItems.map((item) => (
-          <li key={item.label}>
+    <nav className={styles.navMenu} aria-label="Navegacion principal">
+      <ul className={styles.navList}>
+        {items.map((item) => (
+          <li key={item.label} className={styles.navListItem}>
             <NavItem
               label={item.label}
               icon={item.icon}
               isSelected={selectedItem === item.label}
-              onClick={() => setSelectedItem(item.label)}
+              onClick={() => handleItemClick(item.label)}
             />
           </li>
         ))}
