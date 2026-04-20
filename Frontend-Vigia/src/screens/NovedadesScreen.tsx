@@ -15,6 +15,23 @@ import {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const EXCEL_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 
+/** Auto-formats a raw string into DD/MM/AAAA as the user types. */
+function formatDateInput(raw: string): string {
+  // Keep only digits
+  const digits = raw.replace(/\D/g, '').slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
+/** Auto-formats a raw string into HH:MM as the user types. */
+function formatTimeInput(raw: string): string {
+  // Keep only digits
+  const digits = raw.replace(/\D/g, '').slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}:${digits.slice(2)}`;
+}
+
 function validateDate(value: string): string {
   if (!value.trim()) return 'Campo obligatorio';
   const [day, month, year] = value.split('/').map(Number);
@@ -43,6 +60,7 @@ interface Victima {
 export function NovedadesScreen() {
   const [currentStep, setCurrentStep] = useState(1);
   const excelInputRef = useRef<HTMLInputElement>(null);
+  const evidenciaInputRef = useRef<HTMLInputElement>(null);
   const [showExcelModal, setShowExcelModal] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
 
@@ -62,7 +80,8 @@ export function NovedadesScreen() {
 
   // ── Step 2 state ─────────────────────────────────────────────────────────
   const [categoria, setCategoria] = useState('');
-  const [actor, setActor] = useState('');
+  const [actores, setActores] = useState<string[]>([]);
+  const [actorSeleccionado, setActorSeleccionado] = useState('');
   const [nivelConfianza, setNivelConfianza] = useState('');
   const [nivelVisibilidad, setNivelVisibilidad] = useState('');
   const [descripcion, setDescripcion] = useState('');
@@ -71,7 +90,7 @@ export function NovedadesScreen() {
 
   // ── Step 2 errors ────────────────────────────────────────────────────────
   const [errCategoria, setErrCategoria] = useState('');
-  const [errActor, setErrActor] = useState('');
+  const [errActores, setErrActores] = useState('');
   const [errNivelConfianza, setErrNivelConfianza] = useState('');
   const [errNivelVisibilidad, setErrNivelVisibilidad] = useState('');
   const [errDescripcion, setErrDescripcion] = useState('');
@@ -127,14 +146,14 @@ export function NovedadesScreen() {
 
   function validateStep2(): boolean {
     const e1 = required(categoria);
-    const e2 = required(actor);
+    const e2 = actores.length === 0 ? 'Debe agregar al menos un actor' : '';
     const e3 = required(nivelConfianza);
     const e4 = required(nivelVisibilidad);
     const e5 = descripcion.trim().length < 20 ? (descripcion.trim() === '' ? 'Campo obligatorio' : 'Mínimo 20 caracteres') : '';
     const e6 = infraestructura.trim().length > 0 && infraestructura.trim().length < 20 ? 'Mínimo 20 caracteres' : '';
     const e7 = accionInstitucional.trim().length < 20 ? (accionInstitucional.trim() === '' ? 'Campo obligatorio' : 'Mínimo 20 caracteres') : '';
     setErrCategoria(e1);
-    setErrActor(e2);
+    setErrActores(e2);
     setErrNivelConfianza(e3);
     setErrNivelVisibilidad(e4);
     setErrDescripcion(e5);
@@ -169,9 +188,9 @@ export function NovedadesScreen() {
     setErrFecha(''); setErrHoraInicio(''); setErrHoraFin(''); setErrMunicipio(''); setErrLocalidad('');
     
     // Paso 2
-    setCategoria(''); setActor(''); setNivelConfianza(''); setNivelVisibilidad('');
+    setCategoria(''); setActores([]); setActorSeleccionado(''); setNivelConfianza(''); setNivelVisibilidad('');
     setDescripcion(''); setInfraestructura(''); setAccionInstitucional('');
-    setErrCategoria(''); setErrActor(''); setErrNivelConfianza(''); setErrNivelVisibilidad('');
+    setErrCategoria(''); setErrActores(''); setErrNivelConfianza(''); setErrNivelVisibilidad('');
     setErrDescripcion(''); setErrInfraestructura(''); setErrAccionInstitucional('');
     
     // Paso 3
@@ -215,6 +234,24 @@ export function NovedadesScreen() {
 
   function handleEliminarEvidencia(index: number) {
     setEvidencias(prev => prev.filter((_, i) => i !== index));
+  }
+
+  function handleEvidenciaFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.files) {
+      const newEvidencias = Array.from(e.target.files).map(f => {
+        const ext = f.name.split('.').pop()?.toLowerCase() ?? '';
+        const tipo = ['jpg', 'jpeg', 'png', 'gif'].includes(ext)
+          ? 'IMAGEN'
+          : ['mp4', 'avi', 'mov'].includes(ext)
+          ? 'VIDEO'
+          : 'DOCUMENTO';
+        return { nombre: f.name, tipo };
+      });
+      setEvidencias(prev => [...prev, ...newEvidencias]);
+      if (evidenciaInputRef.current) {
+        evidenciaInputRef.current.value = '';
+      }
+    }
   }
 
   function handleAgregarVictima() {
@@ -314,7 +351,8 @@ export function NovedadesScreen() {
                         type="text"
                         placeholder="DD/MM/AAAA"
                         value={fecha}
-                        onChange={e => setFecha(e.target.value)}
+                        maxLength={10}
+                        onChange={e => setFecha(formatDateInput(e.target.value))}
                         onBlur={() => setErrFecha(validateDate(fecha))}
                       />
                       {errFecha && <span className="field-error">{errFecha}</span>}
@@ -325,7 +363,8 @@ export function NovedadesScreen() {
                         type="text"
                         placeholder="HH:MM"
                         value={horaInicio}
-                        onChange={e => setHoraInicio(e.target.value)}
+                        maxLength={5}
+                        onChange={e => setHoraInicio(formatTimeInput(e.target.value))}
                         onBlur={() => setErrHoraInicio(required(horaInicio))}
                       />
                       {errHoraInicio && <span className="field-error">{errHoraInicio}</span>}
@@ -336,7 +375,8 @@ export function NovedadesScreen() {
                         type="text"
                         placeholder="HH:MM"
                         value={horaFin}
-                        onChange={e => setHoraFin(e.target.value)}
+                        maxLength={5}
+                        onChange={e => setHoraFin(formatTimeInput(e.target.value))}
                         onBlur={() => setErrHoraFin(required(horaFin))}
                       />
                       {errHoraFin && <span className="field-error">{errHoraFin}</span>}
@@ -396,17 +436,53 @@ export function NovedadesScreen() {
                     {errCategoria && <span className="field-error">{errCategoria}</span>}
                   </div>
 
-                  <div className={`form-group ${errActor ? 'input-error' : ''}`}>
+                  <div className={`form-group ${errActores ? 'input-error' : ''}`}>
                     <label>ACTORES INVOLUCRADOS * <span className="label-code">NOV-F07</span></label>
-                    <select
-                      value={actor}
-                      onChange={e => setActor(e.target.value)}
-                      onBlur={() => setErrActor(required(actor))}
-                    >
-                      <option value="" disabled hidden>Seleccionar actor</option>
-                      {ACTORES.map(a => <option key={a} value={a}>{a}</option>)}
-                    </select>
-                    {errActor && <span className="field-error">{errActor}</span>}
+                    <div className="actor-selector">
+                      <div className="actor-input-row">
+                        <select
+                          value={actorSeleccionado}
+                          onChange={e => setActorSeleccionado(e.target.value)}
+                        >
+                          <option value="" disabled hidden>Seleccionar actor</option>
+                          {ACTORES.filter(a => !actores.includes(a)).map(a => (
+                            <option key={a} value={a}>{a}</option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          className="btn-add-actor"
+                          disabled={!actorSeleccionado}
+                          onClick={() => {
+                            if (actorSeleccionado && !actores.includes(actorSeleccionado)) {
+                              setActores(prev => [...prev, actorSeleccionado]);
+                              setActorSeleccionado('');
+                              setErrActores('');
+                            }
+                          }}
+                        >
+                          + AGREGAR
+                        </button>
+                      </div>
+                      {actores.length > 0 && (
+                        <div className="actor-chips">
+                          {actores.map(a => (
+                            <span key={a} className="actor-chip">
+                              {a}
+                              <button
+                                type="button"
+                                className="actor-chip-remove"
+                                onClick={() => setActores(prev => prev.filter(x => x !== a))}
+                                aria-label={`Eliminar ${a}`}
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {errActores && <span className="field-error">{errActores}</span>}
                   </div>
 
                   <div className="form-group row-2">
@@ -645,7 +721,15 @@ export function NovedadesScreen() {
                 <div className="step-title"><h4>PASO 4 — EVIDENCIAS Y DOCUMENTACION</h4></div>
                 <div className="form-grid">
                   <div className="section-subtitle">ADJUNTAR ARCHIVOS</div>
-                  <div className="dropzone" onClick={() => excelInputRef.current?.click()}>
+                  <input
+                    type="file"
+                    ref={evidenciaInputRef}
+                    style={{ display: 'none' }}
+                    accept=".pdf, .jpg, .jpeg, .png, .mp4"
+                    multiple
+                    onChange={handleEvidenciaFileSelect}
+                  />
+                  <div className="dropzone" onClick={() => evidenciaInputRef.current?.click()}>
                     <div className="dropzone-icon" />
                     <div className="dropzone-text">Arrastre archivos aquí o haga clic para seleccionar</div>
                     <div className="dropzone-subtext">Formatos: PDF, JPG, PNG, MP4 — Máximo 10 MB por archivo</div>
