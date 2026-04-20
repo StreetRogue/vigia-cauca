@@ -16,8 +16,10 @@ public class SnapshotMapper {
         LocalDate fecha = LocalDate.parse(evento.getFechaHecho());
 
         return NovedadSnapshotEntity.builder()
+        // Dentro de fromEvento y actualizarDesdeEvento
                 .novedadId(UUID.fromString(evento.getNovedadId()))
                 .usuarioId(UUID.fromString(evento.getUsuarioId()))
+                .oculto(evento.getOculto() != null ? evento.getOculto() : false)
                 .fechaHecho(fecha)
                 .anio(fecha.getYear())
                 .mes(fecha.getMonthValue())
@@ -40,6 +42,10 @@ public class SnapshotMapper {
     }
 
     public NovedadReporteDTO toReporteDTO(NovedadSnapshotEntity entity) {
+        // Construir display legible de actores
+        String actoresDisplay = entity.getActor1() != null ? entity.getActor1().name() : "";
+        if (entity.getActor2() != null) actoresDisplay += ", " + entity.getActor2().name();
+
         return NovedadReporteDTO.builder()
                 .novedadId(entity.getNovedadId())
                 .fechaHecho(entity.getFechaHecho())
@@ -48,9 +54,13 @@ public class SnapshotMapper {
                 .categoria(entity.getCategoria())
                 .actor1(entity.getActor1())
                 .actor2(entity.getActor2())
+                .actoresDisplay(actoresDisplay)
                 .nivelConfianza(entity.getNivelConfianza())
                 .muertosTotales(entity.getMuertosTotales())
+                .muertosCiviles(entity.getMuertosCiviles())
+                .muertosFuerzaPublica(entity.getMuertosFuerzaPublica())
                 .heridosTotales(entity.getHeridosTotales())
+                .heridosCiviles(entity.getHeridosCiviles())
                 .desplazadosTotales(entity.getDesplazadosTotales())
                 .confinadosTotales(entity.getConfinadosTotales())
                 .descripcionHecho(entity.getDescripcionHecho())
@@ -62,6 +72,8 @@ public class SnapshotMapper {
      */
     public void actualizarDesdeEvento(NovedadSnapshotEntity entity, NovedadEventoDTO evento) {
         LocalDate fecha = LocalDate.parse(evento.getFechaHecho());
+        // Dentro de fromEvento y actualizarDesdeEvento
+        entity.setOculto(evento.getOculto() != null ? evento.getOculto() : false);
         entity.setFechaHecho(fecha);
         entity.setAnio(fecha.getYear());
         entity.setMes(fecha.getMonthValue());

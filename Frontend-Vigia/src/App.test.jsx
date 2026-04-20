@@ -1,7 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { expect, test } from 'vitest';
 
-describe("App", () => {
-  it("should pass", () => {
-    expect(true).toBe(true);
-  });
+test('Verificar que el entorno de pruebas funciona', () => {
+  expect(1 + 1).toBe(2);
 });
