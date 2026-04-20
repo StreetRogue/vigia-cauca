@@ -1,6 +1,13 @@
 import { useRef, useState } from 'react';
 import { Sidebar } from '../components/organisms/Sidebar';
 import { ExcelUploadModal } from '../components/organisms/ExcelUploadModal';
+import { NavMenu } from '../components/molecules/NavMenu';
+import { UserCard } from '../components/molecules/UserCard';
+import dashboardIcon from '../assets/Dashboard_Icon.svg';
+import novedadesIcon from '../assets/novedades_icon.svg';
+import usuariosIcon from '../assets/usuarios_icon.svg';
+import reportesIcon from '../assets/reportes_icon.svg';
+import configuracionIcon from '../assets/configuracion_icon.svg';
 import {
   CATEGORIAS,
   ACTORES,
@@ -266,6 +273,16 @@ export function NovedadesScreen() {
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
+  const menuItems = [
+    { label: 'DASHBOARD', icon: <img src={dashboardIcon} alt="" /> },
+    { label: 'NOVEDADES', icon: <img src={novedadesIcon} alt="" />, to: '/novedades' },
+    { label: 'USUARIOS', icon: <img src={usuariosIcon} alt="" />, to: '/usuarios' },
+    { label: 'REPORTES', icon: <img src={reportesIcon} alt="" /> },
+    { label: 'CONFIGURACION', icon: <img src={configuracionIcon} alt="" /> },
+  ];
+  const sidebarNav = <NavMenu items={menuItems} />;
+  const sidebarFooter = <UserCard name="Actual_user" role="Admin Rol" />;
+
   return (
     <div className="layout">
       {showSuccessToast && (
@@ -283,7 +300,7 @@ export function NovedadesScreen() {
         }}
       />
 
-      <Sidebar title="VIGIA CAUCA" subtitle="GESTION INTEGRAL" />
+      <Sidebar title="VIGIA CAUCA" subtitle="GESTION INTEGRAL" nav={sidebarNav} footer={sidebarFooter} />
       <main className="main-content">
         <header className="main-header">
           <div className="breadcrumb">
