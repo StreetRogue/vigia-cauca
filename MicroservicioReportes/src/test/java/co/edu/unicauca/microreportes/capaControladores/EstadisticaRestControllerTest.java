@@ -16,6 +16,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -60,11 +61,18 @@ class EstadisticaRestControllerTest {
                 .totalHeridos(35L)
                 .totalDesplazados(50L)
                 .totalConfinados(10L)
+                .filtrosAplicados(Map.of("anio", "2024", "municipio", "Popayán"))
                 .build();
 
         serieTemporalEjemplo = List.of(
-                SerieTemporalDTO.builder().mes(1).nombreMes("Ene").totalEventos(10L).totalMuertos(2L).totalHeridos(5L).build(),
-                SerieTemporalDTO.builder().mes(2).nombreMes("Feb").totalEventos(15L).totalMuertos(3L).totalHeridos(8L).build()
+                SerieTemporalDTO.builder()
+                        .anio(2024).mes(1).nombreMes("Ene")
+                        .totalEventos(10L).totalMuertos(2L).totalHeridos(5L).totalDesplazados(3L)
+                        .frecuenciaRelativa(40.0).frecuenciaAcumulada(10L).build(),
+                SerieTemporalDTO.builder()
+                        .anio(2024).mes(2).nombreMes("Feb")
+                        .totalEventos(15L).totalMuertos(3L).totalHeridos(8L).totalDesplazados(4L)
+                        .frecuenciaRelativa(60.0).frecuenciaAcumulada(25L).build()
         );
 
         estadisticaActorEjemplo = List.of(
@@ -85,6 +93,7 @@ class EstadisticaRestControllerTest {
         );
 
         dashboardEjemplo = DashboardCompletoDTO.builder()
+                .filtrosAplicados(Map.of())
                 .resumen(resumenKPIEjemplo)
                 .historicoMensual(serieTemporalEjemplo)
                 .incidentesPorActor(estadisticaActorEjemplo)
@@ -123,13 +132,15 @@ class EstadisticaRestControllerTest {
     }
 
     @Test
-    void dashboard_conFiltroAnioYMunicipio_retornaDashboardFiltrado() throws Exception {
+    void dashboard_conFiltrosMultiples_retornaDashboardFiltrado() throws Exception {
         when(estadisticaService.obtenerDashboardCompleto(any(), any())).thenReturn(dashboardEjemplo);
 
         mockMvc.perform(get(BASE_URL + "/dashboard")
                         .param("anio", "2024")
+                        .param("mes", "3")
                         .param("municipio", "Popayán")
-                        .param("categoria", "ENFRENTAMIENTO"))
+                        .param("categoria", "ENFRENTAMIENTO")
+                        .param("actor", "ELN"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resumen.anio").value(2024));
     }
@@ -163,6 +174,17 @@ class EstadisticaRestControllerTest {
     }
 
     @Test
+    void resumen_conFiltrosAplicados_presentes_enRespuesta() throws Exception {
+        when(estadisticaService.obtenerResumenKPI(any(), any())).thenReturn(resumenKPIEjemplo);
+
+        mockMvc.perform(get(BASE_URL + "/resumen")
+                        .param("anio", "2024")
+                        .param("municipio", "Popayán"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.filtrosAplicados").exists());
+    }
+
+    @Test
     void resumen_conRolOperador_retornaKPIs() throws Exception {
         when(estadisticaService.obtenerResumenKPI(any(), eq("OPERADOR")))
                 .thenReturn(resumenKPIEjemplo);
@@ -182,8 +204,11 @@ class EstadisticaRestControllerTest {
         mockMvc.perform(get(BASE_URL + "/serie-temporal"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].anio").value(2024))
                 .andExpect(jsonPath("$[0].mes").value(1))
                 .andExpect(jsonPath("$[0].nombreMes").value("Ene"))
+                .andExpect(jsonPath("$[0].frecuenciaRelativa").value(40.0))
+                .andExpect(jsonPath("$[0].frecuenciaAcumulada").value(10))
                 .andExpect(jsonPath("$[1].mes").value(2));
 
         verify(estadisticaService).obtenerSerieTemporal(any(), any());
@@ -199,6 +224,17 @@ class EstadisticaRestControllerTest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    void serieTemporal_conActor_delegaAlServicio() throws Exception {
+        when(estadisticaService.obtenerSerieTemporal(any(), any())).thenReturn(serieTemporalEjemplo);
+
+        mockMvc.perform(get(BASE_URL + "/serie-temporal")
+                        .param("actor", "ELN"))
+                .andExpect(status().isOk());
+
+        verify(estadisticaService).obtenerSerieTemporal(any(), any());
+    }
+
     // ===================== /por-actor =====================
 
     @Test
@@ -211,6 +247,19 @@ class EstadisticaRestControllerTest {
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].actor").value("ELN"))
                 .andExpect(jsonPath("$[0].totalEventos").value(40));
+
+        verify(estadisticaService).obtenerEstadisticasPorActor(any(), any());
+    }
+
+    @Test
+    void porActor_conMesYCategoria_delegaAlServicio() throws Exception {
+        when(estadisticaService.obtenerEstadisticasPorActor(any(), any()))
+                .thenReturn(estadisticaActorEjemplo);
+
+        mockMvc.perform(get(BASE_URL + "/por-actor")
+                        .param("mes", "5")
+                        .param("categoria", "HOMICIDIO"))
+                .andExpect(status().isOk());
 
         verify(estadisticaService).obtenerEstadisticasPorActor(any(), any());
     }
@@ -230,6 +279,16 @@ class EstadisticaRestControllerTest {
         verify(estadisticaService).obtenerMapaCalor(any(), any());
     }
 
+    @Test
+    void mapaCalor_conAnioYCategoria_delegaAlServicio() throws Exception {
+        when(estadisticaService.obtenerMapaCalor(any(), any())).thenReturn(mapaCalorEjemplo);
+
+        mockMvc.perform(get(BASE_URL + "/mapa-calor")
+                        .param("anio", "2024")
+                        .param("categoria", "ENFRENTAMIENTO"))
+                .andExpect(status().isOk());
+    }
+
     // ===================== /por-categoria =====================
 
     @Test
@@ -244,5 +303,16 @@ class EstadisticaRestControllerTest {
                 .andExpect(jsonPath("$[0].totalEventos").value(50));
 
         verify(estadisticaService).obtenerDesgloseCategorias(any(), any());
+    }
+
+    @Test
+    void porCategoria_conMes_delegaAlServicio() throws Exception {
+        when(estadisticaService.obtenerDesgloseCategorias(any(), any()))
+                .thenReturn(estadisticaCategoriaEjemplo);
+
+        mockMvc.perform(get(BASE_URL + "/por-categoria")
+                        .param("mes", "6")
+                        .param("municipio", "Popayán"))
+                .andExpect(status().isOk());
     }
 }

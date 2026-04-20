@@ -2,6 +2,7 @@ package co.edu.unicauca.microreportes.mensajeria;
 
 import lombok.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -47,4 +48,7 @@ public class NovedadEventoDTO {
     private String actor2;
     private String localidadEspecifica;
     private String descripcionHecho;
+
+    /** Lista de víctimas individuales con datos demográficos. Puede ser null o vacía. */
+    private List<VictimaEventoDTO> victimas;
 }

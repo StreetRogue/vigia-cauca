@@ -3,21 +3,24 @@ package co.edu.unicauca.microreportes.fachadaServices.services.impl;
 import co.edu.unicauca.microreportes.capaAccesoDatos.models.EstadisticaAgregadaEntity;
 import co.edu.unicauca.microreportes.capaAccesoDatos.models.EventoProcesadoEntity;
 import co.edu.unicauca.microreportes.capaAccesoDatos.models.NovedadSnapshotEntity;
-import co.edu.unicauca.microreportes.capaAccesoDatos.models.enums.CategoriaEvento;
-import co.edu.unicauca.microreportes.capaAccesoDatos.models.enums.NivelVisibilidad;
-import co.edu.unicauca.microreportes.capaAccesoDatos.models.enums.TipoEvento;
+import co.edu.unicauca.microreportes.capaAccesoDatos.models.VictimaSnapshotEntity;
+import co.edu.unicauca.microreportes.capaAccesoDatos.models.enums.*;
 import co.edu.unicauca.microreportes.capaAccesoDatos.repositories.EstadisticaAgregadaRepository;
 import co.edu.unicauca.microreportes.capaAccesoDatos.repositories.EventoProcesadoRepository;
 import co.edu.unicauca.microreportes.capaAccesoDatos.repositories.NovedadSnapshotRepository;
+import co.edu.unicauca.microreportes.capaAccesoDatos.repositories.VictimaSnapshotRepository;
 import co.edu.unicauca.microreportes.fachadaServices.mapper.SnapshotMapper;
 import co.edu.unicauca.microreportes.fachadaServices.services.IProyeccionService;
 import co.edu.unicauca.microreportes.mensajeria.NovedadEventoDTO;
+import co.edu.unicauca.microreportes.mensajeria.VictimaEventoDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -44,6 +47,7 @@ public class ProyeccionServiceImpl implements IProyeccionService {
     private final NovedadSnapshotRepository snapshotRepository;
     private final EstadisticaAgregadaRepository agregadaRepository;
     private final EventoProcesadoRepository eventoProcesadoRepository;
+    private final VictimaSnapshotRepository victimaSnapshotRepository;
     private final SnapshotMapper snapshotMapper;
     private final CacheManager cacheManager;
 
@@ -63,10 +67,13 @@ public class ProyeccionServiceImpl implements IProyeccionService {
         // 2. Actualizar agregación incremental
         actualizarAgregacion(snapshot, true);
 
-        // 3. Registrar como procesado
+        // 3. Persistir víctimas individuales
+        persistirVictimas(evento, snapshot);
+
+        // 4. Registrar como procesado
         registrarEventoProcesado(evento, TipoEvento.NOVEDAD_CREADA, idempotencyKey);
 
-        // 4. Invalidar caché
+        // 5. Invalidar caché
         invalidarCaches();
 
         log.info("Proyección CREADA para novedad: {}", evento.getNovedadId());
@@ -96,12 +103,17 @@ public class ProyeccionServiceImpl implements IProyeccionService {
 
             // 3. Incrementar stats nuevas
             actualizarAgregacion(existente, true);
+
+            // 4. Reemplazar víctimas (borrar las viejas y persistir las nuevas)
+            victimaSnapshotRepository.deleteByNovedadId(novedadId);
+            persistirVictimas(evento, existente);
         } else {
             // Snapshot no existe (evento de creación se perdió) -> crear
             log.warn("Snapshot no encontrado para actualización, creando: {}", novedadId);
             NovedadSnapshotEntity snapshot = snapshotMapper.fromEvento(evento);
             snapshotRepository.save(snapshot);
             actualizarAgregacion(snapshot, true);
+            persistirVictimas(evento, snapshot);
         }
 
         registrarEventoProcesado(evento, TipoEvento.NOVEDAD_ACTUALIZADA, idempotencyKey);
@@ -125,6 +137,9 @@ public class ProyeccionServiceImpl implements IProyeccionService {
             // Solo marcamos el snapshot como oculto para los reportes
             existente.setOculto(true);
             snapshotRepository.save(existente);
+
+            // Ocultar también las víctimas asociadas (soft delete)
+            victimaSnapshotRepository.ocultarByNovedadId(novedadId);
         }
 
         registrarEventoProcesado(evento, TipoEvento.NOVEDAD_ELIMINADA, generarIdempotencyKey(evento));
@@ -177,6 +192,48 @@ public class ProyeccionServiceImpl implements IProyeccionService {
     }
 
     // ==========================================
+    // VÍCTIMAS
+    // ==========================================
+
+    private void persistirVictimas(NovedadEventoDTO evento, NovedadSnapshotEntity snapshot) {
+        if (evento.getVictimas() == null || evento.getVictimas().isEmpty()) return;
+
+        UUID novedadId = snapshot.getNovedadId();
+        NivelVisibilidad visibilidad = snapshot.getNivelVisibilidad();
+
+        List<VictimaSnapshotEntity> victimas = new ArrayList<>();
+        for (VictimaEventoDTO v : evento.getVictimas()) {
+            victimas.add(VictimaSnapshotEntity.builder()
+                    .novedadId(novedadId)
+                    .anio(snapshot.getAnio())
+                    .mes(snapshot.getMes())
+                    .municipio(snapshot.getMunicipio())
+                    .categoria(snapshot.getCategoria())
+                    .nombreVictima(v.getNombreVictima())
+                    .genero(parsearEnum(Genero.class, v.getGeneroVictima(), Genero.NO_ESPECIFICADO))
+                    .edad(v.getEdadVictima())
+                    .grupoPoblacional(parsearEnum(GrupoPoblacional.class, v.getGrupoPoblacional(), null))
+                    .ocupacionVictima(v.getOcupacionVictima())
+                    .nivelVisibilidad(visibilidad)
+                    .build());
+        }
+
+        if (!victimas.isEmpty()) {
+            victimaSnapshotRepository.saveAll(victimas);
+        }
+    }
+
+    private <E extends Enum<E>> E parsearEnum(Class<E> tipo, String valor, E porDefecto) {
+        if (valor == null || valor.isBlank()) return porDefecto;
+        try {
+            return Enum.valueOf(tipo, valor.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("Valor desconocido para {}: '{}'", tipo.getSimpleName(), valor);
+            return porDefecto;
+        }
+    }
+
+    // ==========================================
     // IDEMPOTENCIA
     // ==========================================
 
@@ -204,14 +261,10 @@ public class ProyeccionServiceImpl implements IProyeccionService {
 
     private void invalidarCaches() {
         try {
-            if (cacheManager.getCache("kpis") != null)
-                cacheManager.getCache("kpis").clear();
-            if (cacheManager.getCache("serieTemporal") != null)
-                cacheManager.getCache("serieTemporal").clear();
-            if (cacheManager.getCache("mapaCalor") != null)
-                cacheManager.getCache("mapaCalor").clear();
-            if (cacheManager.getCache("dashboard") != null)
-                cacheManager.getCache("dashboard").clear();
+            for (String nombre : new String[]{"kpis", "serieTemporal", "mapaCalor", "dashboard", "victimasEstadisticas"}) {
+                var cache = cacheManager.getCache(nombre);
+                if (cache != null) cache.clear();
+            }
         } catch (Exception e) {
             log.warn("Error invalidando cachés: {}", e.getMessage());
         }
