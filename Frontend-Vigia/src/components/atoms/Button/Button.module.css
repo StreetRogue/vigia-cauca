@@ -35,24 +35,24 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  box-shadow: 0 6px 14px rgba(34, 82, 173, 0.2);
+  box-shadow: none;
 }
 
 .primary:hover:not(:disabled) {
   background: var(--color-primary-600);
-  transform: translateY(-1px);
-  box-shadow: 0 10px 20px rgba(34, 82, 173, 0.24);
+  transform: none;
+  box-shadow: none;
 }
 
 .ghost {
   min-height: 30px;
   padding: 0 10px;
   background: transparent;
-  color: var(--color-text-muted);
+  color: var(--color-primary-500);
   font-size: 0.875rem;
 }
 
 .ghost:hover:not(:disabled) {
   color: var(--color-primary-500);
-  background: var(--color-primary-soft);
+  background: transparent;
 }

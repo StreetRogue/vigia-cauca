@@ -21,7 +21,7 @@
 }
 
 .input:hover {
-  border-color: var(--color-primary-400);
+  border-color: var(--color-border-medium);
 }
 
 .input:focus-visible {

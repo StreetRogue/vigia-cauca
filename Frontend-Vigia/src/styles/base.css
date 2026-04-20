@@ -11,7 +11,7 @@ body,
 
 html,
 body {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Geomanist", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: var(--color-text-primary);
   background: var(--color-surface-body);
 }
