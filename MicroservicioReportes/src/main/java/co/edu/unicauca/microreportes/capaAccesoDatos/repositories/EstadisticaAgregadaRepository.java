@@ -22,6 +22,9 @@ public interface EstadisticaAgregadaRepository extends JpaRepository<Estadistica
 
     /**
      * KPIs globales del resumen (cards del dashboard).
+     *
+     * Todos los filtros son opcionales: null = sin restricción.
+     * Cuando anio es null se agregan todos los años disponibles.
      */
     @Query("SELECT " +
             "COALESCE(SUM(e.totalEventos),0), " +
@@ -30,27 +33,35 @@ public interface EstadisticaAgregadaRepository extends JpaRepository<Estadistica
             "COALESCE(SUM(e.totalDesplazados),0), " +
             "COALESCE(SUM(e.totalConfinados),0) " +
             "FROM EstadisticaAgregadaEntity e " +
-            "WHERE e.anio = :anio " +
+            "WHERE (:anio IS NULL OR e.anio = :anio) " +
+            "AND (:mes IS NULL OR e.mes = :mes) " +
             "AND (:municipio IS NULL OR e.municipio = :municipio) " +
+            "AND (:categoria IS NULL OR e.categoria = :categoria) " +
             "AND e.nivelVisibilidad IN :visibilidades")
     List<Object[]> obtenerKPIs(
             @Param("anio") Integer anio,
+            @Param("mes") Integer mes,
             @Param("municipio") String municipio,
+            @Param("categoria") CategoriaEvento categoria,
             @Param("visibilidades") List<NivelVisibilidad> visibilidades
     );
 
     /**
      * Desglose por categoría para gráficos.
+     *
+     * Todos los filtros son opcionales: null = sin restricción.
      */
     @Query("SELECT e.categoria, " +
             "SUM(e.totalEventos), SUM(e.totalMuertos), SUM(e.totalHeridos) " +
             "FROM EstadisticaAgregadaEntity e " +
-            "WHERE e.anio = :anio " +
+            "WHERE (:anio IS NULL OR e.anio = :anio) " +
+            "AND (:mes IS NULL OR e.mes = :mes) " +
             "AND (:municipio IS NULL OR e.municipio = :municipio) " +
             "AND e.nivelVisibilidad IN :visibilidades " +
             "GROUP BY e.categoria ORDER BY SUM(e.totalEventos) DESC")
     List<Object[]> desglosePorCategoria(
             @Param("anio") Integer anio,
+            @Param("mes") Integer mes,
             @Param("municipio") String municipio,
             @Param("visibilidades") List<NivelVisibilidad> visibilidades
     );

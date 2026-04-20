@@ -13,7 +13,7 @@ public interface IEstadisticaService {
 
     List<EstadisticaActorDTO> obtenerEstadisticasPorActor(FiltroEstadisticaDTO filtro, String rol);
 
-    List<EstadisticaMunicipioDTO> obtenerMapaCalor(Integer anio, String rol);
+    List<EstadisticaMunicipioDTO> obtenerMapaCalor(FiltroEstadisticaDTO filtro, String rol);
 
     List<EstadisticaCategoriaDTO> obtenerDesgloseCategorias(FiltroEstadisticaDTO filtro, String rol);
 

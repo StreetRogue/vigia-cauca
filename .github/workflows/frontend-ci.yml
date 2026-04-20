@@ -1,0 +1,41 @@
+name: Frontend CI - Vigía Cauca
+
+on:
+  push:
+    branches: [ develop, main ]
+    paths:
+      - 'Frontend-Vigia/**'
+  pull_request:
+    branches: [ develop, main ]
+    paths:
+      - 'Frontend-Vigia/**'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Frontend-Vigia
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name:  Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: Frontend-Vigia/package-lock.json
+
+      - name:  Install Dependencies (Clean Install)
+        run: npm ci
+
+      - name: Lint Check
+        run: npm run lint
+
+      - name:  Run Unit Tests
+        run: npm run test
+
+      - name:  Build Project
+        run: npm run build
