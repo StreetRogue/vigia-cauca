@@ -3,7 +3,7 @@ import { Sidebar } from '../components/organisms/Sidebar';
 export function DashboardScreen() {
   return (
     <div className="layout">
-      <Sidebar />
+      <Sidebar title="VIGIA CAUCA" subtitle="GESTION INTEGRAL" />
       <main className="main-content">
         <header className="main-header">
           <h2>Panel de Control</h2>

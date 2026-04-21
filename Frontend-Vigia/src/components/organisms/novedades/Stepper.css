@@ -1,0 +1,56 @@
+/* Stepper */
+.stepper-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #cccccc;
+}
+
+.step.active {
+  color: #122d5d;
+}
+
+.step-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.step.active .step-circle {
+  background: #122d5d;
+  color: #ffffff;
+}
+
+.step.completed {
+  color: #27ae60;
+}
+
+.step.completed .step-circle {
+  background: #27ae60;
+  color: #ffffff;
+}
+
+.step-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.step-divider {
+  flex: 1;
+  height: 1px;
+  background: #eeeeee;
+  margin: 0 16px;
+}
