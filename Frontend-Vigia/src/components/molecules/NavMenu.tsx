@@ -1,20 +1,32 @@
-import { useState } from "react";
 import type { ReactNode } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { NavItem } from "../atoms/NavItem";
 import styles from "./NavMenu.module.css";
 
 export interface NavMenuProps {
-  items: Array<{ label: string; icon?: ReactNode }>;
+  items: Array<{ label: string; icon?: ReactNode; to?: string }>;
   selectedItem?: string;
   onItemSelect?: (label: string) => void;
 }
 
-export function NavMenu({ items, selectedItem: initialSelected = "", onItemSelect }: NavMenuProps) {
-  const [selectedItem, setSelectedItem] = useState(initialSelected);
+export function NavMenu({ items, selectedItem, onItemSelect }: NavMenuProps) {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
 
-  const handleItemClick = (label: string) => {
-    setSelectedItem(label);
+  const resolveSelected = () => {
+    // Priority 1: match by current URL path
+    const byRoute = items.find((item) => item.to && pathname.startsWith(item.to));
+    if (byRoute) return byRoute.label;
+    // Priority 2: controlled selectedItem prop
+    if (selectedItem) return selectedItem;
+    return "";
+  };
+
+  const activeLabel = resolveSelected();
+
+  const handleClick = (label: string, to?: string) => {
     onItemSelect?.(label);
+    if (to) navigate(to);
   };
 
   return (
@@ -25,8 +37,8 @@ export function NavMenu({ items, selectedItem: initialSelected = "", onItemSelec
             <NavItem
               label={item.label}
               icon={item.icon}
-              isSelected={selectedItem === item.label}
-              onClick={() => handleItemClick(item.label)}
+              isSelected={activeLabel === item.label}
+              onClick={() => handleClick(item.label, item.to)}
             />
           </li>
         ))}

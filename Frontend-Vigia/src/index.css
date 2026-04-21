@@ -1,3 +1,5 @@
+@import "./styles/tokens.css";
+
 @font-face {
   font-family: 'Geomanist';
   src: url('./assets/fonts/Geomanist-Regular.otf') format('opentype');

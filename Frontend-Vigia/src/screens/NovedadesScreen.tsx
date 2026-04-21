@@ -34,7 +34,7 @@ function NovedadesContent() {
         }}
       />
 
-      <Sidebar title="VIGIA CAUCA" subtitle="GESTION INTEGRAL" />
+      <Sidebar title="VIGIA CAUCA" subtitle="GESTION INTEGRAL" nav={sidebarNav} footer={sidebarFooter} />
       <main className="main-content">
         <header className="main-header">
           <div className="breadcrumb">
