@@ -1,5 +1,6 @@
 import { useNovedades, required } from '../../../context/NovedadesContext';
 import { CATEGORIAS, ACTORES, NIVELES_CONFIANZA, NIVELES_VISIBILIDAD } from '../../../constants/dominios';
+import './Step2Caracterizacion.css';
 
 export function Step2Caracterizacion() {
   const {

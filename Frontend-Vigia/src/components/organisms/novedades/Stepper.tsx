@@ -1,5 +1,6 @@
 import React, { Fragment } from 'react';
 import { useNovedades } from '../../../context/NovedadesContext';
+import './Stepper.css';
 
 export function Stepper() {
   const { currentStep } = useNovedades();

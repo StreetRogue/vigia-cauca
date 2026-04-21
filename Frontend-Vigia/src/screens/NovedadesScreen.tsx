@@ -7,6 +7,7 @@ import { Step2Caracterizacion } from '../components/organisms/novedades/Step2Car
 import { Step3Afectacion } from '../components/organisms/novedades/Step3Afectacion';
 import { Step4Evidencias } from '../components/organisms/novedades/Step4Evidencias';
 import { Step5Success } from '../components/organisms/novedades/Step5Success';
+import './novedades.css';
 
 function NovedadesContent() {
   const {

@@ -1,4 +1,5 @@
 import { useNovedades } from '../../../context/NovedadesContext';
+import './Step5Success.css';
 
 export function Step5Success() {
   const {
