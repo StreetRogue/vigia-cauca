@@ -1,5 +1,6 @@
 import { NovedadesProvider, useNovedades } from '../context/NovedadesContext';
 import { Sidebar } from '../components/organisms/Sidebar';
+import { NavMenu } from '../components/molecules/NavMenu';
 import { ExcelUploadModal } from '../components/organisms/ExcelUploadModal';
 import { Stepper } from '../components/organisms/novedades/Stepper';
 import { Step1Localizacion } from '../components/organisms/novedades/Step1Localizacion';
@@ -7,7 +8,32 @@ import { Step2Caracterizacion } from '../components/organisms/novedades/Step2Car
 import { Step3Afectacion } from '../components/organisms/novedades/Step3Afectacion';
 import { Step4Evidencias } from '../components/organisms/novedades/Step4Evidencias';
 import { Step5Success } from '../components/organisms/novedades/Step5Success';
+import dashboardIcon from '../assets/Dashboard_Icon.svg';
+import novedadesIcon from '../assets/novedades_icon.svg';
+import usuariosIcon from '../assets/usuarios_icon.svg';
+import reportesIcon from '../assets/reportes_icon.svg';
+import configuracionIcon from '../assets/configuracion_icon.svg';
 import './novedades.css';
+
+const menuItems = [
+  { label: 'DASHBOARD', icon: <img src={dashboardIcon} alt="" /> },
+  { label: 'NOVEDADES', icon: <img src={novedadesIcon} alt="" />, to: '/novedades' },
+  { label: 'USUARIOS', icon: <img src={usuariosIcon} alt="" />, to: '/usuarios' },
+  { label: 'REPORTES', icon: <img src={reportesIcon} alt="" /> },
+  { label: 'CONFIGURACION', icon: <img src={configuracionIcon} alt="" /> },
+];
+
+const sidebarNav = <NavMenu items={menuItems} />;
+
+const sidebarFooter = (
+  <div className="user-card">
+    <div className="avatar">AC</div>
+    <div className="user-card-info">
+      <span className="user-card-name">Admin Chávez</span>
+      <span className="user-card-role">Administrador</span>
+    </div>
+  </div>
+);
 
 function NovedadesContent() {
   const {
