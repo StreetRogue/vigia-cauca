@@ -1,14 +1,14 @@
-name: Backend CI - Reportes
+name: Backend CI - Ubicaciones
 
 on:
   push:
     branches: [ develop, main ]
     paths:
-      - 'Backend-Vigia/MicroservicioReportes/**'
+      - 'Backend-Vigia/micro-ubicaciones/**'
   pull_request:
     branches: [ develop, main ]
     paths:
-      - 'Backend-Vigia/MicroservicioReportes/**'
+      - 'Backend-Vigia/micro-ubicaciones/**'
 
 jobs:
   build:
@@ -18,15 +18,15 @@ jobs:
       - name: Checkout del código
         uses: actions/checkout@v4
 
-      - name: Configurar JDK 17
+      - name: Configurar JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
 
       - name: Compilar y empaquetar con Maven
-        run: mvn -f Backend-Vigia/MicroservicioReportes/pom.xml clean package -DskipTests
+        run: mvn -f Backend-Vigia/micro-ubicaciones/pom.xml clean package -DskipTests
 
       - name: Verificar artefacto generado
-        run: ls -l Backend-Vigia/MicroservicioReportes/target/*.jar
+        run: ls -l Backend-Vigia/micro-ubicaciones/target/*.jar

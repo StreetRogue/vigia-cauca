@@ -1,0 +1,21 @@
+spring:
+    datasource:
+        url: ${DB_URL}
+        username: ${DB_USER}
+        password: ${DB_PASSWORD}
+        driver-class-name: org.postgresql.Driver
+
+    jpa:
+        hibernate:
+            ddl-auto: validate
+        properties:
+            hibernate:
+                dialect: org.hibernate.dialect.PostgreSQLDialect
+
+    flyway:
+        enabled: true
+        baseline-on-migrate: false  # En prod no se usa baseline
+
+logging:
+    level:
+        org.springframework: WARN   # Menos verboso en prod

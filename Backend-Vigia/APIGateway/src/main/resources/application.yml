@@ -1,0 +1,112 @@
+server:
+  port: 8080
+
+spring:
+  main:
+    web-application-type: reactive
+
+  application:
+    name: API-Gateway
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AUTH0_ISSUER_URI}
+          audience: ${AUTH0_AUDIENCE}
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            # =========================
+            # USUARIOS - ADMIN
+            # =========================
+            - id: usuarios-admin
+              uri: http://localhost:8083
+              predicates:
+                - Path=/api/admin/usuarios/**
+              filters:
+                - StripPrefix=2
+
+            # =========================
+            # NOVEDADES - PUBLICO
+            # =========================
+            - id: novedades-public
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/public/novedades/**
+              filters:
+                - StripPrefix=2
+
+            # =========================
+            # NOVEDADES - OPERADOR
+            # =========================
+            - id: novedades-operador
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/operador/novedades/**
+              filters:
+                - StripPrefix=2
+
+            # =========================
+            # NOVEDADES - ADMIN
+            # =========================
+            - id: novedades-admin
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/admin/novedades/**
+              filters:
+                - StripPrefix=2
+
+            # =========================
+            # ESTADISTICAS - PUBLICO
+            # =========================
+            - id: estadisticas-public
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/public/estadisticas/**
+              filters:
+                - StripPrefix=2
+
+            # =========================
+            # 🔐 ESTADISTICAS - OPERADOR
+            # =========================
+            - id: estadisticas-operador
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/operador/estadisticas/**
+              filters:
+                - StripPrefix=2
+
+            # =========================
+            # ESTADISTICAS - ADMIN
+            # =========================
+            - id: estadisticas-admin
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/admin/estadisticas/**
+              filters:
+                - StripPrefix=2
+
+            # =========================
+            # WebSocket
+            # =========================
+            - id: websocket
+              uri: ws://localhost:8080
+              predicates:
+                - Path=/ws/**
+
+# ===========================
+# CONFIG EXTRAS
+# ===========================
+
+auth0:
+  audience: ${AUTH0_AUDIENCE}
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: DEBUG
+
