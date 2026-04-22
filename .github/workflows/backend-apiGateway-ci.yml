@@ -1,4 +1,4 @@
-name: Backend CI - Reportes
+name: Backend CI - APIGateway
 
 on:
   push:
