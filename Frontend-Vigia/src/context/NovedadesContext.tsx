@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useRef, ReactNode } from 'react';
+import { novedadesService } from '../services/novedades.service';
+import type { NovedadDTOPeticion } from '../types/novedad.types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 export const EXCEL_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -228,16 +230,64 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
     setEvidencias([]); setUrlEvidencia('');
   }
 
-  function handleContinuar() {
+  async function handleContinuar() {
     if (currentStep === 1 && !validateStep1()) return;
     if (currentStep === 2 && !validateStep2()) return;
     if (currentStep === 3 && !validateStep3()) return;
+
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
-    } else {
+      return;
+    }
+
+    // Paso 4 → enviar al backend
+    const [dia, mes, anio] = fecha.split('/');
+    const fechaISO = `${anio}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+
+    const usuarioId = localStorage.getItem('kc-user-id') ?? 'ANONIMO';
+
+    const payload: NovedadDTOPeticion = {
+      usuarioId,
+      fechaHecho:  fechaISO,
+      horaInicio:  horaInicio || undefined,
+      horaFin:     horaFin   || undefined,
+      municipio,
+      localidadEspecifica: localidad || undefined,
+      categoria:          categoria  as NovedadDTOPeticion['categoria'],
+      actores:            actores    as NovedadDTOPeticion['actores'],
+      nivelConfianza:     nivelConfianza  as NovedadDTOPeticion['nivelConfianza'],
+      nivelVisibilidad:   nivelVisibilidad as NovedadDTOPeticion['nivelVisibilidad'],
+      descripcion:        descripcion || undefined,
+      afectacionHumana: {
+        muertosCiviles:           Number(muertosCiviles)  || 0,
+        muertosFuerzaPublica:     Number(muertosFuerza)   || 0,
+        muertosIlegales:          Number(muertosGrupos)   || 0,
+        muertosTotales:           muertosTotal,
+        heridosCiviles:           Number(heridosCiviles)  || 0,
+        heridosTotales:           heridosTotal,
+        desplazadosTotales:       Number(desplazados)     || 0,
+        confinadosTotales:        Number(confinados)      || 0,
+        afectacionCivilesFlag:    afectacionCiviles === 'Sí',
+        reclutamientoMenoresFlag: reclutamiento     === 'Sí',
+      },
+      victimas: victimas.map((v) => ({
+        nombreVictima:    v.nombre,
+        generoVictima:    v.genero    as NovedadDTOPeticion['victimas'][0]['generoVictima'],
+        edadVictima:      Number(v.edad) || undefined,
+        grupoPoblacional: v.grupoPoblacional as NovedadDTOPeticion['victimas'][0]['grupoPoblacional'],
+        ocupacionVictima: v.ocupacion || undefined,
+      })),
+      urlsEvidencia: evidencias.map((e) => e.nombre),
+    };
+
+    try {
+      await novedadesService.crear(payload);
       setShowSuccessToast(true);
       setCurrentStep(5);
       setTimeout(() => setShowSuccessToast(false), 3500);
+    } catch (err) {
+      console.error('[NovedadesContext] Error al enviar novedad:', err);
+      // Puedes mostrar un banner de error aquí si el contexto lo expone
     }
   }
 
@@ -253,7 +303,19 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
       setExcelError('El archivo excede el tamaño máximo permitido (10 MB)');
       return;
     }
-    // Archivo válido — aquí se invocaría el backend
+    // Archivo válido → enviar al backend
+    const usuarioId = localStorage.getItem('kc-user-id') ?? 'ANONIMO';
+    novedadesService
+      .cargarExcel(file, usuarioId)
+      .then(() => {
+        setShowExcelModal(false);
+        setShowSuccessToast(true);
+        setTimeout(() => setShowSuccessToast(false), 3500);
+      })
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'Error al procesar el archivo';
+        setExcelError(msg);
+      });
   }
 
   const value: NovedadesContextType = {

@@ -1,17 +1,5 @@
-import { Sidebar } from '../components/organisms/Sidebar';
+import { DashboardTemplate } from '../components/templates/DashboardTemplate/DashboardTemplate';
 
 export function DashboardScreen() {
-  return (
-    <div className="layout">
-      <Sidebar title="VIGIA CAUCA" subtitle="GESTION INTEGRAL" />
-      <main className="main-content">
-        <header className="main-header">
-          <h2>Panel de Control</h2>
-        </header>
-        <section className="content-area">
-          <p>Bienvenido al sistema de estadísticas de seguridad.</p>
-        </section>
-      </main>
-    </div>
-  );
+  return <DashboardTemplate />;
 }

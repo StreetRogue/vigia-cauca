@@ -1,0 +1,46 @@
+.panel {
+  background: var(--dash-panel);
+  border: 1px solid var(--dash-border);
+  border-radius: 6px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.cell {
+  border: 1px solid;
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+
+.cellValue {
+  font-family: var(--font-family-primary);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-top: 4px;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.loading {
+  opacity: 0.55;
+  pointer-events: none;
+  animation: panelPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes panelPulse {
+  0%, 100% { opacity: 0.55; }
+  50%       { opacity: 0.3; }
+}

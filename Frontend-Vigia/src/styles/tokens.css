@@ -41,4 +41,20 @@
   --space-3: 0.75rem;
   --space-4: 1rem;
   --space-5: 1.5rem;
+
+  /* Dashboard dark theme */
+  --dash-bg:        #091629;
+  --dash-panel:     #0d1f3c;
+  --dash-panel2:    #112444;
+  --dash-border:    rgba(34, 82, 173, 0.25);
+  --dash-border-hi: rgba(75, 119, 194, 0.55);
+  --dash-accent:    #c8971f;
+  --dash-red:       #c0392b;
+  --dash-amber:     #d4a520;
+  --dash-green:     #27ae60;
+  --dash-text-0:    #ffffff;
+  --dash-text-1:    #becef0;
+  --dash-text-bone: #ddd8cf;
+  --dash-text-2:    #878d99;
+  --dash-text-3:    #484e5b;
 }
