@@ -1,0 +1,22 @@
+.strip {
+  display: flex;
+  border-bottom: 1px solid var(--dash-border);
+  flex-shrink: 0;
+}
+
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 0.35; }
+}
+
+@media (max-width: 640px) {
+  .strip {
+    flex-wrap: wrap;
+  }
+}
