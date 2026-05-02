@@ -57,4 +57,27 @@
   --dash-text-bone: #ddd8cf;
   --dash-text-2:    #878d99;
   --dash-text-3:    #484e5b;
+
+  /* Métricas — color semántico por tipo de dato */
+  --metric-eventos:      #c8971f;   /* dorado  — igual que --dash-accent  */
+  --metric-muertos:      #c0392b;   /* rojo    — gravedad máxima          */
+  --metric-heridos:      #d4813a;   /* naranja — gravedad media           */
+  --metric-desplazados:  #4a80c4;   /* azul    — desplazamiento forzado   */
+  --metric-confinados:   #8e6bbf;   /* violeta — confinamiento            */
+
+  /* Soft backgrounds para KPI cards (8 % opacidad) */
+  --metric-eventos-soft:     rgba(200, 151, 31,  0.08);
+  --metric-muertos-soft:     rgba(192,  57, 43,  0.08);
+  --metric-heridos-soft:     rgba(212, 129,  58, 0.08);
+  --metric-desplazados-soft: rgba( 74, 128, 196, 0.08);
+  --metric-confinados-soft:  rgba(142, 107, 191, 0.08);
+
+  /* Deltas para comparación de períodos */
+  --delta-up:   #c0392b;   /* sube la violencia → rojo  */
+  --delta-down: #27ae60;   /* baja la violencia → verde */
+  --delta-zero: #878d99;   /* sin cambio → gris         */
+
+  /* Layout estadísticas */
+  --stats-gap:    1.25rem;
+  --stats-radius: 10px;
 }

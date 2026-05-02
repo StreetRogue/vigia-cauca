@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CapLabel } from '../../atoms/CapLabel/CapLabel';
 import styles from './DashboardNavbar.module.css';
 
@@ -93,6 +94,7 @@ interface DashboardNavbarProps {
 
 export function DashboardNavbar({ onFilterChange: _onFilterChange }: DashboardNavbarProps = {}) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -105,6 +107,22 @@ export function DashboardNavbar({ onFilterChange: _onFilterChange }: DashboardNa
             <div className={styles.brandSub}>SISTEMA DE MONITOREO TÁCTICO</div>
           </div>
         </div>
+
+        <div className={styles.dividerV} />
+
+        {/* Nav: Estadísticas */}
+        <button
+          className={styles.statsNavBtn}
+          onClick={() => navigate('/estadisticas')}
+        >
+          <svg viewBox="0 0 16 14" width={13} height={13} fill="none">
+            <rect x="1" y="7" width="2.5" height="7" rx="1" fill="var(--dash-accent)" />
+            <rect x="5" y="4" width="2.5" height="10" rx="1" fill="var(--dash-accent)" opacity="0.7" />
+            <rect x="9" y="1" width="2.5" height="13" rx="1" fill="var(--dash-accent)" opacity="0.5" />
+            <rect x="13" y="5" width="2.5" height="9" rx="1" fill="var(--dash-accent)" opacity="0.6" />
+          </svg>
+          <CapLabel size={8} color="var(--dash-accent)">ESTADÍSTICAS</CapLabel>
+        </button>
 
         <div className={styles.dividerV} />
 
