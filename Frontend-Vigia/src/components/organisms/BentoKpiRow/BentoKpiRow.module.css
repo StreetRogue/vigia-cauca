@@ -71,16 +71,19 @@
 
 /* ── Valor principal ─────────────────────────────────────────────────────── */
 .cardValue {
-  font-size: 2rem;
+  font-size: clamp(1.3rem, 3vw, 2rem);
   font-weight: 700;
   line-height: 1;
   color: var(--card-color);
   letter-spacing: -0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Card wide → número un poco más grande */
 .wide .cardValue {
-  font-size: 2.4rem;
+  font-size: clamp(1.5rem, 3.5vw, 2.4rem);
 }
 
 /* ── Sublabel ────────────────────────────────────────────────────────────── */
