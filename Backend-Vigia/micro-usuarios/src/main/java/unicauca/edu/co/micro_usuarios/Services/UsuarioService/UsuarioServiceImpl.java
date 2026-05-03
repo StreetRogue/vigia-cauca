@@ -22,7 +22,7 @@ import unicauca.edu.co.micro_usuarios.Exceptions.UsernameAlreadyExistsException;
 import unicauca.edu.co.micro_usuarios.Exceptions.UsuarioNotFoundException;
 import unicauca.edu.co.micro_usuarios.Mapper.UsuarioMapper;
 import unicauca.edu.co.micro_usuarios.Repository.UsuarioRepository;
-import unicauca.edu.co.micro_usuarios.Services.IAMService.Auth0Service;
+import unicauca.edu.co.micro_usuarios.Services.IAMService.IamService;
 import unicauca.edu.co.micro_usuarios.Services.RabbitMQService.UsuarioEventPublisher;
 import unicauca.edu.co.micro_usuarios.Specifications.UsuarioSpecification;
 
@@ -37,11 +37,11 @@ import java.util.stream.Collectors;
 public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioEventPublisher usuarioEventPublisher;
     private final UsuarioRepository usuarioRepository;
-    private final Auth0Service auth0Service;
+    private final IamService iamService;
     private final UbicacionesClient ubicacionesClient;
 
     @Override
-    public UsuarioResponseDTO registrarUsuario(UsuarioCreateDTO dto, String adminAuth0Id) {
+    public UsuarioResponseDTO registrarUsuario(UsuarioCreateDTO dto, String adminIdIam) {
         // Validaciones
         if (usuarioRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new EmailAlreadyExistsException("El email ya está registrado");
@@ -64,29 +64,21 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = UsuarioMapper.toEntity(dto);
 
         // Crear usuario en Auth0
-        String auth0Id = auth0Service.crearUsuario(
+        String idIam = iamService.crearUsuario(
                 dto.getEmail(),
                 dto.getUsername(),
                 dto.getRol()
         );
 
-        usuario.setIdIam(auth0Id);
+        usuario.setIdIam(idIam);
 
-        log.info("Usuario creado en Auth0 | idAuth0={}", auth0Id);
+        log.info("Usuario creado en Iam | idIam={}", idIam);
 
         // Auditoría
-        usuario.setCreadoPor(adminAuth0Id);
+        usuario.setCreadoPor(adminIdIam);
 
         // Guardar en DB
         Usuario guardado = usuarioRepository.save(usuario);
-
-        // Generar ticket
-        try {
-            String ticketCambio = auth0Service.generarTicketCambioPassword(auth0Id);
-            log.info("Link del ticket de cambio: {}", ticketCambio);
-        } catch (Exception e) {
-            log.error("Error generando ticket de cambio de password | userId={}", auth0Id, e);
-        }
 
         UsuarioResponseDTO usuarioResponseDTO = UsuarioMapper.toDTO(guardado, municipio);
 
@@ -97,11 +89,11 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public UsuarioResponseDTO editarUsuario(UUID id, UsuarioUpdateDTO dto, String adminAuth0Id) {
+    public UsuarioResponseDTO editarUsuario(UUID id, UsuarioUpdateDTO dto, String adminIdIam) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
 
-        if (usuario.getIdIam().equals(adminAuth0Id)
+        if (usuario.getIdIam().equals(adminIdIam)
                 && EstadoUsuario.INACTIVO.equals(dto.getEstado())) {
             throw new InvalidOperationException("No puedes inactivarte a ti mismo");
         }
@@ -132,21 +124,21 @@ public class UsuarioServiceImpl implements UsuarioService {
             usuario.setEstado(dto.getEstado());
 
             if (dto.getEstado().equals(EstadoUsuario.INACTIVO)) {
-                auth0Service.bloquearUsuario(usuario.getIdIam());
+                iamService.bloquearUsuario(usuario.getIdIam());
             }
 
             if (dto.getEstado().equals(EstadoUsuario.ACTIVO)) {
-                auth0Service.desbloquearUsuario(usuario.getIdIam());
+                iamService.desbloquearUsuario(usuario.getIdIam());
             }
         }
 
         // SOLO si hay datos reales de Auth0
         if (dto.getEmail() != null || dto.getUsername() != null) {
-            auth0Service.actualizarUsuario(usuario.getIdIam(), dto);
+            iamService.actualizarUsuario(usuario.getIdIam(), dto);
         }
 
         // Auditoría
-        usuario.setEditadoPor(adminAuth0Id);
+        usuario.setEditadoPor(adminIdIam);
 
         Usuario actualizado = usuarioRepository.save(usuario);
 
@@ -170,9 +162,9 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public UsuarioResponseDTO getByAuth0Id(String auth0Id) {
+    public UsuarioResponseDTO getByIdIam(String adminIdIam) {
 
-        Usuario usuario = usuarioRepository.findByIdAuth0(auth0Id)
+        Usuario usuario = usuarioRepository.findByIdIam(adminIdIam)
                 .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
 
         MunicipioResponseDTO municipio = ubicacionesClient.getMunicipio(usuario.getIdMunicipio());

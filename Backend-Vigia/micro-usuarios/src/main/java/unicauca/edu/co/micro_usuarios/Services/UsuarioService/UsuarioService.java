@@ -8,9 +8,9 @@ import unicauca.edu.co.micro_usuarios.DTOs.Response.UsuarioResponseDTO;
 import java.util.UUID;
 
 public interface UsuarioService {
-    UsuarioResponseDTO registrarUsuario(UsuarioCreateDTO dto, String adminAuth0Id);
-    UsuarioResponseDTO editarUsuario(UUID id, UsuarioUpdateDTO dto, String adminAuth0Id);
+    UsuarioResponseDTO registrarUsuario(UsuarioCreateDTO dto, String adminIdIam);
+    UsuarioResponseDTO editarUsuario(UUID id, UsuarioUpdateDTO dto, String adminIdIam);
     UsuarioResponseDTO getUserById(UUID id);
-    UsuarioResponseDTO getByAuth0Id(String adminAuth0Id);
+    UsuarioResponseDTO getByIdIam(String adminIdIam);
     PageResponseDTO<UsuarioResponseDTO> listarUsuarios(String rol, String estado, Long idMunicipio, int page, int size);
 }
