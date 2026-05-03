@@ -1,0 +1,83 @@
+:root {
+  --color-primary-500: #2252ad;
+  --color-primary-600: #1a3f86;
+  --color-primary-400: #4b77c2;
+  --color-primary-100: #becef0;
+  --color-primary-050: #e4ebf8;
+  --color-primary-soft: rgba(34, 82, 173, 0.12);
+  --color-primary-ring: rgba(34, 82, 173, 0.24);
+
+  --color-navy-950: #040c18;
+  --color-navy-900: #091629;
+  --color-navy-800: #112444;
+  --color-navy-700: #112444;
+
+  --color-text-primary: #484e5b;
+  --color-text-on-dark: #ffffff;
+  --color-text-muted: #aeb2bb;
+  --color-text-label: #484e5b;
+
+  --color-surface-body: #f4f5f7;
+  --color-surface-shell-start: #f4f5f7;
+  --color-surface-shell-end: #f4f5f7;
+  --color-surface-card: #ffffff;
+  --color-surface-blueprint-end: #091629;
+
+  --color-border-soft: #e8eaed;
+  --color-border-medium: #d3d6db;
+
+  --color-danger-500: #b42318;
+  --color-danger-soft: rgba(180, 35, 24, 0.1);
+  --color-danger-border: rgba(180, 35, 24, 0.16);
+
+  --color-success-500: #166534;
+  --color-success-soft: rgba(21, 128, 61, 0.1);
+
+  --color-warning-500: #92400e;
+  --color-warning-soft: rgba(180, 83, 9, 0.1);
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+
+  /* Dashboard dark theme */
+  --dash-bg:        #091629;
+  --dash-panel:     #0d1f3c;
+  --dash-panel2:    #112444;
+  --dash-border:    rgba(34, 82, 173, 0.25);
+  --dash-border-hi: rgba(75, 119, 194, 0.55);
+  --dash-accent:    #c8971f;
+  --dash-red:       #c0392b;
+  --dash-amber:     #d4a520;
+  --dash-green:     #27ae60;
+  --dash-text-0:    #ffffff;
+  --dash-text-1:    #becef0;
+  --dash-text-bone: #ddd8cf;
+  --dash-text-2:    #878d99;
+  --dash-text-3:    #484e5b;
+
+  /* Métricas — color semántico por tipo de dato */
+  --metric-eventos:      #c8971f;   /* dorado  — igual que --dash-accent  */
+  --metric-muertos:      #c0392b;   /* rojo    — gravedad máxima          */
+  --metric-heridos:      #d4813a;   /* naranja — gravedad media           */
+  --metric-desplazados:  #4a80c4;   /* azul    — desplazamiento forzado   */
+  --metric-confinados:   #8e6bbf;   /* violeta — confinamiento            */
+
+  /* Soft backgrounds para KPI cards (8 % opacidad) */
+  --metric-eventos-soft:     rgba(200, 151, 31,  0.08);
+  --metric-muertos-soft:     rgba(192,  57, 43,  0.08);
+  --metric-heridos-soft:     rgba(212, 129,  58, 0.08);
+  --metric-desplazados-soft: rgba( 74, 128, 196, 0.08);
+  --metric-confinados-soft:  rgba(142, 107, 191, 0.08);
+
+  /* Deltas para comparación de períodos */
+  --delta-up:   #c0392b;   /* sube la violencia → rojo  */
+  --delta-down: #27ae60;   /* baja la violencia → verde */
+  --delta-zero: #878d99;   /* sin cambio → gris         */
+
+  /* Layout estadísticas */
+  --stats-gap:    1.25rem;
+  --stats-radius: 10px;
+}

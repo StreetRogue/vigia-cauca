@@ -1,0 +1,32 @@
+name: Backend CI - APIGateway
+
+on:
+  push:
+    branches: [ develop, main ]
+    paths:
+      - 'Backend-Vigia/APIGateway/**'
+  pull_request:
+    branches: [ develop, main ]
+    paths:
+      - 'Backend-Vigia/APIGateway/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Compilar y empaquetar con Maven
+        run: mvn -f Backend-Vigia/APIGateway/pom.xml clean package -DskipTests
+
+      - name: Verificar artefacto generado
+        run: ls -l Backend-Vigia/APIGateway/target/*.jar

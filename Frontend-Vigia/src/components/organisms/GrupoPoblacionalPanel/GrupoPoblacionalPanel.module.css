@@ -1,0 +1,113 @@
+/* ── Panel ───────────────────────────────────────────────────────────────── */
+.panel {
+  background: var(--dash-panel);
+  border: 1px solid var(--dash-border);
+  border-radius: var(--stats-radius, 10px);
+  padding: 1.1rem 1.25rem 1rem;
+}
+
+/* ── Encabezado ──────────────────────────────────────────────────────────── */
+.panelHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.panelTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--dash-text-1);
+  text-transform: uppercase;
+}
+
+.panelSub {
+  font-size: 0.68rem;
+  color: var(--dash-text-2);
+}
+
+/* ── Lista de barras ─────────────────────────────────────────────────────── */
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* ── Fila individual ─────────────────────────────────────────────────────── */
+.barRow {
+  display: grid;
+  grid-template-columns: 9rem 1fr 3.5rem 3rem 4rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.barName {
+  font-size: 0.74rem;
+  color: var(--dash-text-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Track / barra ───────────────────────────────────────────────────────── */
+.barTrack {
+  height: 7px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* ── Valores numéricos ───────────────────────────────────────────────────── */
+.barAbs {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.barRel {
+  font-size: 0.72rem;
+  color: var(--dash-text-2);
+  text-align: right;
+}
+
+.barAcum {
+  font-size: 0.68rem;
+  color: var(--dash-text-3);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Carga ───────────────────────────────────────────────────────────────── */
+.loading {
+  opacity: 0.5;
+  pointer-events: none;
+  animation: panelPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes panelPulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 0.25; }
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 800px) {
+  .barRow {
+    grid-template-columns: 8rem 1fr 3rem 3rem;
+  }
+  .barAcum { display: none; }
+}
+
+@media (max-width: 560px) {
+  .barRow {
+    grid-template-columns: 7rem 1fr 3rem;
+  }
+  .barRel { display: none; }
+}

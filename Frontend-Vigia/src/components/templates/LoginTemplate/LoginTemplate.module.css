@@ -1,0 +1,179 @@
+.shell {
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  background: var(--color-surface-body);
+}
+
+.blueprint {
+  position: relative;
+  overflow: hidden;
+  border-right: 1px solid var(--color-border-medium);
+  background:
+    linear-gradient(90deg, rgba(75, 119, 194, 0.1) 1px, transparent 1px),
+    linear-gradient(rgba(75, 119, 194, 0.1) 1px, transparent 1px),
+    linear-gradient(180deg, var(--color-navy-800) 0%, var(--color-navy-900) 100%);
+  background-size: 50px 50px, 50px 50px, auto;
+}
+
+.blueprint::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 66% 35%, rgba(34, 82, 173, 0.14), transparent 22%),
+    radial-gradient(circle at 40% 55%, rgba(9, 22, 41, 0.28), transparent 32%),
+    radial-gradient(circle at 72% 78%, rgba(9, 22, 41, 0.24), transparent 24%);
+}
+
+.blueprintContent {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  padding: 30px 40px 40px;
+  display: flex;
+  flex-direction: column;
+  color: var(--color-primary-100);
+}
+
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brandMark {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, var(--color-primary-500) 0%, var(--color-primary-600) 100%);
+  color: var(--color-text-on-dark);
+  display: grid;
+  place-items: center;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.brandTitle {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-primary-100);
+}
+
+.brandSubtitle {
+  margin: 4px 0 0;
+  color: var(--color-primary-400);
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.monitorLabel {
+  margin-top: 26px;
+  color: var(--color-primary-400);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.mapFrame {
+  position: relative;
+  flex: 1;
+  margin: 24px 0;
+  border-radius: 20px;
+  background: transparent;
+}
+
+.mapImage {
+  position: absolute;
+  inset: 62px;
+  width: calc(100% - 124px);
+  height: calc(100% - 124px);
+  object-fit: contain;
+  object-position: center;
+  opacity: 0.88;
+  filter: saturate(1.05) brightness(1.05);
+}
+
+.coordinateTop,
+.coordinateBottom {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: rgba(9, 22, 41, 0.72);
+  color: var(--color-primary-100);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  box-shadow: 0 10px 20px rgba(4, 12, 24, 0.28);
+}
+
+.coordinateTop {
+  top: 132px;
+  left: 40px;
+}
+
+.coordinateBottom {
+  bottom: 132px;
+  left: 40px;
+}
+
+.coordinateDot {
+  width: 14px;
+  height: 14px;
+  border-radius: 0;
+  background: linear-gradient(180deg, var(--color-primary-500), var(--color-primary-600));
+}
+
+.blueprintFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(75, 119, 194, 0.22);
+  color: var(--color-primary-400);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.panelSlot {
+  background: var(--color-surface-body);
+}
+
+@media (max-width: 1024px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .blueprint {
+    min-height: 36rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border-soft);
+  }
+
+  .blueprintContent {
+    padding: 24px 20px 28px;
+  }
+}
+
+@media (max-width: 640px) {
+  .blueprint {
+    min-height: 26rem;
+  }
+
+  .brandRow {
+    align-items: flex-start;
+  }
+
+  .blueprintFooter {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,133 @@
+import { NovedadesProvider, useNovedades } from '../context/NovedadesContext';
+import { Sidebar } from '../components/organisms/Sidebar';
+import { NavMenu } from '../components/molecules/NavMenu';
+import { ExcelUploadModal } from '../components/organisms/ExcelUploadModal';
+import { Stepper } from '../components/organisms/novedades/Stepper';
+import { Step1Localizacion } from '../components/organisms/novedades/Step1Localizacion';
+import { Step2Caracterizacion } from '../components/organisms/novedades/Step2Caracterizacion';
+import { Step3Afectacion } from '../components/organisms/novedades/Step3Afectacion';
+import { Step4Evidencias } from '../components/organisms/novedades/Step4Evidencias';
+import { Step5Success } from '../components/organisms/novedades/Step5Success';
+import dashboardIcon from '../assets/Dashboard_Icon.svg';
+import novedadesIcon from '../assets/novedades_icon.svg';
+import usuariosIcon from '../assets/usuarios_icon.svg';
+import reportesIcon from '../assets/reportes_icon.svg';
+import configuracionIcon from '../assets/configuracion_icon.svg';
+import './novedades.css';
+
+const menuItems = [
+  { label: 'DASHBOARD', icon: <img src={dashboardIcon} alt="" /> },
+  { label: 'NOVEDADES', icon: <img src={novedadesIcon} alt="" />, to: '/novedades' },
+  { label: 'USUARIOS', icon: <img src={usuariosIcon} alt="" />, to: '/usuarios' },
+  { label: 'REPORTES', icon: <img src={reportesIcon} alt="" /> },
+  { label: 'CONFIGURACION', icon: <img src={configuracionIcon} alt="" /> },
+];
+
+const sidebarNav = <NavMenu items={menuItems} />;
+
+const sidebarFooter = (
+  <div className="user-card">
+    <div className="avatar">AC</div>
+    <div className="user-card-info">
+      <span className="user-card-name">Admin Chávez</span>
+      <span className="user-card-role">Administrador</span>
+    </div>
+  </div>
+);
+
+function NovedadesContent() {
+  const {
+    currentStep, setCurrentStep,
+    showExcelModal, setShowExcelModal,
+    showSuccessToast,
+    handleContinuar, handleExcelFile
+  } = useNovedades();
+
+  return (
+    <div className="layout">
+      {showSuccessToast && (
+        <div className="toast-success">
+          ✅ Novedad registrada con éxito
+        </div>
+      )}
+
+      <ExcelUploadModal
+        isOpen={showExcelModal}
+        onClose={() => setShowExcelModal(false)}
+        onUpload={file => {
+          handleExcelFile(file);
+          setShowExcelModal(false);
+        }}
+      />
+
+      <Sidebar title="VIGIA CAUCA" subtitle="GESTION INTEGRAL" nav={sidebarNav} footer={sidebarFooter} />
+      <main className="main-content">
+        <header className="main-header">
+          <div className="breadcrumb">
+            <span className="breadcrumb-path">Dashboard / </span>
+            <span className="breadcrumb-current">Novedades</span>
+          </div>
+          <div className="header-user-profile">
+            <div className="avatar-circle">AC</div>
+            <div className="user-info">
+              <span className="user-name">Admin Chávez</span>
+              <span className="user-role">Administrador</span>
+            </div>
+          </div>
+        </header>
+
+        <section className="content-area">
+          {currentStep === 5 ? (
+            <Step5Success />
+          ) : (
+            <div className="registration-card">
+              <div className="registration-header">
+                <div className="registration-title-group">
+                  <h3>REGISTRAR NUEVA NOVEDAD</h3>
+                  <p>Complete los campos del paso actual para continuar</p>
+                </div>
+                {currentStep === 1 && (
+                  <div>
+                    <button
+                      className="btn-excel"
+                      onClick={() => setShowExcelModal(true)}
+                    >
+                      CARGAR DESDE EXCEL
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <Stepper />
+
+              {currentStep === 1 && <Step1Localizacion />}
+              {currentStep === 2 && <Step2Caracterizacion />}
+              {currentStep === 3 && <Step3Afectacion />}
+              {currentStep === 4 && <Step4Evidencias />}
+
+              <div className="card-actions">
+                <button
+                  className="btn-secondary"
+                  onClick={() => currentStep > 1 ? setCurrentStep(currentStep - 1) : null}
+                >
+                  {currentStep > 1 ? 'ANTERIOR' : 'CANCELAR'}
+                </button>
+                <button className="btn-primary" onClick={handleContinuar}>
+                  {currentStep === 4 ? 'REGISTRAR NOVEDAD' : 'CONTINUAR'}
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      </main>
+    </div>
+  );
+}
+
+export function NovedadesScreen() {
+  return (
+    <NovedadesProvider>
+      <NovedadesContent />
+    </NovedadesProvider>
+  );
+}

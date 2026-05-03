@@ -1,0 +1,13 @@
+.navMenu {
+  width: 100%;
+}
+
+.navList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navListItem {
+  margin: 0;
+}

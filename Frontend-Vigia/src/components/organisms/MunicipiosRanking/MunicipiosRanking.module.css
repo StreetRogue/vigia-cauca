@@ -1,0 +1,163 @@
+/* ── Panel ───────────────────────────────────────────────────────────────── */
+.panel {
+  background: var(--dash-panel);
+  border: 1px solid var(--dash-border);
+  border-radius: var(--stats-radius, 10px);
+  padding: 1.1rem 1.25rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ── Encabezado ──────────────────────────────────────────────────────────── */
+.panelHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.panelTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--dash-text-1);
+  text-transform: uppercase;
+}
+
+.panelSub {
+  font-size: 0.68rem;
+  color: var(--dash-text-2);
+}
+
+/* ── Tabla ───────────────────────────────────────────────────────────────── */
+.tableWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  border-radius: 7px;
+  border: 1px solid var(--dash-border);
+}
+
+/* ── Fila ────────────────────────────────────────────────────────────────── */
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.5rem 1fr 4.5rem 4.5rem 4.5rem 4.5rem 4.5rem;
+  align-items: center;
+  padding: 0.45rem 0.75rem;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--dash-border);
+  transition: background 0.15s;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.row:not(.head):hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Barra de fondo por intensidad */
+.rowBar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Fila encabezado ─────────────────────────────────────────────────────── */
+.head {
+  background: var(--dash-panel2);
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.head > * {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: var(--dash-text-2);
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Columnas ────────────────────────────────────────────────────────────── */
+.colIdx {
+  font-size: 0.68rem;
+  color: var(--dash-text-3);
+  position: relative;
+  z-index: 1;
+  text-align: right;
+}
+
+.colMunicipio {
+  font-size: 0.75rem;
+  color: var(--dash-text-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  z-index: 1;
+}
+
+.colNum {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: right;
+  position: relative;
+  z-index: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.colFreq {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: right;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Carga ───────────────────────────────────────────────────────────────── */
+.loading {
+  opacity: 0.5;
+  pointer-events: none;
+  animation: panelPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes panelPulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 0.25; }
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .row {
+    grid-template-columns: 1.5rem 1fr 4rem 4rem 4.5rem;
+  }
+  /* Ocultar heridos en mobile */
+  .colNum:nth-child(4),
+  .head > span:nth-child(4) {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .row {
+    grid-template-columns: 1fr 4rem 4.5rem;
+  }
+  .colIdx,
+  .colNum:nth-child(3),
+  .colNum:nth-child(5),
+  .head > span:nth-child(2),
+  .head > span:nth-child(4),
+  .head > span:nth-child(6) {
+    display: none;
+  }
+}

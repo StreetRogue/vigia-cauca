@@ -1,0 +1,88 @@
+
+server:
+  port: 8080
+
+spring:
+  main:
+    web-application-type: reactive
+
+  application:
+    name: api-gateway
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/security-realm-dev}
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            # =========================
+            # USUARIOS
+            # =========================
+            - id: usuarios
+              uri: http://localhost:8083
+              predicates:
+                - Path=/api/*/usuarios/**
+              filters:
+                - StripPrefix=2
+
+            # =========================
+            # NOVEDADES
+            # =========================
+            - id: novedades
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/*/novedades/**
+              filters:
+                - StripPrefix=2
+
+            # =========================
+            # ESTADISTICAS
+            # =========================
+            - id: estadisticas
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/*/estadisticas/**
+              filters:
+                - StripPrefix=2
+
+            # =========================
+            # WEBSOCKET
+            # =========================
+            - id: websocket
+              uri: ws://localhost:8090
+              predicates:
+                - Path=/ws/**
+
+# ===========================
+# JWT CUSTOM CONFIG
+# ===========================
+jwt:
+  auth:
+    converter:
+      principle-attribute: preferred_username
+      api-client: ${KEYCLOAK_CLIENT_ID:api-gateway}
+
+# ===========================
+# KEYCLOAK
+# ===========================
+
+keycloak:
+  token-url: ${KEYCLOAK_TOKEN_URL}
+  logout-url: ${KEYCLOAK_LOGOUT_URL}
+  client-id: ${KEYCLOAK_CLIENT_ID}
+  client-secret: ${KEYCLOAK_CLIENT_SECRET}
+
+# ===========================
+# LOGGING
+# ===========================
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: INFO
+    org.springframework.security: DEBUG
+

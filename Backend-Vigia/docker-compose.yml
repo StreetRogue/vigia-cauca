@@ -1,0 +1,131 @@
+# docker-compose.yml
+services:
+
+  # ─────────────────────────────────────────
+  # INFRAESTRUCTURA
+  # ─────────────────────────────────────────
+
+  postgres-usuarios:
+    image: postgres:16-alpine
+    container_name: postgres-usuarios
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${USUARIOS_DB}
+      POSTGRES_USER: ${USUARIOS_DB_USER}
+      POSTGRES_PASSWORD: ${USUARIOS_DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_usuarios_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${USUARIOS_DB_USER} -d ${USUARIOS_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-ubicaciones:
+    image: postgres:16-alpine
+    container_name: postgres-ubicaciones
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${UBICACIONES_DB}
+      POSTGRES_USER: ${UBICACIONES_DB_USER}
+      POSTGRES_PASSWORD: ${UBICACIONES_DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_ubicaciones_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${UBICACIONES_DB_USER} -d ${UBICACIONES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.3
+    container_name: keycloak
+    restart: unless-stopped
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD}
+    ports:
+      - "8180:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+
+  # ─────────────────────────────────────────
+  # MICROSERVICIOS
+  # ─────────────────────────────────────────
+
+  micro-usuarios:
+    build:
+      context: ./micro-usuarios
+      dockerfile: Dockerfile
+    container_name: micro-usuarios
+    restart: unless-stopped
+    env_file:
+      - ./micro-usuarios/.env.dev
+    ports:
+      - "${USUARIOS_PORT}:${USUARIOS_PORT}"
+    networks:
+      - backend
+    depends_on:
+      postgres-usuarios:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  micro-ubicaciones:
+    build:
+      context: ./micro-ubicaciones
+      dockerfile: Dockerfile
+    container_name: micro-ubicaciones
+    restart: unless-stopped
+    env_file:
+      - ./micro-ubicaciones/.env.dev
+    ports:
+      - "${UBICACIONES_PORT}:${UBICACIONES_PORT}"
+    networks:
+      - backend
+    depends_on:
+      postgres-ubicaciones:
+        condition: service_healthy
+
+# ─────────────────────────────────────────
+# VOLÚMENES Y RED
+# ─────────────────────────────────────────
+
+volumes:
+  postgres_usuarios_data:
+  postgres_ubicaciones_data:
+  rabbitmq_data:
+  keycloak_data:
+
+networks:
+  backend:
+    driver: bridge

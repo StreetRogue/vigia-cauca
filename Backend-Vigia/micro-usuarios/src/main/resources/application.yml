@@ -1,0 +1,42 @@
+server:
+  port: ${APP_PORT:8081}
+
+spring:
+  application:
+    name: micro-usuarios
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  web:
+    error:
+      include-exception: true
+
+security:
+  oauth2:
+    resourceserver:
+      jwt:
+        issuer-uri: ${KEYCLOAK_ISSUER_URI}
+
+auth0:
+  issuer-uri: ${ISSUER_URI}
+  client-id: ${AUTH0_CLIENT_ID}
+  client-secret: ${AUTH0_CLIENT_SECRET}
+  api-audience: ${AUTH0_API_AUDIENCE}
+  roles:
+    admin: ${ROL_ADMIN}
+    operador: ${ROL_OPERADOR}
+
+keycloak:
+  server-url: ${KEYCLOAK_SERVER_URL}
+  realm-name: ${KEYCLOAK_REALM_NAME}
+  realm-master: ${KEYCLOAK_REALM_MASTER}
+  admin-cli: ${KEYCLOAK_ADMIN_CLI}
+  user-console: ${KEYCLOAK_USER_CONSOLE}
+  console-passsword: ${KEYCLOAK_CONSOLE_PASSWORD}
+  client-secret: ${KEYCLOAK_CLIENT_SECRET}
+
+ubicaciones:
+  url: http://micro-ubicaciones:8082
+
+logging:
+  level:
+    org.springframework.security: INFO

@@ -1,0 +1,31 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 19px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.default {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-500);
+}
+
+.success {
+  background: var(--color-success-soft);
+  color: var(--color-success-500);
+}
+
+.warning {
+  background: var(--color-warning-soft);
+  color: var(--color-warning-500);
+}
+
+.danger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-500);
+}
