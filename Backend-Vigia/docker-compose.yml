@@ -69,7 +69,7 @@ services:
     image: quay.io/keycloak/keycloak:24.0.3
     container_name: keycloak
     restart: unless-stopped
-    command: start-dev
+    command: start-dev --import-realm
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_USER}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD}
@@ -77,10 +77,13 @@ services:
       - "8180:8080"
     volumes:
       - keycloak_data:/opt/keycloak/data
+      - ./keycloak/realms:/opt/keycloak/data/import
+    networks:
+      - backend
 
-  # ─────────────────────────────────────────
+  # =========================================
   # MICROSERVICIOS
-  # ─────────────────────────────────────────
+  # =========================================
 
   micro-usuarios:
     build:
@@ -116,9 +119,9 @@ services:
       postgres-ubicaciones:
         condition: service_healthy
 
-# ─────────────────────────────────────────
+# =========================================
 # VOLÚMENES Y RED
-# ─────────────────────────────────────────
+# =========================================
 
 volumes:
   postgres_usuarios_data:
