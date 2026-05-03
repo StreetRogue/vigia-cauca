@@ -1,0 +1,96 @@
+/* ── Panel contenedor ────────────────────────────────────────────────────── */
+.panel {
+  background: var(--dash-panel);
+  border: 1px solid var(--dash-border);
+  border-radius: var(--stats-radius, 10px);
+  padding: 1.1rem 1.25rem 1rem;
+}
+
+/* ── Encabezado ──────────────────────────────────────────────────────────── */
+.panelHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.panelTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--dash-text-1);
+  text-transform: uppercase;
+}
+
+.panelSub {
+  font-size: 0.68rem;
+  color: var(--dash-text-2);
+}
+
+/* ── Grid 2×2 de mini-charts ─────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+/* ── Mini card individual ────────────────────────────────────────────────── */
+.miniCard {
+  background: var(--dash-panel2);
+  border: 1px solid var(--dash-border);
+  border-radius: 8px;
+  padding: 0.75rem 0.75rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.miniHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.miniLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.miniMax {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--dash-text-0);
+}
+
+.miniSvg {
+  width: 100%;
+  height: 90px;
+  display: block;
+}
+
+/* ── Estado de carga ─────────────────────────────────────────────────────── */
+.loading {
+  opacity: 0.5;
+  pointer-events: none;
+  animation: panelPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes panelPulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 0.25; }
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 1000px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

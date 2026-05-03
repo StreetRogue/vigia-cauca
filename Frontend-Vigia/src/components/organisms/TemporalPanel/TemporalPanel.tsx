@@ -29,38 +29,18 @@ export function TemporalPanel({ serie, loading }: TemporalPanelProps) {
   // Ordenar por mes
   const sorted = [...raw].sort((a, b) => a.mes - b.mes);
 
-  const total     = sorted.reduce((s, m) => s + m.totalEventos, 0) || 1;
-  const MAX       = Math.max(...sorted.map((m) => m.totalEventos), 1);
-  const nowMonth  = new Date().getMonth() + 1;
+  const MAX         = Math.max(...sorted.map((m) => m.totalEventos), 1);
+  const nowMonth    = new Date().getMonth() + 1;
   const CURRENT_IDX = sorted.findIndex((m) => m.mes === nowMonth);
-
-  // Enriquecer con frecuencias calculadas localmente si el back no las trae
-  const enriched = sorted.map((m) => ({
-    month:       m.nombreMes,
-    value:       m.totalEventos,
-    freqRel:     m.frecuenciaRelativa > 0
-                   ? m.frecuenciaRelativa.toFixed(1)
-                   : ((m.totalEventos / total) * 100).toFixed(1),
-    freqAcum:    m.frecuenciaAcumulada,
-    freqAcumPct: m.frecuenciaAcumulada > 0
-                   ? ((m.frecuenciaAcumulada / (sorted[sorted.length - 1].frecuenciaAcumulada || total)) * 100).toFixed(1)
-                   : '0.0',
-  }));
-
-  const acumMax = Math.max(...enriched.map((e) => e.freqAcum), 1);
 
   return (
     <div className={`${styles.panel} ${loading ? styles.loading : ''}`}>
       <div className={styles.header}>
-        <CapLabel color="var(--color-primary-400)">ANÁLISIS TEMPORAL · EVENTOS / MES</CapLabel>
+        <CapLabel color="var(--color-primary-400)">TENDENCIA MENSUAL · EVENTOS</CapLabel>
         <div className={styles.legend}>
           <div className={styles.legendItem}>
             <div className={styles.legendBar} style={{ background: 'var(--color-primary-500)' }} />
             <CapLabel size={8}>Eventos / mes</CapLabel>
-          </div>
-          <div className={styles.legendItem}>
-            <div className={styles.legendLine} style={{ background: 'var(--dash-amber)' }} />
-            <CapLabel size={8}>Frec. acumulada</CapLabel>
           </div>
           <div className={styles.legendItem}>
             <div className={styles.legendBar} style={{ background: 'var(--dash-accent)' }} />
@@ -69,17 +49,20 @@ export function TemporalPanel({ serie, loading }: TemporalPanelProps) {
         </div>
       </div>
 
-      {/* Bar chart */}
+      {/* Bar chart limpio — solo eventos por mes */}
       <div className={styles.chart}>
         <div className={styles.bars}>
-          {enriched.map(({ month, value }, i) => {
-            const isCurrent = CURRENT_IDX >= 0 ? i === CURRENT_IDX : i === enriched.length - 1;
+          {sorted.map(({ nombreMes, totalEventos }, i) => {
+            const isCurrent = CURRENT_IDX >= 0 ? i === CURRENT_IDX : i === sorted.length - 1;
             return (
-              <div key={month} className={styles.barCol}>
+              <div key={nombreMes} className={styles.barCol}>
+                <div className={styles.barValue}>
+                  {isCurrent && <span>{totalEventos}</span>}
+                </div>
                 <div
                   className={styles.bar}
                   style={{
-                    height: `${(value / MAX) * 100}%`,
+                    height: `${(totalEventos / MAX) * 100}%`,
                     background: isCurrent ? 'var(--dash-accent)' : 'var(--color-primary-500)',
                     opacity: isCurrent ? 1 : 0.72,
                     border: isCurrent ? '1px solid var(--dash-accent)' : 'none',
@@ -89,77 +72,11 @@ export function TemporalPanel({ serie, loading }: TemporalPanelProps) {
                   size={8}
                   color={isCurrent ? 'var(--dash-accent)' : undefined}
                 >
-                  {month}
+                  {nombreMes.slice(0, 3)}
                 </CapLabel>
               </div>
             );
           })}
-        </div>
-
-        {/* Cumulative line overlay */}
-        <svg className={styles.lineOverlay} viewBox="0 0 1200 100" preserveAspectRatio="none">
-          <polyline
-            points={enriched.map(({ freqAcum }, i) =>
-              `${i * 100 + 50},${100 - (freqAcum / acumMax) * 92}`
-            ).join(' ')}
-            fill="none"
-            stroke="var(--dash-amber)"
-            strokeWidth="2"
-            strokeDasharray="5,3"
-            strokeLinejoin="round"
-            strokeLinecap="round"
-          />
-          {enriched.map(({ freqAcum }, i) => (
-            <circle
-              key={i}
-              cx={i * 100 + 50}
-              cy={100 - (freqAcum / acumMax) * 92}
-              r="3"
-              fill="var(--dash-amber)"
-            />
-          ))}
-        </svg>
-      </div>
-
-      {/* Frequency summary row */}
-      <div className={styles.freqRow}>
-        <div className={styles.freqBlock}>
-          <CapLabel color="var(--color-primary-400)">FRECUENCIA RELATIVA POR MES</CapLabel>
-          <div className={styles.freqBars}>
-            {enriched.map(({ month, freqRel }) => (
-              <div key={month} className={styles.freqCol}>
-                <div className={styles.freqRelBar}>
-                  <div
-                    className={styles.freqRelFill}
-                    style={{ height: `${parseFloat(freqRel)}%` }}
-                  />
-                </div>
-                <div className={styles.freqRelVal}>{freqRel}%</div>
-                <CapLabel size={7}>{month}</CapLabel>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className={styles.freqDivider} />
-
-        <div className={styles.freqBlock}>
-          <CapLabel color="var(--color-primary-400)">FRECUENCIA ACUMULADA</CapLabel>
-          <div className={styles.freqAcumList}>
-            {enriched.filter((_, i) => i % 3 === 2).map(({ month, freqAcum, freqAcumPct }) => (
-              <div key={month} className={styles.freqAcumRow}>
-                <CapLabel size={8}>{month}</CapLabel>
-                <div className={styles.freqAcumTrack}>
-                  <div
-                    className={styles.freqAcumFill}
-                    style={{ width: `${freqAcumPct}%` }}
-                  />
-                </div>
-                <div className={styles.freqAcumVal}>{freqAcum}</div>
-                <div className={styles.freqAcumPct}>({freqAcumPct}%)</div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>

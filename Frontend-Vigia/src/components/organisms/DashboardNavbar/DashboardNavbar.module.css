@@ -11,6 +11,24 @@
   z-index: 100;
 }
 
+/* ── Nav: Estadísticas ── */
+.statsNavBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(200, 151, 31, 0.08);
+  border: 1px solid rgba(200, 151, 31, 0.3);
+  border-radius: 6px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+.statsNavBtn:hover {
+  background: rgba(200, 151, 31, 0.16);
+  border-color: var(--dash-accent);
+}
+
 /* ── Brand ── */
 .brand {
   display: flex;
