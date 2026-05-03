@@ -23,7 +23,7 @@ public class UsuarioMapper {
     public static UsuarioResponseDTO toDTO(Usuario usuario, MunicipioResponseDTO municipio) {
         return UsuarioResponseDTO.builder()
                 .idUsuario(usuario.getIdUsuario())
-                .idAuth0(usuario.getIdAuth0())
+                .idIam(usuario.getIdIam())
                 .cedula(usuario.getCedula())
                 .nombre(usuario.getNombre())
                 .telefono(usuario.getTelefono())
@@ -43,7 +43,7 @@ public class UsuarioMapper {
         UsuarioPayload event = new UsuarioPayload();
 
         event.setIdUsuario(usuario.getIdUsuario());
-        event.setIdAuth0(usuario.getIdAuth0());
+        event.setIdIam(usuario.getIdIam());
         event.setCedula(usuario.getCedula());
         event.setNombre(usuario.getNombre());
         event.setTelefono(usuario.getTelefono());
