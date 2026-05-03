@@ -33,9 +33,9 @@ public class UsuarioActivoFilter extends OncePerRequestFilter {
         // Verificar que hay usuario autenticado
         if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
 
-            String auth0Id = jwt.getSubject();
+            String keycloakId = jwt.getSubject();
 
-            Usuario usuario = usuarioRepository.findByIdAuth0(auth0Id).orElse(null);
+            Usuario usuario = usuarioRepository.findByIdAuth0(keycloakId).orElse(null);
 
             if (usuario != null && usuario.getEstado() == EstadoUsuario.INACTIVO) {
 

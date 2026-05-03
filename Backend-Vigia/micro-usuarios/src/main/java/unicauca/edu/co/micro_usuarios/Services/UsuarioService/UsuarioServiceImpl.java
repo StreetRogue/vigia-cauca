@@ -22,7 +22,7 @@ import unicauca.edu.co.micro_usuarios.Exceptions.UsernameAlreadyExistsException;
 import unicauca.edu.co.micro_usuarios.Exceptions.UsuarioNotFoundException;
 import unicauca.edu.co.micro_usuarios.Mapper.UsuarioMapper;
 import unicauca.edu.co.micro_usuarios.Repository.UsuarioRepository;
-import unicauca.edu.co.micro_usuarios.Services.Auth0Service.Auth0Service;
+import unicauca.edu.co.micro_usuarios.Services.IAMService.Auth0Service;
 import unicauca.edu.co.micro_usuarios.Services.RabbitMQService.UsuarioEventPublisher;
 import unicauca.edu.co.micro_usuarios.Specifications.UsuarioSpecification;
 
@@ -70,7 +70,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                 dto.getRol()
         );
 
-        usuario.setIdAuth0(auth0Id);
+        usuario.setIdIam(auth0Id);
 
         log.info("Usuario creado en Auth0 | idAuth0={}", auth0Id);
 
@@ -101,7 +101,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
 
-        if (usuario.getIdAuth0().equals(adminAuth0Id)
+        if (usuario.getIdIam().equals(adminAuth0Id)
                 && EstadoUsuario.INACTIVO.equals(dto.getEstado())) {
             throw new InvalidOperationException("No puedes inactivarte a ti mismo");
         }
@@ -132,17 +132,17 @@ public class UsuarioServiceImpl implements UsuarioService {
             usuario.setEstado(dto.getEstado());
 
             if (dto.getEstado().equals(EstadoUsuario.INACTIVO)) {
-                auth0Service.bloquearUsuario(usuario.getIdAuth0());
+                auth0Service.bloquearUsuario(usuario.getIdIam());
             }
 
             if (dto.getEstado().equals(EstadoUsuario.ACTIVO)) {
-                auth0Service.desbloquearUsuario(usuario.getIdAuth0());
+                auth0Service.desbloquearUsuario(usuario.getIdIam());
             }
         }
 
         // SOLO si hay datos reales de Auth0
         if (dto.getEmail() != null || dto.getUsername() != null) {
-            auth0Service.actualizarUsuario(usuario.getIdAuth0(), dto);
+            auth0Service.actualizarUsuario(usuario.getIdIam(), dto);
         }
 
         // Auditoría

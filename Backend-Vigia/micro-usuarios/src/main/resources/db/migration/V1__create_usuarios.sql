@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS usuarios (
     id_usuario          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    id_auth0            VARCHAR(255) UNIQUE,
+    id_keycloak            VARCHAR(255) UNIQUE,
     cedula              VARCHAR(20)  NOT NULL UNIQUE,
     nombre              VARCHAR(255) NOT NULL,
     telefono            VARCHAR(20)  NOT NULL,

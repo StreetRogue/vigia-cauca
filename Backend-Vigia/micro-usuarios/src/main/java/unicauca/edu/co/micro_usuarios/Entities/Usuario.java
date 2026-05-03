@@ -1,15 +1,17 @@
 package unicauca.edu.co.micro_usuarios.Entities;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "usuarios")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -19,7 +21,7 @@ public class Usuario {
     private UUID idUsuario;
 
     @Column(unique = true)
-    private String idAuth0;
+    private String idIam;
 
     @Column(nullable = false, unique = true)
     private String cedula;
