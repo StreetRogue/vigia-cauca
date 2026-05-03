@@ -1,121 +1,102 @@
 package unicauca.edu.co.micro_usuarios.Services.IAMService;
 
+import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.keycloak.OAuth2Constants;
+import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UserResource;
+import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import unicauca.edu.co.micro_usuarios.DTOs.Request.UsuarioUpdateDTO;
 import unicauca.edu.co.micro_usuarios.Entities.Rol;
+import unicauca.edu.co.micro_usuarios.Exceptions.IamException;
+import unicauca.edu.co.micro_usuarios.Util.KeycloakProvider;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class KeycloakService implements IamService {
-    @Value("${keycloak.server-url}")
-    private String serverUrl;
+    private final KeycloakProvider keycloakProvider;
 
-    @Value("${keycloak.realm}")
-    private String realm;
+    public void logoutUsuario(String userId) {
+        RealmResource realmResource = keycloakProvider.getRealmResource();
 
-    @Value("${keycloak.admin-client-id}")
-    private String clientId;
-
-    @Value("${keycloak.admin-client-secret}")
-    private String clientSecret;
-
-    private final RestTemplate restTemplate;
-
-    private String cachedToken;
-    private long tokenExpirationTime;
-
-    private synchronized String getAdminToken() {
-        if (cachedToken != null && System.currentTimeMillis() < tokenExpirationTime) {
-            return cachedToken;
-        }
-
-        String url = serverUrl + "/realms/" + realm + "/protocol/openid-connect/token";
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        // Keycloak usa form-urlencoded, no JSON como Auth0
-        String body = "grant_type=client_credentials"
-                + "&client_id=" + clientId
-                + "&client_secret=" + clientSecret;
-
-        HttpEntity<String> request = new HttpEntity<>(body, headers);
-        ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
-
-        cachedToken = (String) response.getBody().get("access_token");
-        Integer expiresIn = (Integer) response.getBody().get("expires_in");
-        tokenExpirationTime = System.currentTimeMillis() + (expiresIn * 1000L) - 60000;
-
-        return cachedToken;
+        realmResource.users()
+                .get(userId)
+                .logout();
     }
 
     @Override
     public String crearUsuario(String email, String username, Rol rol) {
         try {
-            String token = getAdminToken();
-            String url = serverUrl + "/admin/realms/" + realm + "/users";
+            UsersResource userResource = keycloakProvider.getUsersResource();
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(token);
-            headers.setContentType(MediaType.APPLICATION_JSON);
+            UserRepresentation userRepresentation = new UserRepresentation();
+            userRepresentation.setEmail(email);
+            userRepresentation.setUsername(username);
+            userRepresentation.setEnabled(true);
 
-            Map<String, Object> body = Map.of(
-                    "username", username,
-                    "email", email,
-                    "enabled", true,
-                    "credentials", List.of(Map.of(
-                            "type", "password",
-                            "value", "password",
-                            "temporary", true
-                    ))
-            );
+            Response response = userResource.create(userRepresentation);
+            int status = response.getStatus();
 
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+            if (status == 201) {
+                String path = response.getLocation().getPath();
+                String userId = path.substring(path.lastIndexOf("/") + 1);
 
-            // Keycloak devuelve 201 y el ID en el header Location
-            ResponseEntity<Void> response = restTemplate.exchange(
-                    url, HttpMethod.POST, request, Void.class
-            );
+                CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
+                credentialRepresentation.setTemporary(true);
+                credentialRepresentation.setType(OAuth2Constants.PASSWORD);
+                credentialRepresentation.setValue(generarPasswordTemporal());
+                userResource.get(userId).resetPassword(credentialRepresentation);
 
-            // Extraer el ID del header Location: .../users/{id}
-            String location = response.getHeaders().getFirst("Location");
-            String userId = location.substring(location.lastIndexOf("/") + 1);
+                asignarRol(userId, rol);
 
-            asignarRol(userId, rol);
-
-            return userId;
+                return userId;
+            } else if (status == 409) {
+                log.error("El usuario ya existe en Keycloak");
+                throw new IamException("El usuario ya existe en Keycloak");
+            } else {
+                log.error("Error creando el usuario en Keycloak");
+                throw new IamException("Error creando el usuario en Keycloak");
+            }
 
         } catch (Exception e) {
             log.error("Error creando usuario en Keycloak | email={}", email, e);
-            throw new RuntimeException("No se pudo crear el usuario en Keycloak");
+            throw new IamException("No se pudo crear el usuario en Keycloak");
         }
     }
 
+    @Override
     public void actualizarUsuario(String userId, UsuarioUpdateDTO dto) {
         try {
-            String token = getAdminToken();
-            String url = serverUrl + "/admin/realms/" + realm + "/users/" + userId;
+            // Actualizar contraseña
+            CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
+            credentialRepresentation.setTemporary(false);
+            credentialRepresentation.setType(OAuth2Constants.PASSWORD);
+            credentialRepresentation.setValue(dto.getPassword());
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(token);
-            headers.setContentType(MediaType.APPLICATION_JSON);
+            UserRepresentation userRepresentation = new UserRepresentation();
 
-            Map<String, Object> body = new HashMap<>();
-            if (dto.getEmail() != null) body.put("email", dto.getEmail());
-            if (dto.getUsername() != null) body.put("username", dto.getUsername());
+            if (dto.getEmail() != null) {
+                userRepresentation.setEmail(dto.getEmail());
+            }
 
-            restTemplate.exchange(url, HttpMethod.PUT,
-                    new HttpEntity<>(body, headers), Void.class);
+            if (dto.getUsername() != null) {
+                userRepresentation.setUsername(dto.getUsername());
+            }
+
+            userRepresentation.setCredentials(Collections.singletonList(credentialRepresentation));
+
+            UserResource userResource = keycloakProvider.getUsersResource().get(userId);
+
+            userResource.update(userRepresentation);
 
         } catch (Exception e) {
             log.error("Error actualizando usuario en Keycloak | userId={}", userId, e);
@@ -123,63 +104,44 @@ public class KeycloakService implements IamService {
         }
     }
 
+    @Override
     public void bloquearUsuario(String userId) {
-        cambiarEstadoUsuario(userId, false);
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setEnabled(false);
+
+        UserResource userResource = keycloakProvider.getUsersResource().get(userId);
+        userResource.update(userRepresentation);
+
+        // Cierra la sesión del usuario bloqueado
+        logoutUsuario(userId);
     }
 
+    @Override
     public void desbloquearUsuario(String userId) {
-        cambiarEstadoUsuario(userId, true);
-    }
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setEnabled(true);
 
-    private void cambiarEstadoUsuario(String userId, boolean enabled) {
-        try {
-            String token = getAdminToken();
-            String url = serverUrl + "/admin/realms/" + realm + "/users/" + userId;
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(token);
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            Map<String, Object> body = Map.of("enabled", enabled);
-
-            restTemplate.exchange(url, HttpMethod.PUT,
-                    new HttpEntity<>(body, headers), Void.class);
-
-        } catch (Exception e) {
-            log.error("Error cambiando estado usuario en Keycloak | userId={}", userId, e);
-            throw new RuntimeException("No se pudo cambiar el estado del usuario");
-        }
+        UserResource userResource = keycloakProvider.getUsersResource().get(userId);
+        userResource.update(userRepresentation);
     }
 
     public void asignarRol(String userId, Rol rol) {
         try {
-            String token = getAdminToken();
-
-            // Primero obtener el objeto del rol con su ID
-            String rolNombre = rol.name(); // "ADMIN" o "OPERADOR"
-            String urlRol = serverUrl + "/admin/realms/" + realm + "/roles/" + rolNombre;
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(token);
-
-            ResponseEntity<Map> rolResponse = restTemplate.exchange(
-                    urlRol, HttpMethod.GET, new HttpEntity<>(headers), Map.class
-            );
-
-            // Asignar el rol al usuario
-            String urlAsignar = serverUrl + "/admin/realms/" + realm
-                    + "/users/" + userId + "/role-mappings/realm";
-
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<List<Map>> requestAsignar = new HttpEntity<>(
-                    List.of(rolResponse.getBody()), headers
-            );
-
-            restTemplate.exchange(urlAsignar, HttpMethod.POST, requestAsignar, Void.class);
+            RealmResource realmResource = keycloakProvider.getRealmResource();
+            List<RoleRepresentation> roleRepresentations = realmResource.roles()
+                    .list()
+                    .stream()
+                    .filter(role -> rol.name().equals(role.getName()))
+                    .toList();
+            realmResource.users().get(userId).roles().realmLevel().add(roleRepresentations);
 
         } catch (Exception e) {
             log.error("Error asignando rol en Keycloak | userId={}", userId, e);
             throw new RuntimeException("No se pudo asignar el rol");
         }
+    }
+
+    private String generarPasswordTemporal() {
+        return "Temp1234*";
     }
 }

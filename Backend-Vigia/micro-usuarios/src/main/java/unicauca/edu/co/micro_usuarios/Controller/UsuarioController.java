@@ -52,8 +52,8 @@ public class UsuarioController {
     // Obtener usuario por ID
     @GetMapping("/auth0/{idAuth0}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<UsuarioResponseDTO> getByAuth0Id(@PathVariable String idAuth0) {
-        UsuarioResponseDTO response = usuarioService.getByAuth0Id(idAuth0);
+    public ResponseEntity<UsuarioResponseDTO> getByIdIam(@PathVariable String idAuth0) {
+        UsuarioResponseDTO response = usuarioService.getByIdIam(idAuth0);
         return ResponseEntity.ok(response);
     }
 

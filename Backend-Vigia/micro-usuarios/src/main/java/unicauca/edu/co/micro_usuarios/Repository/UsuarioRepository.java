@@ -13,5 +13,5 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID>, JpaSpec
 
     Optional<Usuario> findByUsername(String username);
 
-    Optional<Usuario> findByIdAuth0(String idAuth0);
+    Optional<Usuario> findByIdIam(String adminIdIam);
 }

@@ -5,9 +5,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import unicauca.edu.co.micro_usuarios.Entities.EstadoUsuario;
@@ -16,6 +17,7 @@ import unicauca.edu.co.micro_usuarios.Repository.UsuarioRepository;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class UsuarioActivoFilter extends OncePerRequestFilter {
@@ -30,16 +32,26 @@ public class UsuarioActivoFilter extends OncePerRequestFilter {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        // Verificar que hay usuario autenticado
-        if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
+        // Verificar que hay autenticación y que es JWT
+        if (authentication instanceof JwtAuthenticationToken jwtAuth) {
 
-            String keycloakId = jwt.getSubject();
+            String keycloakId = jwtAuth.getToken().getSubject();
 
-            Usuario usuario = usuarioRepository.findByIdAuth0(keycloakId).orElse(null);
+            log.debug("Validando estado del usuario | keycloakId={}", keycloakId);
 
-            if (usuario != null && usuario.getEstado() == EstadoUsuario.INACTIVO) {
+            Usuario usuario = usuarioRepository.findByIdIam(keycloakId).orElse(null);
 
-                // Bloquear acceso
+            // ⚠️ Si no existe en DB, puedes decidir si bloquear o dejar pasar
+            if (usuario == null) {
+                log.warn("Usuario no encontrado en BD | keycloakId={}", keycloakId);
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            if (usuario.getEstado() == EstadoUsuario.INACTIVO) {
+
+                log.warn("Acceso bloqueado - usuario inactivo | keycloakId={}", keycloakId);
+
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.setContentType("application/json");
 
