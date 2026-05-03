@@ -20,15 +20,14 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(auth -> auth
                         // Publicos
+                        .pathMatchers("/api/auth/**").permitAll()
                         .pathMatchers("/api/public/**").permitAll()
-
                         // Operador
                         .pathMatchers("/api/operador/**").hasAnyAuthority("OPERADOR", "ADMIN")
-
                         // Admin
                         .pathMatchers("/api/admin/**").hasAuthority("ADMIN")
 
-                        // Todo lo demas
+                        // Todo lo demás
                         .anyExchange().authenticated()
                 )
 
