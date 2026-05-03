@@ -30,4 +30,5 @@ public class UsuarioUpdateDTO {
     private String username;
     private Rol rol;
     private EstadoUsuario estado;
+    private String password;
 }

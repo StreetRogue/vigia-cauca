@@ -79,9 +79,9 @@ public class GlobalExceptionHandler {
     }
 
     // Error en Auth0 (502)
-    @ExceptionHandler(Auth0Exception.class)
+    @ExceptionHandler(IamException.class)
     public ResponseEntity<ApiError> handleAuth0(
-            Auth0Exception ex,
+            IamException ex,
             HttpServletRequest request) {
 
         ApiError error = ApiError.builder()

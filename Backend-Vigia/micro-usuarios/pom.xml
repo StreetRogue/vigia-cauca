@@ -70,8 +70,7 @@
 		<dependency>
 			<groupId>org.keycloak</groupId>
 			<artifactId>keycloak-admin-client</artifactId>
-			<version>24.0.2</version>
-			<scope>runtime</scope>
+			<version>24.0.5</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
