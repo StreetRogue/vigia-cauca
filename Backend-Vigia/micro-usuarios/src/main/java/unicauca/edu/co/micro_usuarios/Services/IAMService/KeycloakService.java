@@ -75,7 +75,7 @@ public class KeycloakService implements IamService {
                     "enabled", true,
                     "credentials", List.of(Map.of(
                             "type", "password",
-                            "value", password,
+                            "value", "password",
                             "temporary", true
                     ))
             );
