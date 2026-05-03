@@ -65,6 +65,19 @@ services:
       timeout: 10s
       retries: 5
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.3
+    container_name: keycloak
+    restart: unless-stopped
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD}
+    ports:
+      - "8180:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+
   # ─────────────────────────────────────────
   # MICROSERVICIOS
   # ─────────────────────────────────────────
@@ -111,6 +124,7 @@ volumes:
   postgres_usuarios_data:
   postgres_ubicaciones_data:
   rabbitmq_data:
+  keycloak_data:
 
 networks:
   backend:

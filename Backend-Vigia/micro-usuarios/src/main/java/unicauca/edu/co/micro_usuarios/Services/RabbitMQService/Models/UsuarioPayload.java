@@ -8,7 +8,7 @@ import java.util.UUID;
 public class UsuarioPayload implements Serializable {
 
     private UUID idUsuario;
-    private String idAuth0;
+    private String idIam;
     private String cedula;
     private String nombre;
     private String telefono;
