@@ -1,3 +1,4 @@
+
 server:
   port: 8080
 
@@ -6,14 +7,13 @@ spring:
     web-application-type: reactive
 
   application:
-    name: API-Gateway
+    name: api-gateway
 
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${AUTH0_ISSUER_URI}
-          audience: ${AUTH0_AUDIENCE}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/security-realm-dev}
 
   cloud:
     gateway:
@@ -21,92 +21,58 @@ spring:
         webflux:
           routes:
             # =========================
-            # USUARIOS - ADMIN
+            # USUARIOS
             # =========================
-            - id: usuarios-admin
+            - id: usuarios
               uri: http://localhost:8083
               predicates:
-                - Path=/api/admin/usuarios/**
+                - Path=/api/**/usuarios/**
               filters:
                 - StripPrefix=2
 
             # =========================
-            # NOVEDADES - PUBLICO
+            # NOVEDADES
             # =========================
-            - id: novedades-public
+            - id: novedades
               uri: http://localhost:8081
               predicates:
-                - Path=/api/public/novedades/**
+                - Path=/api/**/novedades/**
               filters:
                 - StripPrefix=2
 
             # =========================
-            # NOVEDADES - OPERADOR
+            # ESTADISTICAS
             # =========================
-            - id: novedades-operador
-              uri: http://localhost:8081
-              predicates:
-                - Path=/api/operador/novedades/**
-              filters:
-                - StripPrefix=2
-
-            # =========================
-            # NOVEDADES - ADMIN
-            # =========================
-            - id: novedades-admin
-              uri: http://localhost:8081
-              predicates:
-                - Path=/api/admin/novedades/**
-              filters:
-                - StripPrefix=2
-
-            # =========================
-            # ESTADISTICAS - PUBLICO
-            # =========================
-            - id: estadisticas-public
+            - id: estadisticas
               uri: http://localhost:8082
               predicates:
-                - Path=/api/public/estadisticas/**
+                - Path=/api/**/estadisticas/**
               filters:
                 - StripPrefix=2
 
             # =========================
-            # 🔐 ESTADISTICAS - OPERADOR
-            # =========================
-            - id: estadisticas-operador
-              uri: http://localhost:8082
-              predicates:
-                - Path=/api/operador/estadisticas/**
-              filters:
-                - StripPrefix=2
-
-            # =========================
-            # ESTADISTICAS - ADMIN
-            # =========================
-            - id: estadisticas-admin
-              uri: http://localhost:8082
-              predicates:
-                - Path=/api/admin/estadisticas/**
-              filters:
-                - StripPrefix=2
-
-            # =========================
-            # WebSocket
+            # WEBSOCKET
             # =========================
             - id: websocket
-              uri: ws://localhost:8080
+              uri: ws://localhost:8090
               predicates:
                 - Path=/ws/**
 
 # ===========================
-# CONFIG EXTRAS
+# JWT CUSTOM CONFIG
 # ===========================
+jwt:
+  auth:
+    converter:
+      principle-attribute: preferred_username
+      api-client: ${KEYCLOAK_CLIENT_ID:api-gateway}
 
-auth0:
-  audience: ${AUTH0_AUDIENCE}
-
+# ===========================
+# LOGGING
+# ===========================
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG
-    reactor.netty: DEBUG
+    reactor.netty: INFO
+    org.springframework.security: DEBUG
 
