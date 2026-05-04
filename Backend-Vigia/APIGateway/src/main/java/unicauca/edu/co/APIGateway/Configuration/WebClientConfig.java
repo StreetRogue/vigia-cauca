@@ -1,4 +1,4 @@
-package unicauca.edu.co.APIGateway.Config.WebClient;
+package unicauca.edu.co.APIGateway.Configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,6 +9,6 @@ public class WebClientConfig {
 
     @Bean
     public WebClient webClient() {
-        return WebClient.create();
+        return WebClient.builder().build();
     }
 }
