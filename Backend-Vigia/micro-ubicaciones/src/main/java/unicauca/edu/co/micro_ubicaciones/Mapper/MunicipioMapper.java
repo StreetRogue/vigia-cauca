@@ -1,7 +1,7 @@
 package unicauca.edu.co.micro_ubicaciones.Mapper;
 
 import unicauca.edu.co.micro_ubicaciones.DTOs.Response.MunicipioResponseDTO;
-import unicauca.edu.co.micro_ubicaciones.Entitys.Municipio;
+import unicauca.edu.co.micro_ubicaciones.Entities.Municipio;
 
 public class MunicipioMapper {
     public static MunicipioResponseDTO toDTO (Municipio municipio) {

@@ -1,4 +1,4 @@
-package unicauca.edu.co.micro_ubicaciones.Entitys;
+package unicauca.edu.co.micro_ubicaciones.Entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -1,0 +1,41 @@
+# Build artifacts
+target/
+build/
+*.jar
+*.war
+*.ear
+dist/
+
+# IDE configurations
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+.factorypath
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Dependency files
+node_modules/
+.mvn/wrapper/maven-wrapper.jar
+
+# Environment files (security: never commit .env with real credentials)
+.env
+!.env.template
+
+# Logs
+*.log
+logs/
+
+# Temp files
+tmp/
+temp/
