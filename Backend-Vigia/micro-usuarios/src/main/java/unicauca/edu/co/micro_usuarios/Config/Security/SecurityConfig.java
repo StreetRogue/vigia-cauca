@@ -24,6 +24,14 @@ public class SecurityConfig {
     @Autowired
     private KeycloakJwtConverter keycloakJwtConverter;
 
+    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
+    private String jwkSetUri;
+
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, UsuarioActivoFilter usuarioActivoFilter) throws Exception {
         http

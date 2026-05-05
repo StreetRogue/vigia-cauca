@@ -3,7 +3,7 @@ package unicauca.edu.co.micro_ubicaciones.Services;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import unicauca.edu.co.micro_ubicaciones.DTOs.Response.MunicipioResponseDTO;
-import unicauca.edu.co.micro_ubicaciones.Entitys.Municipio;
+import unicauca.edu.co.micro_ubicaciones.Entities.Municipio;
 import unicauca.edu.co.micro_ubicaciones.Mapper.MunicipioMapper;
 import unicauca.edu.co.micro_ubicaciones.Repository.MunicipioRepository;
 
