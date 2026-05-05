@@ -92,7 +92,7 @@ services:
     container_name: micro-usuarios
     restart: unless-stopped
     env_file:
-      - ./micro-usuarios/.env.dev
+      - ./micro-usuarios/.env
     ports:
       - "${USUARIOS_PORT}:${USUARIOS_PORT}"
     networks:
@@ -110,7 +110,7 @@ services:
     container_name: micro-ubicaciones
     restart: unless-stopped
     env_file:
-      - ./micro-ubicaciones/.env.dev
+      - ./micro-ubicaciones/.env
     ports:
       - "${UBICACIONES_PORT}:${UBICACIONES_PORT}"
     networks:
