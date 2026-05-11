@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { novedadesService } from '../services/novedades.service';
-import type { NovedadDTOPeticion } from '../types/novedad.types';
+import { useAuth } from './AuthContext';
+import type { NovedadDTOPeticion, NovedadDTORespuesta, Genero, GrupoPoblacional } from '../types/novedad.types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 export const EXCEL_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -22,9 +23,8 @@ export function validateDate(value: string): string {
   if (!value.trim()) return 'Campo obligatorio';
   const [day, month, year] = value.split('/').map(Number);
   if (!day || !month || !year || value.length < 8) return 'Formato inválido (DD/MM/AAAA)';
-  const date = new Date(year, month - 1, day);
-  if (date > new Date()) return 'La fecha no puede ser futura';
-  if (year < 2000) return 'La fecha ingresada no es válida';
+  if (month < 1 || month > 12 || day < 1 || day > 31) return 'Fecha inválida';
+  if (year < 2000 || year > 2100) return 'El año ingresado no es válido';
   return '';
 }
 
@@ -57,7 +57,11 @@ export interface NovedadesContextType {
   setShowSuccessToast: React.Dispatch<React.SetStateAction<boolean>>;
   excelError: string;
   setExcelError: React.Dispatch<React.SetStateAction<string>>;
-  
+
+  editingNovedadId: string | null;
+  setEditingNovedadId: React.Dispatch<React.SetStateAction<string | null>>;
+  initFromNovedad: (novedad: NovedadDTORespuesta) => void;
+
   // Step 1
   fecha: string; setFecha: React.Dispatch<React.SetStateAction<string>>;
   horaInicio: string; setHoraInicio: React.Dispatch<React.SetStateAction<string>>;
@@ -105,7 +109,7 @@ export interface NovedadesContextType {
   // Step 4
   urlEvidencia: string; setUrlEvidencia: React.Dispatch<React.SetStateAction<string>>;
   evidencias: Evidencia[]; setEvidencias: React.Dispatch<React.SetStateAction<Evidencia[]>>;
-  
+
   // Handlers and Actions
   handleContinuar: () => void;
   resetForm: () => void;
@@ -115,10 +119,12 @@ export interface NovedadesContextType {
 const NovedadesContext = createContext<NovedadesContextType | undefined>(undefined);
 
 export function NovedadesProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [showExcelModal, setShowExcelModal] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [excelError, setExcelError] = useState('');
+  const [editingNovedadId, setEditingNovedadId] = useState<string | null>(null);
 
   // Step 1
   const [fecha, setFecha] = useState('');
@@ -174,10 +180,7 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
 
   // Step 4
   const [urlEvidencia, setUrlEvidencia] = useState('');
-  const [evidencias, setEvidencias] = useState<Evidencia[]>([
-    { nombre: 'foto-001.jpg', tipo: 'IMAGEN' },
-    { nombre: 'video-001.mp4', tipo: 'VIDEO' },
-  ]);
+  const [evidencias, setEvidencias] = useState<Evidencia[]>([]);
 
   function validateStep1(): boolean {
     const e1 = validateDate(fecha);
@@ -185,11 +188,7 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
     const e3 = required(horaFin);
     const e4 = required(municipio);
     const e5 = required(localidad);
-    setErrFecha(e1);
-    setErrHoraInicio(e2);
-    setErrHoraFin(e3);
-    setErrMunicipio(e4);
-    setErrLocalidad(e5);
+    setErrFecha(e1); setErrHoraInicio(e2); setErrHoraFin(e3); setErrMunicipio(e4); setErrLocalidad(e5);
     return !e1 && !e2 && !e3 && !e4 && !e5;
   }
 
@@ -201,22 +200,18 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
     const e5 = descripcion.trim().length < 20 ? (descripcion.trim() === '' ? 'Campo obligatorio' : 'Mínimo 20 caracteres') : '';
     const e6 = infraestructura.trim().length > 0 && infraestructura.trim().length < 20 ? 'Mínimo 20 caracteres' : '';
     const e7 = accionInstitucional.trim().length < 20 ? (accionInstitucional.trim() === '' ? 'Campo obligatorio' : 'Mínimo 20 caracteres') : '';
-    setErrCategoria(e1);
-    setErrActores(e2);
-    setErrNivelConfianza(e3);
-    setErrNivelVisibilidad(e4);
-    setErrDescripcion(e5);
-    setErrInfraestructura(e6);
-    setErrAccionInstitucional(e7);
+    setErrCategoria(e1); setErrActores(e2); setErrNivelConfianza(e3); setErrNivelVisibilidad(e4);
+    setErrDescripcion(e5); setErrInfraestructura(e6); setErrAccionInstitucional(e7);
     return !e1 && !e2 && !e3 && !e4 && !e5 && !e6 && !e7;
   }
 
   function validateStep3(): boolean {
-    return true; // totales calculados automáticamente
+    return true;
   }
 
   function resetForm() {
     setCurrentStep(1);
+    setEditingNovedadId(null);
     setFecha(''); setHoraInicio(''); setHoraFin(''); setMunicipio(''); setLocalidad('');
     setErrFecha(''); setErrHoraInicio(''); setErrHoraFin(''); setErrMunicipio(''); setErrLocalidad('');
     setCategoria(''); setActores([]); setActorSeleccionado(''); setNivelConfianza(''); setNivelVisibilidad('');
@@ -230,6 +225,48 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
     setEvidencias([]); setUrlEvidencia('');
   }
 
+  function initFromNovedad(nov: NovedadDTORespuesta) {
+    const [y, m, d] = nov.fechaHecho.split('-');
+    setFecha(`${d}/${m}/${y}`);
+    setHoraInicio(nov.horaInicio ?? '');
+    setHoraFin(nov.horaFin ?? '');
+    setMunicipio(nov.municipio);
+    setLocalidad(nov.localidadEspecifica ?? '');
+    setCategoria(nov.categoria);
+    setActores([...nov.actores]);
+    setActorSeleccionado('');
+    setNivelConfianza(nov.nivelConfianza);
+    setNivelVisibilidad(nov.nivelVisibilidad);
+    setDescripcion(nov.descripcionHecho ?? '');
+    setInfraestructura(nov.infraestructuraAfectada ?? '');
+    setAccionInstitucional(nov.accionInstitucional ?? '');
+    const ah = nov.afectacionHumana;
+    setMuertosCiviles(String(ah?.muertosCiviles ?? 0));
+    setMuertosFuerza(String(ah?.muertosFuerzaPublica ?? 0));
+    setMuertosGrupos(String(ah?.muertosIlegales ?? 0));
+    setHeridosCiviles(String(ah?.heridosCiviles ?? 0));
+    setHeridosFuerza('0');
+    setHeridosGrupos('0');
+    setDesplazados(String(ah?.desplazadosTotales ?? 0));
+    setConfinados(String(ah?.confinadosTotales ?? 0));
+    setAfectacionCiviles(ah?.afectacionCivilesFlag ? 'Sí' : 'No');
+    setReclutamiento(ah?.reclutamientoMenoresFlag ?? 'NO_APLICA');
+    setVictimas((nov.victimas ?? []).map((v, i) => ({
+      id: i + 1,
+      nombre: v.nombreVictima,
+      genero: v.generoVictima,
+      edad: String(v.edadVictima ?? ''),
+      grupoPoblacional: v.grupoPoblacional,
+      ocupacion: v.ocupacionVictima ?? '',
+    })));
+    setEvidencias((nov.evidencias ?? []).map(e => ({ nombre: e.nombreArchivo, tipo: e.tipoMime })));
+    setCurrentStep(1);
+    setEditingNovedadId(nov.novedadId);
+    setErrFecha(''); setErrHoraInicio(''); setErrHoraFin(''); setErrMunicipio(''); setErrLocalidad('');
+    setErrCategoria(''); setErrActores(''); setErrNivelConfianza(''); setErrNivelVisibilidad('');
+    setErrDescripcion(''); setErrInfraestructura(''); setErrAccionInstitucional('');
+  }
+
   async function handleContinuar() {
     if (currentStep === 1 && !validateStep1()) return;
     if (currentStep === 2 && !validateStep2()) return;
@@ -240,54 +277,58 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Paso 4 → enviar al backend
     const [dia, mes, anio] = fecha.split('/');
     const fechaISO = `${anio}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
-
-    const usuarioId = localStorage.getItem('kc-user-id') ?? 'ANONIMO';
+    const usuarioId = user?.sub ?? '';
 
     const payload: NovedadDTOPeticion = {
       usuarioId,
-      fechaHecho:  fechaISO,
-      horaInicio:  horaInicio || undefined,
-      horaFin:     horaFin   || undefined,
+      fechaHecho:              fechaISO,
+      horaInicio:              horaInicio || undefined,
+      horaFin:                 horaFin   || undefined,
       municipio,
-      localidadEspecifica: localidad || undefined,
-      categoria:          categoria  as NovedadDTOPeticion['categoria'],
-      actores:            actores    as NovedadDTOPeticion['actores'],
-      nivelConfianza:     nivelConfianza  as NovedadDTOPeticion['nivelConfianza'],
-      nivelVisibilidad:   nivelVisibilidad as NovedadDTOPeticion['nivelVisibilidad'],
-      descripcion:        descripcion || undefined,
+      localidadEspecifica:     localidad || undefined,
+      categoria:               categoria  as NovedadDTOPeticion['categoria'],
+      actores:                 actores    as NovedadDTOPeticion['actores'],
+      nivelConfianza:          nivelConfianza  as NovedadDTOPeticion['nivelConfianza'],
+      nivelVisibilidad:        nivelVisibilidad as NovedadDTOPeticion['nivelVisibilidad'],
+      descripcionHecho:        descripcion || undefined,
+      infraestructuraAfectada: infraestructura || undefined,
+      accionInstitucional:     accionInstitucional || undefined,
       afectacionHumana: {
         muertosCiviles:           Number(muertosCiviles)  || 0,
         muertosFuerzaPublica:     Number(muertosFuerza)   || 0,
         muertosIlegales:          Number(muertosGrupos)   || 0,
         muertosTotales:           muertosTotal,
         heridosCiviles:           Number(heridosCiviles)  || 0,
+        heridosFuerzaPublica:     0,
         heridosTotales:           heridosTotal,
         desplazadosTotales:       Number(desplazados)     || 0,
         confinadosTotales:        Number(confinados)      || 0,
         afectacionCivilesFlag:    afectacionCiviles === 'Sí',
-        reclutamientoMenoresFlag: reclutamiento     === 'Sí',
+        reclutamientoMenoresFlag: (reclutamiento || 'NO_APLICA') as 'SI' | 'NO' | 'NO_APLICA' | 'EN_INVESTIGACION',
       },
       victimas: victimas.map((v) => ({
         nombreVictima:    v.nombre,
-        generoVictima:    v.genero    as NovedadDTOPeticion['victimas'][0]['generoVictima'],
-        edadVictima:      Number(v.edad) || undefined,
-        grupoPoblacional: v.grupoPoblacional as NovedadDTOPeticion['victimas'][0]['grupoPoblacional'],
-        ocupacionVictima: v.ocupacion || undefined,
+        generoVictima:    v.genero          as Genero,
+        edadVictima:      Number(v.edad)    || undefined,
+        grupoPoblacional: v.grupoPoblacional as GrupoPoblacional,
+        ocupacionVictima: v.ocupacion       || undefined,
       })),
-      urlsEvidencia: evidencias.map((e) => e.nombre),
+      urlsEvidencias: evidencias.map((e) => e.nombre),
     };
 
     try {
-      await novedadesService.crear(payload);
+      if (editingNovedadId) {
+        await novedadesService.actualizar(editingNovedadId, payload);
+      } else {
+        await novedadesService.crear(payload);
+      }
       setShowSuccessToast(true);
       setCurrentStep(5);
       setTimeout(() => setShowSuccessToast(false), 3500);
     } catch (err) {
       console.error('[NovedadesContext] Error al enviar novedad:', err);
-      // Puedes mostrar un banner de error aquí si el contexto lo expone
     }
   }
 
@@ -303,8 +344,7 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
       setExcelError('El archivo excede el tamaño máximo permitido (10 MB)');
       return;
     }
-    // Archivo válido → enviar al backend
-    const usuarioId = localStorage.getItem('kc-user-id') ?? 'ANONIMO';
+    const usuarioId = user?.sub ?? '';
     novedadesService
       .cargarExcel(file, usuarioId)
       .then(() => {
@@ -321,6 +361,7 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
   const value: NovedadesContextType = {
     currentStep, setCurrentStep, showExcelModal, setShowExcelModal,
     showSuccessToast, setShowSuccessToast, excelError, setExcelError,
+    editingNovedadId, setEditingNovedadId, initFromNovedad,
     fecha, setFecha, horaInicio, setHoraInicio, horaFin, setHoraFin, municipio, setMunicipio, localidad, setLocalidad,
     errFecha, setErrFecha, errHoraInicio, setErrHoraInicio, errHoraFin, setErrHoraFin, errMunicipio, setErrMunicipio, errLocalidad, setErrLocalidad,
     categoria, setCategoria, actores, setActores, actorSeleccionado, setActorSeleccionado, nivelConfianza, setNivelConfianza,
@@ -332,7 +373,7 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
     desplazados, setDesplazados, confinados, setConfinados, afectacionCiviles, setAfectacionCiviles, reclutamiento, setReclutamiento,
     victimas, setVictimas, muertosTotal, heridosTotal,
     urlEvidencia, setUrlEvidencia, evidencias, setEvidencias,
-    handleContinuar, resetForm, handleExcelFile
+    handleContinuar, resetForm, handleExcelFile,
   };
 
   return <NovedadesContext.Provider value={value}>{children}</NovedadesContext.Provider>;
