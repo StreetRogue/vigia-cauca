@@ -25,6 +25,7 @@ export type Actor =
 
 export type NivelVisibilidad = 'PUBLICA' | 'PRIVADA';
 export type NivelConfianza  = 'PRELIMINAR' | 'EN_VERIFICACION' | 'CONFIRMADO';
+export type ReclutamientoMenoresFlag = 'SI' | 'NO' | 'NO_APLICA' | 'EN_INVESTIGACION';
 
 export type Genero =
   | 'MASCULINO'
@@ -46,16 +47,17 @@ export type GrupoPoblacional =
 // ── DTOs de petición ─────────────────────────────────────────────────────────
 
 export interface AfectacionHumanaDTO {
-  muertosTotales:          number;
-  muertosCiviles:          number;
-  muertosFuerzaPublica:    number;
-  muertosIlegales:         number;
-  heridosTotales:          number;
-  heridosCiviles:          number;
-  desplazadosTotales:      number;
-  confinadosTotales:       number;
-  afectacionCivilesFlag:   boolean;
-  reclutamientoMenoresFlag: boolean;
+  muertosTotales:           number;
+  muertosCiviles:           number;
+  muertosFuerzaPublica:     number;
+  muertosIlegales:          number;
+  heridosTotales:           number;
+  heridosCiviles:           number;
+  heridosFuerzaPublica:     number;
+  desplazadosTotales:       number;
+  confinadosTotales:        number;
+  afectacionCivilesFlag:    boolean;
+  reclutamientoMenoresFlag: ReclutamientoMenoresFlag;
 }
 
 export interface VictimaDTOPeticion {
@@ -67,20 +69,22 @@ export interface VictimaDTOPeticion {
 }
 
 export interface NovedadDTOPeticion {
-  usuarioId:          string;
-  fechaHecho:         string;       // ISO date: "2025-04-20"
-  horaInicio?:        string;       // "HH:mm"
-  horaFin?:           string;
-  municipio:          string;
-  localidadEspecifica?: string;
-  categoria:          CategoriaEvento;
-  actores:            Actor[];
-  nivelConfianza:     NivelConfianza;
-  nivelVisibilidad:   NivelVisibilidad;
-  descripcion?:       string;
-  afectacionHumana:   AfectacionHumanaDTO;
-  victimas:           VictimaDTOPeticion[];
-  urlsEvidencia?:     string[];
+  usuarioId:               string;
+  fechaHecho:              string;   // ISO date: "2025-04-20"
+  horaInicio?:             string;   // "HH:mm"
+  horaFin?:                string;
+  municipio:               string;
+  localidadEspecifica?:    string;
+  categoria:               CategoriaEvento;
+  actores:                 Actor[];
+  nivelConfianza:          NivelConfianza;
+  nivelVisibilidad:        NivelVisibilidad;
+  descripcionHecho?:       string;
+  infraestructuraAfectada?: string;
+  accionInstitucional?:    string;
+  afectacionHumana?:       AfectacionHumanaDTO;
+  victimas?:               VictimaDTOPeticion[];
+  urlsEvidencias?:         string[];
 }
 
 // ── DTOs de respuesta ────────────────────────────────────────────────────────
@@ -110,23 +114,25 @@ export interface AuditoriaDTORespuesta {
 }
 
 export interface NovedadDTORespuesta {
-  novedadId:          string;
-  usuarioId:          string;
-  fechaHecho:         string;
-  horaInicio?:        string;
-  horaFin?:           string;
-  municipio:          string;
-  localidadEspecifica?: string;
-  categoria:          CategoriaEvento;
-  actores:            Actor[];
-  nivelConfianza:     NivelConfianza;
-  nivelVisibilidad:   NivelVisibilidad;
-  descripcion?:       string;
-  afectacionHumana:   AfectacionHumanaDTO;
-  victimas:           VictimaDTORespuesta[];
-  evidencias:         EvidenciaDTORespuesta[];
-  fechaCreacion:      string;
-  fechaActualizacion: string;
+  novedadId:              string;
+  usuarioId:              string;
+  fechaHecho:             string;
+  horaInicio?:            string;
+  horaFin?:               string;
+  municipio:              string;
+  localidadEspecifica?:   string;
+  categoria:              CategoriaEvento;
+  actores:                Actor[];
+  nivelConfianza:         NivelConfianza;
+  nivelVisibilidad:       NivelVisibilidad;
+  descripcionHecho?:      string;
+  infraestructuraAfectada?: string;
+  accionInstitucional?:   string;
+  afectacionHumana?:      AfectacionHumanaDTO;
+  victimas?:              VictimaDTORespuesta[];
+  evidencias?:            EvidenciaDTORespuesta[];
+  fechaReporte?:          string;
+  fechaActualizacion?:    string;
 }
 
 // ── Filtros de búsqueda ───────────────────────────────────────────────────────
