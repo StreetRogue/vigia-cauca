@@ -59,7 +59,7 @@ function Donut({ segments }: DonutProps) {
     <svg viewBox="0 0 104 104" className={styles.donut}>
       {slices.map((sl, i) => (
         <circle
-          key={i}
+          key={`${sl.color}-${i}`}
           cx={CX} cy={CY} r={R}
           fill="none"
           stroke={sl.color}

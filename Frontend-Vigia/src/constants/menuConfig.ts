@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-export type AppRole = "ADMIN" | "ANALISTA" | "CONSULTOR";
-export const DEFAULT_ROLE: AppRole = "CONSULTOR";
+export type AppRole = "ADMIN" | "OPERADOR" | "VISITANTE";
+export const DEFAULT_ROLE: AppRole = "VISITANTE";
 
 export interface KeycloakTokenLike {
   name?: string;
@@ -14,20 +14,22 @@ export interface KeycloakTokenLike {
 export interface MenuItem {
   label: string;
   icon?: ReactNode;
+  /** Ruta de navegación; undefined = ítem aún sin página propia */
+  to?: string;
 }
 
 const ALL_MENU_ITEMS: MenuItem[] = [
-  { label: "DASHBOARD" },
-  { label: "NOVEDADES" },
-  { label: "USUARIOS" },
-  { label: "REPORTES" },
-  { label: "CONFIGURACION" },
+  { label: "DASHBOARD",     to: "/dashboard"      },
+  { label: "NOVEDADES",     to: "/novedades"      },
+  { label: "USUARIOS",      to: "/usuarios"       },
+  { label: "REPORTES",      to: "/estadisticas"   }, // redirige a estadísticas
+  { label: "CONFIGURACION", to: "/configuracion"  },
 ];
 
 const ROLE_MENUS: Record<AppRole, string[]> = {
-  ADMIN: ["DASHBOARD", "NOVEDADES", "USUARIOS", "REPORTES", "CONFIGURACION"],
-  ANALISTA: ["DASHBOARD", "NOVEDADES", "REPORTES"],
-  CONSULTOR: ["DASHBOARD", "REPORTES"],
+  ADMIN:     ["DASHBOARD", "NOVEDADES", "USUARIOS", "REPORTES", "CONFIGURACION"],
+  OPERADOR:  ["DASHBOARD", "NOVEDADES", "CONFIGURACION"],
+  VISITANTE: ["DASHBOARD"],
 };
 
 export function getMenuItemsForRole(role: AppRole): MenuItem[] {
@@ -36,9 +38,9 @@ export function getMenuItemsForRole(role: AppRole): MenuItem[] {
 }
 
 export function resolveAppRole(roles: string[]): AppRole {
-  if (roles.some((r) => r.toLowerCase().includes("admin"))) return "ADMIN";
-  if (roles.some((r) => r.toLowerCase().includes("analista"))) return "ANALISTA";
-  return "CONSULTOR";
+  if (roles.some((r) => r.toLowerCase().includes("admin")))    return "ADMIN";
+  if (roles.some((r) => r.toLowerCase().includes("operador"))) return "OPERADOR";
+  return "VISITANTE";
 }
 
 export function extractKeycloakRoles(token?: KeycloakTokenLike, clientId?: string): string[] {

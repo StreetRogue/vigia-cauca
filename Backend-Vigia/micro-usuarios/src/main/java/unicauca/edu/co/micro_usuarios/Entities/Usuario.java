@@ -20,8 +20,8 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID idUsuario;
 
-    @Column(unique = true)
-    private String idIam;
+    @Column(name = "id_keycloak", unique = true)
+    private String idKeycloak;
 
     @Column(nullable = false, unique = true)
     private String cedula;

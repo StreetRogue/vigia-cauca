@@ -21,12 +21,12 @@ export interface TokenResponse {
   token_type:         string;
 }
 
-/** Autenticar con username y contraseña → devuelve tokens de Keycloak. */
-export async function login(username: string, password: string): Promise<TokenResponse> {
+/** Autenticar con email/username y contraseña → devuelve tokens de Keycloak. */
+export async function login(emailOrUsername: string, password: string): Promise<TokenResponse> {
   const res = await fetch(LOGIN_URL, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ username, password }),
+    body:    JSON.stringify({ username: emailOrUsername, password }),
   });
 
   if (!res.ok) {

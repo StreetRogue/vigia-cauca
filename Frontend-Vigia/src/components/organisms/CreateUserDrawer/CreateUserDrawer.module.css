@@ -1,0 +1,221 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 71;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: rgba(25, 35, 55, 0.38);
+  cursor: pointer;
+  z-index: 1;
+}
+
+.drawer {
+  position: relative;
+  z-index: 2;
+  width: 440px; /* Ajuste suave para coincidir proporciones del prototipo */
+  background: #f8f9fd;
+  border-left: 1px solid #d7deea;
+  box-shadow: -16px 0 36px rgba(12, 22, 39, 0.2);
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
+  overflow-y: auto;
+  animation: slideIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.header {
+  border-bottom: 1px solid #d7deea;
+  padding: 24px 32px 20px;
+  background: #ffffff;
+}
+
+.kicker {
+  margin: 0 0 6px 0;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: #3168c4;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 20px;
+  color: #1e293b;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+.closeBtn {
+  border: 0;
+  background: #eef2fb;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  color: #3168c4;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.closeBtn:hover {
+  background: #dfe7f7;
+}
+
+.form {
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Separación amplia entre bloques equivalente a tu FormField */
+}
+
+.formError {
+  margin: 0;
+  font-size: 11px;
+  color: #e74c3c;
+  background: #fdebea;
+  border: 1px solid #f3b4af;
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+
+.section {
+  margin: 0 0 -4px; /* Para acercar un poco el título al primer input */
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8f99ae;
+  font-weight: 700;
+}
+
+.twoCols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Selector que imita tu átomo TextInput */
+.select {
+  box-sizing: border-box;
+  width: 100%;
+  height: 44px;
+  border: 1px solid var(--color-border-medium, #cad3e4);
+  border-radius: 8px;
+  padding: 0 36px 0 14px;
+  background: var(--color-surface-body, #ffffff);
+  color: var(--color-text-primary, #1e293b);
+  font: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  appearance: none; /* Elimina la flecha predeterminada del navegador */
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+  
+  /* Icono de flecha limpio y sutil */
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23475569' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+/* Color gris para simular un "Placeholder" cuando no se ha seleccionado nada */
+.select:invalid,
+.select option[value=""] {
+  color: #9aa6be;
+}
+
+.select:focus-visible {
+  outline: none;
+  border-color: var(--color-primary-500, #3168c4);
+  box-shadow: 0 0 0 3px rgba(49, 104, 196, 0.15);
+}
+
+.selectInvalid {
+  border-color: #e74c3c;
+}
+
+.audit {
+  margin: 12px 0 0;
+  background: #eef4fc;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 12px 16px;
+  border-radius: 4px; /* Opcional si prefieres un borde suavizado */
+  border-left: 3px solid #3168c4;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* Sobrescribiendo el estilo para que "Cancelar" tenga borde */
+.cancelBtn {
+  min-height: 44px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #475569;
+  background: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelBtn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+.saveBtn {
+  min-height: 44px;
+  border: 0;
+  border-radius: 6px;
+  background: #1f5ac9;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0 24px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.saveBtn:hover {
+  background: #1847a0;
+}
+
+@media (max-width: 1100px) {
+  .drawer {
+    width: min(340px, 100%);
+  }
+}

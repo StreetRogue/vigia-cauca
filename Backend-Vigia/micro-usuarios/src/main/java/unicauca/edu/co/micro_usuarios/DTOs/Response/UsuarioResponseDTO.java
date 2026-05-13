@@ -12,7 +12,7 @@ import java.util.UUID;
 @Builder
 public class UsuarioResponseDTO {
     private UUID idUsuario;
-    private String idIam;
+    private String idKeycloak;
     private String cedula;
     private String nombre;
     private String telefono;

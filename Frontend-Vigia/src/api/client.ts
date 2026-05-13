@@ -30,6 +30,10 @@ export const BASE_URLS = {
     API_MODE === 'gateway'
       ? GATEWAY
       : (import.meta.env.VITE_API_UBICACIONES_URL ?? 'http://localhost:8082'),
+  usuarios:
+    API_MODE === 'gateway'
+      ? GATEWAY
+      : (import.meta.env.VITE_API_USUARIOS_URL ?? 'http://localhost:8081'),
 };
 
 // ── Factory para instancias Axios ─────────────────────────────────────────────
@@ -82,6 +86,7 @@ function createClient(baseURL: string): AxiosInstance {
 }
 
 // ── Clientes Axios por microservicio ──────────────────────────────────────────
-export const novedadesClient  = createClient(BASE_URLS.novedades);
-export const reportesClient   = createClient(BASE_URLS.reportes);
+export const novedadesClient   = createClient(BASE_URLS.novedades);
+export const reportesClient    = createClient(BASE_URLS.reportes);
 export const ubicacionesClient = createClient(BASE_URLS.ubicaciones);
+export const usuariosClient    = createClient(BASE_URLS.usuarios);

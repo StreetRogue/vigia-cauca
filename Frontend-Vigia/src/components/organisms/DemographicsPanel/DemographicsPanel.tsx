@@ -69,8 +69,8 @@ export function DemographicsPanel({ victimas, loading }: DemographicsPanelProps)
             size={58}
           />
           <div className={styles.genderLegend}>
-            {genders.map(({ label, pct, color }) => (
-              <div key={label} className={styles.genderRow}>
+            {genders.map(({ label, pct, color }, i) => (
+              <div key={label ?? i} className={styles.genderRow}>
                 <div className={styles.genderDot} style={{ background: color }} />
                 <CapLabel size={8} color="var(--dash-text-2)">{label}</CapLabel>
                 <div className={styles.genderVal} style={{ color }}>{pct.toFixed(1)}%</div>
@@ -89,7 +89,7 @@ export function DemographicsPanel({ victimas, loading }: DemographicsPanelProps)
               const barH = (a.frecuenciaAbsoluta / maxAbs) * 34;
               const isMax = a.frecuenciaAbsoluta === maxAbs;
               return (
-                <div key={a.etiqueta} className={styles.ageCol}>
+                <div key={a.etiqueta ?? i} className={styles.ageCol}>
                   <div
                     className={styles.ageBar}
                     style={{

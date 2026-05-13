@@ -35,33 +35,43 @@ spring:
 
             # =========================
             # NOVEDADES
+            # El micro-novedades usa path completo /api/v1/microNovedades/...
+            # por eso StripPrefix=0 (no se elimina nada del path)
             # =========================
             - id: novedades
               uri: http://micro-novedades:5003
               predicates:
-                - Path=/api/*/novedades/**
+                - Path=/api/*/microNovedades/**
               filters:
-                - StripPrefix=2
+                - StripPrefix=0
 
             # =========================
-            # REPORTES/ESTADISTICAS
+            # REPORTES/ESTADISTICAS/SSE
+            # El micro-reportes usa path completo /api/v1/reportes/...
+            # StripPrefix=0 conserva el path completo.
+            # DedupeResponseHeader elimina el header CORS duplicado que
+            # micro-reportes agrega ademas del que ya pone el gateway.
             # =========================
             - id: reportes
               uri: http://micro-reportes:5004
               predicates:
-                - Path=/api/*/estadisticas/**
+                - Path=/api/*/reportes/**
               filters:
-                - StripPrefix=2
+                - StripPrefix=0
+                - DedupeResponseHeader=Access-Control-Allow-Origin RETAIN_FIRST
 
             # =========================
             # UBICACIONES
+            # El micro-ubicaciones usa @RequestMapping("/municipios") sin prefijo
+            # /api/v1 propio. StripPrefix=3 elimina /api + /v1 + /microUbicaciones
+            # dejando /municipios/... que es lo que espera el controlador.
             # =========================
             - id: ubicaciones
               uri: http://micro-ubicaciones:8082
               predicates:
-                - Path=/api/*/ubicaciones/**
+                - Path=/api/*/microUbicaciones/**
               filters:
-                - StripPrefix=2
+                - StripPrefix=3
 
 # ===========================
 # JWT CUSTOM CONFIG

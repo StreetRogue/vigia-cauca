@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NovedadesProvider, useNovedades } from '../context/NovedadesContext';
 import { ManagementTemplate } from '../components/templates/ManagementTemplate/ManagementTemplate';
 import { NavMenu } from '../components/molecules/NavMenu';
-import { ExcelUploadModal } from '../components/organisms/ExcelUploadModal';
+import { ExcelUploadModal } from '../components/organisms/ExcelUploadModal/ExcelUploadModal';
 import { NovedadesListPanel } from '../components/organisms/novedades/NovedadesListPanel';
 import { NovedadesDetailPanel } from '../components/organisms/novedades/NovedadesDetailPanel';
 import { Stepper } from '../components/organisms/novedades/Stepper';
@@ -198,6 +198,7 @@ function NovedadesContent() {
           onExcel={() => setShowExcelModal(true)}
           onRowClick={nov => setSelectedNovedad(nov)}
           selectedId={selectedNovedad?.novedadId ?? null}
+          userRole={user?.rol}
         />
       }
       rightPanel={

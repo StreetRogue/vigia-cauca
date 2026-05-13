@@ -52,8 +52,8 @@ public class UsuarioController {
     // Obtener usuario por ID
     @GetMapping("/auth0/{idAuth0}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<UsuarioResponseDTO> getByIdIam(@PathVariable String idAuth0) {
-        UsuarioResponseDTO response = usuarioService.getByIdIam(idAuth0);
+    public ResponseEntity<UsuarioResponseDTO> getByIdKeycloak(@PathVariable String idAuth0) {
+        UsuarioResponseDTO response = usuarioService.getByIdKeycloak(idAuth0);
         return ResponseEntity.ok(response);
     }
 
@@ -71,6 +71,13 @@ public class UsuarioController {
         return ResponseEntity.ok(
                 usuarioService.listarUsuarios(rol, estado, idMunicipio, page, size)
         );
+    }
+
+    // Obtener usuario por email (para login)
+    @GetMapping("/by-email/{email}")
+    public ResponseEntity<UsuarioResponseDTO> getByEmail(@PathVariable String email) {
+        UsuarioResponseDTO response = usuarioService.getByEmail(email);
+        return ResponseEntity.ok(response);
     }
 }
 
