@@ -25,7 +25,7 @@ public class UsuarioController {
 
     // Registrar Operador
     @PostMapping("/registrar")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<UsuarioResponseDTO> registrarUsuario(@Valid @RequestBody UsuarioCreateDTO dto, @AuthenticationPrincipal Jwt jwt) {
         String adminAuth0Id = jwt.getSubject();
         UsuarioResponseDTO response = usuarioService.registrarUsuario(dto, adminAuth0Id);
@@ -52,9 +52,34 @@ public class UsuarioController {
     // Obtener usuario por ID
     @GetMapping("/auth0/{idAuth0}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<UsuarioResponseDTO> getByIdKeycloak(@PathVariable String idAuth0) {
-        UsuarioResponseDTO response = usuarioService.getByIdKeycloak(idAuth0);
+    public ResponseEntity<UsuarioResponseDTO> getByIdIam(@PathVariable String idAuth0) {
+        UsuarioResponseDTO response = usuarioService.getByIdIam(idAuth0);
         return ResponseEntity.ok(response);
+    }
+
+    // Eliminar usuario (soft-delete: cambia estado a INACTIVO)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> eliminarUsuario(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+        String adminAuth0Id = jwt.getSubject();
+        usuarioService.eliminarUsuario(id, adminAuth0Id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Perfil propio — cualquier usuario autenticado puede ver su propio perfil
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioResponseDTO> getMe(@AuthenticationPrincipal Jwt jwt) {
+        UsuarioResponseDTO response = usuarioService.getByIdIam(jwt.getSubject());
+        return ResponseEntity.ok(response);
+    }
+
+    // Cambio de contraseña propio — cualquier usuario autenticado
+    @PatchMapping("/me/password")
+    public ResponseEntity<Void> cambiarPasswordMe(
+            @RequestBody @Valid UsuarioUpdateDTO dto,
+            @AuthenticationPrincipal Jwt jwt) {
+        usuarioService.cambiarPasswordPropio(jwt.getSubject(), dto.getPassword());
+        return ResponseEntity.noContent().build();
     }
 
     // Listar usuarios (Se puede aplicar filtros)
@@ -71,13 +96,6 @@ public class UsuarioController {
         return ResponseEntity.ok(
                 usuarioService.listarUsuarios(rol, estado, idMunicipio, page, size)
         );
-    }
-
-    // Obtener usuario por email (para login)
-    @GetMapping("/by-email/{email}")
-    public ResponseEntity<UsuarioResponseDTO> getByEmail(@PathVariable String email) {
-        UsuarioResponseDTO response = usuarioService.getByEmail(email);
-        return ResponseEntity.ok(response);
     }
 }
 

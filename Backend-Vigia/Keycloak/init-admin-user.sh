@@ -4,7 +4,7 @@ set -e
 KC="http://keycloak:8080"
 REALM="security-realm-dev"
 CLIENT_ID="api-gateway"
-CLIENT_SECRET="IbFLyi0YoqRirQz1c2Bh5qB16eXh3tKg"
+CLIENT_SECRET="nygy6iYITC4WuG4rGTNff0zLLJuJ2IO0"
 
 # ── 1. Esperar Keycloak ────────────────────────────────────────────────────
 echo "[init] Esperando a Keycloak..."
@@ -39,11 +39,11 @@ fi
 echo "[init] Realm OK."
 
 # ── 4. Roles ───────────────────────────────────────────────────────────────
-for ROLE in admin operador; do
+for ROLE in ADMIN OPERADOR; do
   curl -s -X POST "$KC/admin/realms/$REALM/roles" \
     -H "Authorization: Bearer $T" \
     -H "Content-Type: application/json" \
-    -d "{\"name\":\"$ROLE\"}" > /dev/null 2>&1 || true
+    -d "{\"name\":\"$ROLE\",\"description\":\"Rol $ROLE del sistema\"}" > /dev/null 2>&1 || true
 done
 echo "[init] Roles OK."
 
@@ -70,30 +70,50 @@ curl -sf -X PUT "$KC/admin/realms/$REALM/clients/$CLIENT_UUID" \
   -d "{\"id\":\"$CLIENT_UUID\",\"clientId\":\"$CLIENT_ID\",\"enabled\":true,\"publicClient\":false,\"secret\":\"$CLIENT_SECRET\",\"directAccessGrantsEnabled\":true,\"clientAuthenticatorType\":\"client-secret\"}"
 echo "[init] Cliente y secret OK."
 
-# ── 6. Usuario admin ───────────────────────────────────────────────────────
-USER_HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
-  -X POST "$KC/admin/realms/$REALM/users" \
-  -H "Authorization: Bearer $T" \
-  -H "Content-Type: application/json" \
-  -d "{\"username\":\"admin\",\"email\":\"admin@vigia.gov.co\",\"firstName\":\"Admin\",\"lastName\":\"Sistema\",\"enabled\":true,\"emailVerified\":true,\"credentials\":[{\"type\":\"password\",\"value\":\"admin\",\"temporary\":false}]}")
+# ── 6. Crear usuarios de prueba ────────────────────────────────────────────
 
-if [ "$USER_HTTP" = "201" ]; then
-  USER_ID=$(curl -sf -H "Authorization: Bearer $T" \
-    "$KC/admin/realms/$REALM/users?username=admin" \
-    | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
-  ROLE_ID=$(curl -sf -H "Authorization: Bearer $T" \
-    "$KC/admin/realms/$REALM/roles/admin" \
-    | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
-  curl -sf -X POST "$KC/admin/realms/$REALM/users/$USER_ID/role-mappings/realm" \
+# Función para crear usuario
+create_user() {
+  local USERNAME=$1
+  local EMAIL=$2
+  local PASSWORD=$3
+  local ROLE=$4
+
+  echo "[init] Creando usuario $USERNAME con rol $ROLE..."
+
+  USER_HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
+    -X POST "$KC/admin/realms/$REALM/users" \
     -H "Authorization: Bearer $T" \
     -H "Content-Type: application/json" \
-    -d "[{\"id\":\"$ROLE_ID\",\"name\":\"admin\"}]"
-  echo "[init] Usuario admin creado y rol asignado."
-else
-  echo "[init] Usuario admin ya existia (HTTP $USER_HTTP)."
-fi
+    -d "{\"username\":\"$USERNAME\",\"email\":\"$EMAIL\",\"firstName\":\"$USERNAME\",\"lastName\":\"Test\",\"enabled\":true,\"emailVerified\":true,\"requiredActions\":[],\"credentials\":[{\"type\":\"password\",\"value\":\"$PASSWORD\",\"temporary\":false}]}")
+
+  if [ "$USER_HTTP" = "201" ] || [ "$USER_HTTP" = "409" ]; then
+    USER_ID=$(curl -sf -H "Authorization: Bearer $T" \
+      "$KC/admin/realms/$REALM/users?username=$USERNAME" \
+      | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+    ROLE_ID=$(curl -sf -H "Authorization: Bearer $T" \
+      "$KC/admin/realms/$REALM/roles/$ROLE" \
+      | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+    if [ ! -z "$ROLE_ID" ]; then
+      curl -sf -X POST "$KC/admin/realms/$REALM/users/$USER_ID/role-mappings/realm" \
+        -H "Authorization: Bearer $T" \
+        -H "Content-Type: application/json" \
+        -d "[{\"id\":\"$ROLE_ID\",\"name\":\"$ROLE\"}]" > /dev/null 2>&1 || true
+      echo "[init] Usuario $USERNAME creado con rol $ROLE"
+    fi
+  else
+    echo "[init] Error creando usuario $USERNAME (HTTP $USER_HTTP)"
+  fi
+}
+
+# Crear usuarios de prueba
+create_user "admin" "admin@vigia.gov.co" "admin" "ADMIN"
+create_user "operador" "operador@vigia.gov.co" "operador123" "OPERADOR"
 
 echo "================================================"
 echo "[init] Keycloak inicializado correctamente"
-echo "[init] Usuario: admin | Password: admin"
+echo "[init] Usuario ADMIN: admin | Password: admin"
+echo "[init] Usuario OPERADOR: operador | Password: operador123"
 echo "================================================"

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CloseButton } from '../../atoms/CloseButton';
 import { ExcelDropzone } from '../../molecules/ExcelDropzone';
+import { novedadesService } from '../../../services/novedades.service';
 import './ExcelUploadModal.css';
 
 interface ExcelUploadModalProps {
@@ -12,6 +13,7 @@ interface ExcelUploadModalProps {
 export function ExcelUploadModal({ isOpen, onClose, onUpload }: ExcelUploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
+  const [downloading, setDownloading] = useState(false);
 
   if (!isOpen) return null;
 
@@ -33,6 +35,26 @@ export function ExcelUploadModal({ isOpen, onClose, onUpload }: ExcelUploadModal
     setFile(null);
     setError('');
     onClose();
+  }
+
+  async function handleDescargarPlantilla() {
+    setDownloading(true);
+    try {
+      const blob = await novedadesService.descargarPlantilla();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'plantilla-novedades.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      setError('Error al descargar la plantilla. Intente de nuevo.');
+      console.error('Error descargando plantilla:', err);
+    } finally {
+      setDownloading(false);
+    }
   }
 
   return (
@@ -58,12 +80,18 @@ export function ExcelUploadModal({ isOpen, onClose, onUpload }: ExcelUploadModal
             Formatos: .xlsx, .xls &nbsp;·&nbsp; Máximo 5 MB
           </div>
 
-          <a href="#" className="modal-download-link" onClick={e => e.preventDefault()}>
+          <button
+            type="button"
+            className="modal-download-link"
+            onClick={handleDescargarPlantilla}
+            disabled={downloading}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
-            Descargar plantilla oficial
-          </a>
+            {downloading ? 'Descargando...' : 'Descargar plantilla oficial'}
+          </button>
         </div>
 
         {/* ── Footer ── */}

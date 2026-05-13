@@ -1,7 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
 import { NavMenu } from "../../components/molecules/NavMenu";
 import { Button } from "../../components/atoms/Button/Button";
+import { Pagination } from "../../components/molecules/Pagination/Pagination";
+import { UserDropdownSection } from "../../components/organisms/UserDropdownSection/UserDropdownSection";
 import { CreateUserDrawer } from "../../components/organisms/CreateUserDrawer/CreateUserDrawer";
+import { UserDetailPanel } from "../../components/organisms/usuarios/UserDetailPanel";
 import { ManagementTemplate } from "../../components/templates/ManagementTemplate/ManagementTemplate";
 import { useAuth } from "../../context/AuthContext";
 import { usuariosService } from "../../services/usuarios.service";
@@ -16,11 +19,11 @@ import configuracionIcon from "../../assets/configuracion_icon.svg";
 import styles from "./UsersManagementPage.module.css";
 
 const menuItems =[
-  { label: "DASHBOARD",     icon: <img src={dashboardIcon}     alt="" />, to: "/dashboard"  },
-  { label: "NOVEDADES",     icon: <img src={novedadesIcon}     alt="" />, to: "/novedades"  },
-  { label: "USUARIOS",      icon: <img src={usuariosIcon}      alt="" />, to: "/usuarios"   },
-  { label: "REPORTES",      icon: <img src={reportesIcon}      alt="" />                    },
-  { label: "CONFIGURACION", icon: <img src={configuracionIcon} alt="" />                    },
+  { label: "DASHBOARD",     icon: <img src={dashboardIcon}     alt="" />, to: "/dashboard"      },
+  { label: "NOVEDADES",     icon: <img src={novedadesIcon}     alt="" />, to: "/novedades"      },
+  { label: "USUARIOS",      icon: <img src={usuariosIcon}      alt="" />, to: "/usuarios"       },
+  { label: "REPORTES",      icon: <img src={reportesIcon}      alt="" />, to: "/reportes"      },
+  { label: "CONFIGURACION", icon: <img src={configuracionIcon} alt="" />, to: "/configuracion" },
 ];
 
 const PAGE_SIZE = 10;
@@ -49,7 +52,7 @@ const mockActivities =[
 ];
 
 export function UsersManagementPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [selected, setSelected] = useState("USUARIOS");
 
   // ── Usuarios ─────────────────────────────────────────────────────────────
@@ -66,10 +69,14 @@ export function UsersManagementPage() {
 
   // ── Drawer ────────────────────────────────────────────────────────────────
   const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
+  const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+  const [selectedUsuario, setSelectedUsuario] = useState<UsuarioResponseDTO | null>(null);
+  const [selectedUsuarioId, setSelectedUsuarioId] = useState<string | null>(null);
 
   // ── Auth display ──────────────────────────────────────────────────────────
   const displayName = user?.name || user?.username || "Admin";
   const displayRole = user?.rol || "ADMIN";
+  const isAdmin = user?.rol === 'ADMIN';
   const initials    = getInitials(displayName);
 
   // ── Load municipalities once ──────────────────────────────────────────────
@@ -84,7 +91,7 @@ export function UsersManagementPage() {
     setLoading(true);
     setLoadError("");
     try {
-      const res = await usuariosService.listarPaginado({ page, size: PAGE_SIZE });
+      const res = await usuariosService.list({ page, size: PAGE_SIZE });
       setUsuarios(res.content);
       setTotalPages(res.totalPages);
       setTotalElements(res.totalElements);
@@ -117,11 +124,37 @@ export function UsersManagementPage() {
   const operPct  = totalElements > 0 ? (totalOperadores / usuarios.length) * 100 : 0;
   const adminPct = totalElements > 0 ? (totalAdmins    / usuarios.length) * 100 : 0;
 
-  // ── Create user ───────────────────────────────────────────────────────────
+  // ── Create/Edit user ──────────────────────────────────────────────────────
   const handleCreateUserSave = async (payload: any) => {
-    await usuariosService.registrar(payload);
+    await usuariosService.create(payload);
     setPage(0);
+    setSelectedUsuario(null);
+    setSelectedUsuarioId(null);
     await loadUsuarios();
+  };
+
+  const handleEditUserSave = async (payload: any) => {
+    if (!selectedUsuario) return;
+    await usuariosService.update(selectedUsuario.idUsuario, payload);
+    setSelectedUsuario(null);
+    setSelectedUsuarioId(null);
+    await loadUsuarios();
+  };
+
+  const handleRowClick = (usuario: UsuarioResponseDTO) => {
+    if (selectedUsuarioId === usuario.idUsuario) {
+      setSelectedUsuario(null);
+      setSelectedUsuarioId(null);
+    } else {
+      setSelectedUsuario(usuario);
+      setSelectedUsuarioId(usuario.idUsuario);
+    }
+  };
+
+  const handleEditClick = (usuario: UsuarioResponseDTO) => {
+    setSelectedUsuario(usuario);
+    setSelectedUsuarioId(usuario.idUsuario);
+    setIsEditDrawerOpen(true);
   };
 
   const existingEmails = usuarios.map((u) => u.email);
@@ -146,13 +179,7 @@ export function UsersManagementPage() {
         </p>
       }
       topbarUser={
-        <>
-          <div className={styles.topbarAvatar}>{initials}</div>
-          <div>
-            <p className={styles.topbarName}>{displayName}</p>
-            <p className={styles.topbarRole}>{displayRole}</p>
-          </div>
-        </>
+        <UserDropdownSection displayName={displayName} displayRol={displayRole} isAdmin={isAdmin} onLogout={logout} />
       }
       mainPanelClassName={styles.tablePanel}
       mainPanel={
@@ -220,8 +247,14 @@ export function UsersManagementPage() {
                   const municipioNombre = u.municipio?.nombre
                     ? u.municipio.nombre.toLowerCase().split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
                     : "—";
+                  const isSelected = selectedUsuarioId === u.idUsuario;
                   return (
-                    <tr key={u.idUsuario} className={styles[tone]}>
+                    <tr
+                      key={u.idUsuario}
+                      className={[styles[tone], isSelected ? styles.rowSelected : ''].filter(Boolean).join(' ')}
+                      onClick={() => handleRowClick(u)}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <td>
                         {String(page * PAGE_SIZE + i + 1).padStart(2, "0")}
                       </td>
@@ -250,21 +283,30 @@ export function UsersManagementPage() {
             </tbody>
           </table>
 
-          <footer className={styles.tableFooter}>
-            {loading ? "Cargando..." : (
-              <>
-                Mostrando {filtered.length} de {totalElements} usuarios · Página {page + 1} de {Math.max(totalPages, 1)}
-              </>
-            )}
-          </footer>
+          {!loading && (
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalElements={totalElements}
+              pageSize={PAGE_SIZE}
+              onPageChange={setPage}
+            />
+          )}
         </>
       }
       rightPanelClassName={styles.rightPanel}
       rightPanel={
-        <>
-          <p className={styles.panelTitle}>RESUMEN · SYS-VIG-02</p>
+        selectedUsuario ? (
+          <UserDetailPanel
+            usuario={selectedUsuario}
+            onEdit={handleEditClick}
+            onRefresh={loadUsuarios}
+          />
+        ) : (
+          <>
+            <p className={styles.panelTitle}>RESUMEN · SYS-VIG-02</p>
 
-          <div className={styles.metricsGrid}>
+            <div className={styles.metricsGrid}>
             <article className={[styles.metricBox, styles.metricBlue].join(" ")}>
               <strong>{loading ? "—" : totalElements}</strong>
               <div className={styles.metricTextGroup}>
@@ -331,16 +373,21 @@ export function UsersManagementPage() {
               ))}
             </ul>
           </section>
-        </>
+          </>
+        )
       }
       overlay={
-        isCreateDrawerOpen ? (
+        isCreateDrawerOpen || isEditDrawerOpen ? (
           <CreateUserDrawer
-            open={isCreateDrawerOpen}
-            onClose={() => setIsCreateDrawerOpen(false)}
+            open={isCreateDrawerOpen || isEditDrawerOpen}
+            onClose={() => {
+              setIsCreateDrawerOpen(false);
+              setIsEditDrawerOpen(false);
+            }}
             municipios={municipios}
-            existingEmails={existingEmails}
-            onSave={handleCreateUserSave}
+            existingEmails={existingEmails.filter(e => selectedUsuario ? e !== selectedUsuario.email : true)}
+            initialData={selectedUsuario}
+            onSave={isEditDrawerOpen ? handleEditUserSave : handleCreateUserSave}
           />
         ) : null
       }

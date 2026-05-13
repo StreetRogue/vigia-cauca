@@ -117,6 +117,43 @@
   gap: 16px;
 }
 
+.passwordInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordInputWrapper :global(input) {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.togglePasswordBtn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #3168c4;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+
+.togglePasswordBtn:hover {
+  color: #1847a0;
+  background: rgba(49, 104, 196, 0.08);
+  border-radius: 4px;
+}
+
+.togglePasswordBtn:disabled {
+  color: #cbd5e1;
+  cursor: not-allowed;
+}
+
 /* Selector que imita tu átomo TextInput */
 .select {
   box-sizing: border-box;

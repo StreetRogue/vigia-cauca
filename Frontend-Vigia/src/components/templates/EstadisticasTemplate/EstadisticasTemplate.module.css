@@ -96,6 +96,9 @@
 
 /* Derecha: botón comparar */
 .navRight {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   flex-shrink: 0;
 }
 

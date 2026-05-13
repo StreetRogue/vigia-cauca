@@ -19,6 +19,8 @@ public interface INovedadService {
 
     Page<NovedadDTORespuesta> listarTodasPaginado(Pageable pageable);
 
+    Page<NovedadDTORespuesta> listarPaginadoPorRol(String rol, UUID usuarioId, Pageable pageable);
+
     List<NovedadDTORespuesta> listarPorUsuario(UUID usuarioId);
 
     List<NovedadDTORespuesta> buscarConFiltros(FiltroNovedadDTO filtro);

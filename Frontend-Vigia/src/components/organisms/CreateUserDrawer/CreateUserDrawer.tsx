@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../../atoms/Button/Button";
 import { CloseButton } from "../../atoms/CloseButton";
 import { TextInput } from "../../atoms/TextInput/TextInput";
 import { FormField } from "../../molecules/FormField";
 import type { MunicipioDTORespuesta } from "../../../types/ubicaciones.types";
+import type { UsuarioResponseDTO } from "../../../types/usuario.types";
 import styles from "./CreateUserDrawer.module.css";
 
 export interface CreateUserDrawerProps {
@@ -11,14 +12,16 @@ export interface CreateUserDrawerProps {
   onClose:        () => void;
   municipios?:    MunicipioDTORespuesta[];
   existingEmails?: string[];
+  initialData?:   UsuarioResponseDTO;
   onSave?: (payload: {
-    cedula:      string;
-    nombre:      string;
-    email:       string;
-    telefono:    string;
-    username:    string;
-    rol:         string;
-    idMunicipio: number;
+    cedula?:      string;
+    nombre?:      string;
+    email?:       string;
+    telefono?:    string;
+    username?:    string;
+    password?:    string;
+    rol?:         string;
+    idMunicipio?: number;
   }) => Promise<void>;
 }
 
@@ -30,6 +33,7 @@ type FormErrors = Partial<{
   email:       string;
   telefono:    string;
   username:    string;
+  password:    string;
   rol:         string;
   idMunicipio: string;
 }>;
@@ -39,31 +43,71 @@ export function CreateUserDrawer({
   onClose,
   municipios = [],
   existingEmails =[],
+  initialData,
   onSave,
 }: CreateUserDrawerProps) {
-  const [cedula,      setCedula]      = useState("");
-  const [nombre,      setNombre]      = useState("");
-  const [email,       setEmail]       = useState("");
-  const [telefono,    setTelefono]    = useState("");
-  const [username,    setUsername]    = useState("");
-  const [rol,         setRol]         = useState("");
-  const [idMunicipio, setIdMunicipio] = useState<string>("");
-  const [errors,      setErrors]      = useState<FormErrors>({});
-  const [formError,   setFormError]   = useState("");
-  const [saving,      setSaving]      = useState(false);
+  const isEditing = Boolean(initialData);
+
+  const [cedula,       setCedula]       = useState("");
+  const [nombre,       setNombre]       = useState("");
+  const [email,        setEmail]        = useState("");
+  const [telefono,     setTelefono]     = useState("");
+  const [username,     setUsername]     = useState("");
+  const [password,     setPassword]     = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rol,          setRol]          = useState("");
+  const [idMunicipio,  setIdMunicipio]  = useState<string>("");
+  const [errors,       setErrors]       = useState<FormErrors>({});
+  const [formError,    setFormError]    = useState("");
+  const [saving,       setSaving]       = useState(false);
+
+  useEffect(() => {
+    if (isEditing && initialData) {
+      setCedula(initialData.cedula);
+      setNombre(initialData.nombre);
+      setEmail(initialData.email);
+      setTelefono(initialData.telefono);
+      setUsername(initialData.username);
+      setRol(initialData.rol);
+      setIdMunicipio(initialData.municipio?.idMunicipio?.toString() ?? "");
+      setPassword("");
+    } else {
+      setCedula("");
+      setNombre("");
+      setEmail("");
+      setTelefono("");
+      setUsername("");
+      setPassword("");
+      setRol("");
+      setIdMunicipio("");
+    }
+    setErrors({});
+    setFormError("");
+  }, [open, isEditing, initialData]);
 
   if (!open) return null;
 
   const validate = (): FormErrors => {
     const e: FormErrors = {};
 
-    if (!cedula.trim())   e.cedula   = "Campo obligatorio.";
-    if (!nombre.trim())   e.nombre   = "Campo obligatorio.";
+    if (!cedula.trim()) {
+      e.cedula = "Campo obligatorio.";
+    } else if (!/^\d{7,11}$/.test(cedula.trim())) {
+      e.cedula = "Debe contener solo números (7-11 dígitos).";
+    }
+
+    if (!nombre.trim()) {
+      e.nombre = "Campo obligatorio.";
+    } else if (nombre.trim().length < 3) {
+      e.nombre = "Nombre muy corto (mínimo 3 caracteres).";
+    }
+
     if (!telefono.trim()) {
       e.telefono = "Campo obligatorio.";
     } else if (!/^3\d{9}$/.test(telefono.trim())) {
       e.telefono = "Debe ser un celular válido (10 dígitos, empezar por 3).";
     }
+
     if (!email.trim()) {
       e.email = "Campo obligatorio.";
     } else {
@@ -74,11 +118,35 @@ export function CreateUserDrawer({
         e.email = "Correo ya en uso.";
       }
     }
+
     if (!username.trim()) {
       e.username = "Campo obligatorio.";
-    } else if (!/^\w+$/.test(username.trim())) {
+    } else if (username.trim().length < 3) {
+      e.username = "Mínimo 3 caracteres.";
+    } else if (!/^[a-zA-Z0-9_]+$/.test(username.trim())) {
       e.username = "Solo letras, números y guion bajo.";
     }
+
+    if (!isEditing) {
+      if (!password.trim()) {
+        e.password = "Campo obligatorio.";
+      } else if (password.length < 8) {
+        e.password = "Mínimo 8 caracteres.";
+      } else if (!/[A-Z]/.test(password)) {
+        e.password = "Debe incluir al menos una mayúscula.";
+      } else if (!/[0-9]/.test(password)) {
+        e.password = "Debe incluir al menos un número.";
+      }
+    } else if (password.trim()) {
+      if (password.length < 8) {
+        e.password = "Mínimo 8 caracteres.";
+      } else if (!/[A-Z]/.test(password)) {
+        e.password = "Debe incluir al menos una mayúscula.";
+      } else if (!/[0-9]/.test(password)) {
+        e.password = "Debe incluir al menos un número.";
+      }
+    }
+
     if (!rol.trim())         e.rol         = "Debes seleccionar un rol.";
     if (!idMunicipio.trim()) e.idMunicipio = "Debes seleccionar un municipio.";
 
@@ -100,7 +168,7 @@ export function CreateUserDrawer({
     setFormError("");
     setSaving(true);
     try {
-      await onSave?.({
+      const payload: any = {
         cedula:      cedula.trim(),
         nombre:      nombre.trim(),
         email:       email.trim().toLowerCase(),
@@ -108,12 +176,16 @@ export function CreateUserDrawer({
         username:    username.trim(),
         rol,
         idMunicipio: Number(idMunicipio),
-      });
+      };
+      if (!isEditing || password.trim()) {
+        payload.password = password.trim();
+      }
+      await onSave?.(payload);
       onClose();
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? "Error al crear el usuario. Intente de nuevo.";
+        ?? `Error al ${isEditing ? 'actualizar' : 'crear'} el usuario. Intente de nuevo.`;
       setFormError(msg);
     } finally {
       setSaving(false);
@@ -126,9 +198,9 @@ export function CreateUserDrawer({
 
       <aside className={styles.drawer} role="dialog" aria-modal="true" aria-labelledby="create-user-title">
         <header className={styles.header}>
-          <p className={styles.kicker}>SYS-VIG-02 · CREAR NUEVO USUARIO</p>
+          <p className={styles.kicker}>SYS-VIG-02 · {isEditing ? 'EDITAR USUARIO' : 'CREAR NUEVO USUARIO'}</p>
           <div className={styles.headerRow}>
-            <h2 id="create-user-title" className={styles.title}>Crear nuevo usuario</h2>
+            <h2 id="create-user-title" className={styles.title}>{isEditing ? 'Editar usuario' : 'Crear nuevo usuario'}</h2>
             <CloseButton className={styles.closeBtn} onClick={onClose} ariaLabel="Cerrar" />
           </div>
         </header>
@@ -198,6 +270,28 @@ export function CreateUserDrawer({
 
           <p className={styles.section}>ACCESO AL SISTEMA</p>
 
+          <FormField label="CONTRASEÑA" required={!isEditing} hint={isEditing ? "Dejar en blanco para no cambiar." : "Mínimo 8 caracteres."} error={errors.password}>
+            <div className={styles.passwordInputWrapper}>
+              <TextInput
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Contraseña segura"
+                type={showPassword ? "text" : "password"}
+                invalid={Boolean(errors.password)}
+                required
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                className={styles.togglePasswordBtn}
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              >
+                {showPassword ? "Ocultar" : "Ver"}
+              </Button>
+            </div>
+          </FormField>
+
           <div className={styles.twoCols}>
             <FormField label="ROL" required error={errors.rol}>
               <select
@@ -238,7 +332,7 @@ export function CreateUserDrawer({
               CANCELAR
             </Button>
             <Button type="submit" className={styles.saveBtn} disabled={saving}>
-              {saving ? "GUARDANDO..." : "GUARDAR"}
+              {saving ? (isEditing ? "ACTUALIZANDO..." : "GUARDANDO...") : (isEditing ? "ACTUALIZAR" : "GUARDAR")}
             </Button>
           </div>
         </form>

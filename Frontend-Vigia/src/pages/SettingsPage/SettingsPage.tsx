@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavMenu }            from '../../components/molecules/NavMenu';
 import { Button }             from '../../components/atoms/Button/Button';
+import { UserDropdownSection } from '../../components/organisms/UserDropdownSection/UserDropdownSection';
 import { ManagementTemplate } from '../../components/templates/ManagementTemplate/ManagementTemplate';
 import { useAuth }            from '../../context/AuthContext';
 import { usuariosService }    from '../../services/usuarios.service';
@@ -66,6 +67,7 @@ function EditableInfoRow({ label, value, editable, isEditing, onChange }: Editab
 
 export function SettingsPage() {
   const { user, logout } = useAuth();
+  const isAdmin = user?.rol === 'ADMIN';
 
   const menuItems = getMenuItemsForRole(resolveAppRole([user?.rol ?? ''])).map((item) => ({
     ...item,
@@ -92,7 +94,7 @@ export function SettingsPage() {
 
     setSaving(true);
     try {
-      await usuariosService.actualizar(user.sub, {
+      await usuariosService.update(user.sub, {
         nombre: editName,
         email: editEmail,
         telefono: editPhone || undefined,
@@ -135,13 +137,7 @@ export function SettingsPage() {
         </p>
       }
       topbarUser={
-        <>
-          <div className={styles.topbarAvatar}>{initials}</div>
-          <div>
-            <p className={styles.topbarName}>{displayName}</p>
-            <p className={styles.topbarRole}>{user?.rol ?? 'OPERADOR'}</p>
-          </div>
-        </>
+        <UserDropdownSection displayName={displayName} displayRol={user?.rol ?? 'OPERADOR'} isAdmin={isAdmin} onLogout={logout} />
       }
       mainPanelClassName={styles.mainPanel}
       mainPanel={

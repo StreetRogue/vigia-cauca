@@ -78,6 +78,16 @@ public class NovedadServiceImpl implements INovedadService {
 
     @Override
     @Transactional(readOnly = true)
+    public Page<NovedadDTORespuesta> listarPaginadoPorRol(String rol, UUID usuarioId, Pageable pageable) {
+        if ("ADMIN".equalsIgnoreCase(rol)) {
+            return novedadRepository.findAll(pageable).map(mapper::toDTO);
+        } else {
+            return novedadRepository.findByUsuarioId(usuarioId, pageable).map(mapper::toDTO);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<NovedadDTORespuesta> listarPorUsuario(UUID usuarioId) {
         return mapper.toDTOList(novedadRepository.findByUsuarioId(usuarioId));
     }

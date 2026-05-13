@@ -63,11 +63,12 @@ public class UsuarioServiceImpl implements UsuarioService {
         // Convertir DTO a entidad
         Usuario usuario = UsuarioMapper.toEntity(dto);
 
-        // Crear usuario en Auth0
+        // Crear usuario en Keycloak con contraseña
         String idKeycloak = iamService.crearUsuario(
                 dto.getEmail(),
                 dto.getUsername(),
-                dto.getRol()
+                dto.getRol(),
+                dto.getPassword()
         );
 
         usuario.setIdKeycloak(idKeycloak);
@@ -162,20 +163,9 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public UsuarioResponseDTO getByIdKeycloak(String adminIdKeycloak) {
+    public UsuarioResponseDTO getByIdIam(String adminIdIam) {
 
-        Usuario usuario = usuarioRepository.findByIdKeycloak(adminIdKeycloak)
-                .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
-
-        MunicipioResponseDTO municipio = ubicacionesClient.getMunicipio(usuario.getIdMunicipio());
-
-        return UsuarioMapper.toDTO(usuario, municipio);
-    }
-
-    @Override
-    public UsuarioResponseDTO getByEmail(String email) {
-
-        Usuario usuario = usuarioRepository.findByEmail(email)
+        Usuario usuario = usuarioRepository.findByIdKeycloak(adminIdIam)
                 .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
 
         MunicipioResponseDTO municipio = ubicacionesClient.getMunicipio(usuario.getIdMunicipio());
@@ -243,5 +233,42 @@ public class UsuarioServiceImpl implements UsuarioService {
                 usuariosPage.getTotalElements(),
                 usuariosPage.getTotalPages()
         );
+    }
+
+    @Override
+    public void cambiarPasswordPropio(String idIam, String newPassword) {
+        Usuario usuario = usuarioRepository.findByIdKeycloak(idIam)
+                .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
+
+        UsuarioUpdateDTO dto = new UsuarioUpdateDTO();
+        dto.setPassword(newPassword);
+        iamService.actualizarUsuario(usuario.getIdKeycloak(), dto);
+    }
+
+    @Override
+    public void eliminarUsuario(UUID id, String adminIdIam) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
+
+        if (usuario.getIdKeycloak() != null && usuario.getIdKeycloak().equals(adminIdIam)) {
+            throw new InvalidOperationException("No puedes eliminarte a ti mismo");
+        }
+
+        usuario.setEstado(EstadoUsuario.INACTIVO);
+        usuario.setEditadoPor(adminIdIam);
+
+        // Bloquear en IAM
+        if (usuario.getIdKeycloak() != null) {
+            iamService.bloquearUsuario(usuario.getIdKeycloak());
+        }
+
+        usuarioRepository.save(usuario);
+
+        // Publicar evento de actualización
+        MunicipioResponseDTO municipio = ubicacionesClient.getMunicipio(usuario.getIdMunicipio());
+        UsuarioResponseDTO dto = UsuarioMapper.toDTO(usuario, municipio);
+        usuarioEventPublisher.publicarActualizacion(dto);
+
+        log.info("Usuario eliminado (soft delete) | id={} | adminIdIam={}", id, adminIdIam);
     }
 }
