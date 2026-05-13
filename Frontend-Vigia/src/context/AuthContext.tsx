@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as authService from '../services/auth.service';
 import { parseJwt, getRolFromJwt, isTokenExpiringSoon, type JwtPayload } from '../utils/jwt';
 
@@ -71,6 +72,7 @@ function clearTokens() {
 // ── Provider ──────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
   const [state, setState] = useState<AuthState>(() => {
     // Restaurar sesión del localStorage al cargar la app
     const accessToken  = localStorage.getItem(STORAGE_ACCESS);
@@ -116,9 +118,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }));
         scheduleRefresh(newPayload, tokens.refresh_token);
       } catch {
-        // Refresh falló → cerrar sesión silenciosamente
+        // Refresh falló → cerrar sesión y redirigir al login
         clearTokens();
         setState({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false, isLoading: false });
+        navigate('/login');
       }
     }, msUntilRefresh);
   }, []);

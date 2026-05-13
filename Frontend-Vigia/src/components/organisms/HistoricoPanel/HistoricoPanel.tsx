@@ -109,7 +109,9 @@ interface HistoricoPanelProps {
 
 export function HistoricoPanel({ serie, loading }: HistoricoPanelProps) {
   const raw    = serie?.length ? serie : MOCK;
-  const sorted = [...raw].sort((a, b) => a.mes - b.mes);
+  const sorted = [...raw].sort((a, b) =>
+    a.anio !== b.anio ? a.anio - b.anio : a.mes - b.mes,
+  );
 
   const labels        = sorted.map((m) => m.nombreMes.slice(0, 3).toUpperCase());
   const eventos       = sorted.map((m) => m.totalEventos);

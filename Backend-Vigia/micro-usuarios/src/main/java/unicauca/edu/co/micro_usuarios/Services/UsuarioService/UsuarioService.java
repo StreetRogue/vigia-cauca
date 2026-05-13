@@ -11,6 +11,7 @@ public interface UsuarioService {
     UsuarioResponseDTO registrarUsuario(UsuarioCreateDTO dto, String adminIdIam);
     UsuarioResponseDTO editarUsuario(UUID id, UsuarioUpdateDTO dto, String adminIdIam);
     UsuarioResponseDTO getUserById(UUID id);
-    UsuarioResponseDTO getByIdIam(String adminIdIam);
+    UsuarioResponseDTO getByIdKeycloak(String adminIdKeycloak);
+    UsuarioResponseDTO getByEmail(String email);
     PageResponseDTO<UsuarioResponseDTO> listarUsuarios(String rol, String estado, Long idMunicipio, int page, int size);
 }

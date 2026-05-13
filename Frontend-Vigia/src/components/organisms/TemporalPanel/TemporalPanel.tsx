@@ -26,8 +26,10 @@ interface TemporalPanelProps {
 export function TemporalPanel({ serie, loading }: TemporalPanelProps) {
   const raw = serie?.length ? serie : MOCK;
 
-  // Ordenar por mes
-  const sorted = [...raw].sort((a, b) => a.mes - b.mes);
+  // Ordenar por año y luego por mes (soporta series multi-año)
+  const sorted = [...raw].sort((a, b) =>
+    a.anio !== b.anio ? a.anio - b.anio : a.mes - b.mes,
+  );
 
   const MAX         = Math.max(...sorted.map((m) => m.totalEventos), 1);
   const nowMonth    = new Date().getMonth() + 1;
@@ -52,10 +54,10 @@ export function TemporalPanel({ serie, loading }: TemporalPanelProps) {
       {/* Bar chart limpio — solo eventos por mes */}
       <div className={styles.chart}>
         <div className={styles.bars}>
-          {sorted.map(({ nombreMes, totalEventos }, i) => {
+          {sorted.map(({ anio, mes, nombreMes, totalEventos }, i) => {
             const isCurrent = CURRENT_IDX >= 0 ? i === CURRENT_IDX : i === sorted.length - 1;
             return (
-              <div key={nombreMes} className={styles.barCol}>
+              <div key={`${anio}-${mes}`} className={styles.barCol}>
                 <div className={styles.barValue}>
                   {isCurrent && <span>{totalEventos}</span>}
                 </div>

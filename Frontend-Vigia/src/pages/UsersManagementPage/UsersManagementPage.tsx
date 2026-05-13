@@ -1,71 +1,130 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { NavMenu } from "../../components/molecules/NavMenu";
 import { Button } from "../../components/atoms/Button/Button";
-import { CreateUserDrawer } from "../../components/organisms/CreateUserDrawer";
+import { CreateUserDrawer } from "../../components/organisms/CreateUserDrawer/CreateUserDrawer";
 import { ManagementTemplate } from "../../components/templates/ManagementTemplate/ManagementTemplate";
-import dashboardIcon from "../../assets/Dashboard_Icon.svg";
-import novedadesIcon from "../../assets/novedades_icon.svg";
-import usuariosIcon from "../../assets/usuarios_icon.svg";
-import reportesIcon from "../../assets/reportes_icon.svg";
+import { useAuth } from "../../context/AuthContext";
+import { usuariosService } from "../../services/usuarios.service";
+import { ubicacionesService } from "../../services/ubicaciones.service";
+import type { UsuarioResponseDTO } from "../../types/usuario.types";
+import type { MunicipioDTORespuesta } from "../../types/ubicaciones.types";
+import dashboardIcon    from "../../assets/Dashboard_Icon.svg";
+import novedadesIcon    from "../../assets/novedades_icon.svg";
+import usuariosIcon     from "../../assets/usuarios_icon.svg";
+import reportesIcon     from "../../assets/reportes_icon.svg";
 import configuracionIcon from "../../assets/configuracion_icon.svg";
 import styles from "./UsersManagementPage.module.css";
 
-const menuItems = [
-  { label: "DASHBOARD", icon: <img src={dashboardIcon} alt="" /> },
-  { label: "NOVEDADES", icon: <img src={novedadesIcon} alt="" />, to: "/novedades" },
-  { label: "USUARIOS", icon: <img src={usuariosIcon} alt="" />, to: "/usuarios" },
-  { label: "REPORTES", icon: <img src={reportesIcon} alt="" /> },
-  { label: "CONFIGURACION", icon: <img src={configuracionIcon} alt="" /> },
+const menuItems =[
+  { label: "DASHBOARD",     icon: <img src={dashboardIcon}     alt="" />, to: "/dashboard"  },
+  { label: "NOVEDADES",     icon: <img src={novedadesIcon}     alt="" />, to: "/novedades"  },
+  { label: "USUARIOS",      icon: <img src={usuariosIcon}      alt="" />, to: "/usuarios"   },
+  { label: "REPORTES",      icon: <img src={reportesIcon}      alt="" />                    },
+  { label: "CONFIGURACION", icon: <img src={configuracionIcon} alt="" />                    },
 ];
 
-const users = [
-  { id: "01", initials: "AC", name: "Admin Chavez", mail: "admin.chavez@cauca.gov.co", role: "ADMIN", city: "Popayan", state: "ACTIVO", tone: "blue" },
-  { id: "02", initials: "MR", name: "Maria Rios", mail: "m.rios@cauca.gov.co", role: "OPERADOR", city: "Santander Q.", state: "ACTIVO", tone: "green" },
-  { id: "03", initials: "CM", name: "Carlos Medina", mail: "c.medina@cauca.gov.co", role: "OPERADOR", city: "Patia", state: "INACTIVO", tone: "orange" },
-  { id: "04", initials: "LP", name: "Laura Penafiel", mail: "l.penafiel@cauca.gov.co", role: "ADMIN", city: "Timbio", state: "ACTIVO", tone: "blue" },
-  { id: "05", initials: "JM", name: "Jorge Munoz", mail: "j.munoz@cauca.gov.co", role: "OPERADOR", city: "Bolivar", state: "ACTIVO", tone: "green" },
-  { id: "06", initials: "AR", name: "Ana Rodriguez", mail: "a.rodriguez@cauca.gov.co", role: "OPERADOR", city: "Rosas", state: "ACTIVO", tone: "green" },
-  { id: "07", initials: "PL", name: "Pedro Lemos", mail: "p.lemos@cauca.gov.co", role: "ADMIN", city: "Silvia", state: "INACTIVO", tone: "orange" },
-  { id: "08", initials: "SR", name: "Sandra Ruiz", mail: "s.ruiz@cauca.gov.co", role: "OPERADOR", city: "Cajibio", state: "ACTIVO", tone: "green" },
-] as const;
+const PAGE_SIZE = 10;
 
-const activity = [
-  { dot: "green", text: "Usuario creado: Sandra Ruiz", date: "Hoy 08:42" },
-  { dot: "orange", text: "Rol modificado: Carlos Medina", date: "Ayer 16:30" },
-  { dot: "red", text: "Cuenta suspendida: Pedro Lemos", date: "07/04 11:05" },
-  { dot: "blue", text: "Acceso concedido: Maria Rios", date: "06/04 09:18" },
-  { dot: "gray", text: "Contrasena restablecida: J. Munoz", date: "05/04 14:35" },
-] as const;
+function getTone(estado: string, rol: string): "blue" | "green" | "orange" {
+  if (estado === "INACTIVO") return "orange";
+  return rol === "ADMIN" ? "blue" : "green";
+}
+
+function getInitials(nombre: string): string {
+  return nombre
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("");
+}
+
+// Datos simulados para replicar visualmente la sección de Actividad del prototipo
+const mockActivities =[
+  { id: 1, text: "Usuario creado: Sandra Ruiz", date: "Hoy 08:42", dot: "green" },
+  { id: 2, text: "Rol modificado: Carlos Medina", date: "Ayer 16:30", dot: "orange" },
+  { id: 3, text: "Cuenta suspendida: Pedro Lemos", date: "07/04 11:05", dot: "red" },
+  { id: 4, text: "Acceso concedido: María Ríos", date: "06/04 09:18", dot: "blue" },
+  { id: 5, text: "Contraseña restablecida: J. Muñoz", date: "05/04 14:55", dot: "gray" },
+];
 
 export function UsersManagementPage() {
+  const { user } = useAuth();
   const [selected, setSelected] = useState("USUARIOS");
+
+  // ── Usuarios ─────────────────────────────────────────────────────────────
+  const [usuarios,       setUsuarios]       = useState<UsuarioResponseDTO[]>([]);
+  const [loading,        setLoading]        = useState(true);
+  const [loadError,      setLoadError]      = useState("");
+  const [page,           setPage]           = useState(0);
+  const [totalPages,     setTotalPages]     = useState(0);
+  const [totalElements,  setTotalElements]  = useState(0);
+  const [search,         setSearch]         = useState("");
+
+  // ── Municipios (para el drawer) ───────────────────────────────────────────
+  const [municipios, setMunicipios] = useState<MunicipioDTORespuesta[]>([]);
+
+  // ── Drawer ────────────────────────────────────────────────────────────────
   const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
 
-  const openCreateDrawer = () => {
-    console.log("[UsersManagementPage] Click en '+ Crear usuario'");
-    setIsCreateDrawerOpen(true);
-  };
+  // ── Auth display ──────────────────────────────────────────────────────────
+  const displayName = user?.name || user?.username || "Admin";
+  const displayRole = user?.rol || "ADMIN";
+  const initials    = getInitials(displayName);
 
-  const closeCreateDrawer = () => {
-    console.log("[UsersManagementPage] Cerrar drawer de creacion de usuario");
-    setIsCreateDrawerOpen(false);
-  };
-
-  const handleCreateUserSave = (payload: {
-    cedula: string;
-    nombreCompleto: string;
-    emailInstitucional: string;
-    telefono: string;
-    nombreUsuario: string;
-    rol: string;
-    municipio: string;
-  }) => {
-    console.log("[UsersManagementPage] Guardar usuario", payload);
-  };
-
+  // ── Load municipalities once ──────────────────────────────────────────────
   useEffect(() => {
-    console.log("[UsersManagementPage] Drawer abierto:", isCreateDrawerOpen);
-  }, [isCreateDrawerOpen]);
+    ubicacionesService.getMunicipios()
+      .then(setMunicipios)
+      .catch(() => {/* fail silently */});
+  },[]);
+
+  // ── Load users ────────────────────────────────────────────────────────────
+  const loadUsuarios = useCallback(async () => {
+    setLoading(true);
+    setLoadError("");
+    try {
+      const res = await usuariosService.listarPaginado({ page, size: PAGE_SIZE });
+      setUsuarios(res.content);
+      setTotalPages(res.totalPages);
+      setTotalElements(res.totalElements);
+    } catch {
+      setLoadError("Error al cargar los usuarios. Verifique la conexión.");
+    } finally {
+      setLoading(false);
+    }
+  }, [page]);
+
+  useEffect(() => { loadUsuarios(); }, [loadUsuarios]);
+
+  // ── Search filter ─────────────────────────────────────────────────────────
+  const q = search.trim().toLowerCase();
+  const filtered = q
+    ? usuarios.filter(
+        (u) =>
+          u.nombre.toLowerCase().includes(q) ||
+          u.username.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q) ||
+          u.cedula.includes(q),
+      )
+    : usuarios;
+
+  // ── Metrics ───────────────────────────────────────────────────────────────
+  const totalActivos   = usuarios.filter((u) => u.estado === "ACTIVO").length;
+  const totalInactivos = usuarios.filter((u) => u.estado === "INACTIVO").length;
+  const totalAdmins    = usuarios.filter((u) => u.rol === "ADMIN").length;
+  const totalOperadores = usuarios.filter((u) => u.rol === "OPERADOR").length;
+  const operPct  = totalElements > 0 ? (totalOperadores / usuarios.length) * 100 : 0;
+  const adminPct = totalElements > 0 ? (totalAdmins    / usuarios.length) * 100 : 0;
+
+  // ── Create user ───────────────────────────────────────────────────────────
+  const handleCreateUserSave = async (payload: any) => {
+    await usuariosService.registrar(payload);
+    setPage(0);
+    await loadUsuarios();
+  };
+
+  const existingEmails = usuarios.map((u) => u.email);
 
   return (
     <ManagementTemplate
@@ -74,20 +133,24 @@ export function UsersManagementPage() {
       sidebarNav={<NavMenu items={menuItems} selectedItem={selected} onItemSelect={setSelected} />}
       sidebarFooter={
         <div className={styles.sidebarUser}>
-          <div className={styles.sidebarAvatar}>AC</div>
+          <div className={styles.sidebarAvatar}>{initials}</div>
           <div>
-            <p className={styles.sidebarName}>Admin Chavez</p>
-            <p className={styles.sidebarRole}>Administrador</p>
+            <p className={styles.sidebarName}>{displayName}</p>
+            <p className={styles.sidebarRole}>{displayRole}</p>
           </div>
         </div>
       }
-      breadcrumb={<p className={styles.breadcrumbText}><strong>Dashboard</strong> / Gestion de Usuarios</p>}
+      breadcrumb={
+        <p className={styles.breadcrumbText}>
+          <strong>Dashboard</strong> / Gestión de Usuarios
+        </p>
+      }
       topbarUser={
         <>
-          <div className={styles.topbarAvatar}>AC</div>
+          <div className={styles.topbarAvatar}>{initials}</div>
           <div>
-            <p className={styles.topbarName}>Admin Chavez</p>
-            <p className={styles.topbarRole}>Administrador</p>
+            <p className={styles.topbarName}>{displayName}</p>
+            <p className={styles.topbarRole}>{displayRole}</p>
           </div>
         </>
       }
@@ -97,15 +160,36 @@ export function UsersManagementPage() {
           <div className={styles.tableToolbar}>
             <div className={styles.searchBox}>
               <span className={styles.searchIcon} aria-hidden="true" />
-              <input className={styles.searchInput} placeholder="Buscar usuario..." />
+              <input
+                className={styles.searchInput}
+                placeholder="Buscar usuario..."
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+              />
             </div>
-            <span className={styles.counter}>8 usuarios</span>
-            <Button type="button" className={styles.createBtn} onClick={openCreateDrawer}>
-              + Crear usuario
+            <span className={styles.counter}>
+              {loading ? "Cargando..." : `${totalElements} usuarios`}
+            </span>
+            <Button type="button" className={styles.createBtn} onClick={() => setIsCreateDrawerOpen(true)}>
+              + CREAR USUARIO
             </Button>
           </div>
 
+          {loadError && (
+            <div style={{ padding: "12px 24px", fontSize: 12, color: "var(--color-danger, #e74c3c)" }}>
+              {loadError}
+            </div>
+          )}
+
           <table className={styles.table}>
+            <colgroup>
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "18%" }} />
+              <col style={{ width: "18%" }} />
+              <col style={{ width: "10%" }} />
+              <col style={{ width: "28%" }} />
+              <col style={{ width: "18%" }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>#</th>
@@ -117,80 +201,131 @@ export function UsersManagementPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
-                <tr key={user.id} className={styles[user.tone]}>
-                  <td>{user.id}</td>
-                  <td>
-                    <div className={styles.nameCell}>
-                      <span className={[styles.initial, styles[user.tone]].join(" ")}>{user.initials}</span>
-                      {user.name}
-                    </div>
-                  </td>
-                  <td className={styles.muted}>{user.mail}</td>
-                  <td>
-                    <span className={[styles.tag, user.role === "ADMIN" ? styles.adminTag : styles.operatorTag].join(" ")}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td>{user.city}</td>
-                  <td>
-                    <span className={[styles.tag, user.state === "ACTIVO" ? styles.activeTag : styles.inactiveTag].join(" ")}>
-                      {user.state}
-                    </span>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: "center", color: "var(--color-text-muted)", padding: "24px 0" }}>
+                    Cargando usuarios...
                   </td>
                 </tr>
-              ))}
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: "center", color: "var(--color-text-muted)", padding: "24px 0" }}>
+                    {search ? "Sin resultados para la búsqueda." : "No hay usuarios registrados."}
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((u, i) => {
+                  const tone     = getTone(u.estado, u.rol);
+                  const initials = getInitials(u.nombre);
+                  const municipioNombre = u.municipio?.nombre
+                    ? u.municipio.nombre.toLowerCase().split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
+                    : "—";
+                  return (
+                    <tr key={u.idUsuario} className={styles[tone]}>
+                      <td>
+                        {String(page * PAGE_SIZE + i + 1).padStart(2, "0")}
+                      </td>
+                      <td>
+                        <div className={styles.nameCell}>
+                          <span className={[styles.initial, styles[tone]].join(" ")}>{initials}</span>
+                          {u.nombre}
+                        </div>
+                      </td>
+                      <td className={styles.muted}>{u.email}</td>
+                      <td>
+                        <span className={[styles.tag, u.rol === "ADMIN" ? styles.adminTag : styles.operatorTag].join(" ")}>
+                          {u.rol}
+                        </span>
+                      </td>
+                      <td>{municipioNombre}</td>
+                      <td>
+                        <span className={[styles.tag, u.estado === "ACTIVO" ? styles.activeTag : styles.inactiveTag].join(" ")}>
+                          {u.estado}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
 
-          <footer className={styles.tableFooter}>Mostrando 8 de 8 usuarios · Pagina 1 de 1</footer>
+          <footer className={styles.tableFooter}>
+            {loading ? "Cargando..." : (
+              <>
+                Mostrando {filtered.length} de {totalElements} usuarios · Página {page + 1} de {Math.max(totalPages, 1)}
+              </>
+            )}
+          </footer>
         </>
       }
       rightPanelClassName={styles.rightPanel}
       rightPanel={
         <>
-          <p className={styles.panelTitle}>Resumen · SYS-VIG-02</p>
+          <p className={styles.panelTitle}>RESUMEN · SYS-VIG-02</p>
 
           <div className={styles.metricsGrid}>
             <article className={[styles.metricBox, styles.metricBlue].join(" ")}>
-              <strong>8</strong>
-              <span>Total usuarios registrados</span>
+              <strong>{loading ? "—" : totalElements}</strong>
+              <div className={styles.metricTextGroup}>
+                <span className={styles.metricTitle}>TOTAL USUARIOS</span>
+                <span className={styles.metricSubtitle}>registrados</span>
+              </div>
             </article>
             <article className={[styles.metricBox, styles.metricGreen].join(" ")}>
-              <strong>6</strong>
-              <span>Activos en servicio</span>
+              <strong>{loading ? "—" : totalActivos}</strong>
+              <div className={styles.metricTextGroup}>
+                <span className={styles.metricTitle}>ACTIVOS</span>
+                <span className={styles.metricSubtitle}>en servicio</span>
+              </div>
             </article>
             <article className={[styles.metricBox, styles.metricGray].join(" ")}>
-              <strong>2</strong>
-              <span>Inactivos suspendidos</span>
+              <strong>{loading ? "—" : totalInactivos}</strong>
+              <div className={styles.metricTextGroup}>
+                <span className={styles.metricTitle}>INACTIVOS</span>
+                <span className={styles.metricSubtitle}>suspendidos</span>
+              </div>
             </article>
             <article className={[styles.metricBox, styles.metricPurple].join(" ")}>
-              <strong>3</strong>
-              <span>Admins con acceso total</span>
+              <strong>{loading ? "—" : totalAdmins}</strong>
+              <div className={styles.metricTextGroup}>
+                <span className={styles.metricTitle}>ADMINS</span>
+                <span className={styles.metricSubtitle}>con acceso total</span>
+              </div>
             </article>
           </div>
 
           <section className={styles.block}>
-            <h3 className={styles.blockTitle}>Distribucion por rol</h3>
+            <h3 className={styles.blockTitle}>DISTRIBUCIÓN POR ROL</h3>
             <div className={styles.progressGroup}>
-              <div className={styles.progressLabelRow}><span>OPERADORES</span><span>5 / 8</span></div>
-              <div className={styles.track}><span className={[styles.fill, styles.fillGreen].join(" ")} /></div>
+              <div className={styles.progressLabelRow}>
+                <span>OPERADORES</span>
+                <span>{totalOperadores} / {usuarios.length}</span>
+              </div>
+              <div className={styles.track}>
+                <span className={styles.fill} style={{ width: `${operPct}%`, background: "#127850" }} />
+              </div>
             </div>
             <div className={styles.progressGroup}>
-              <div className={styles.progressLabelRow}><span>ADMINISTRADORES</span><span>3 / 8</span></div>
-              <div className={styles.track}><span className={[styles.fill, styles.fillBlue].join(" ")} /></div>
+              <div className={styles.progressLabelRow}>
+                <span>ADMINISTRADORES</span>
+                <span>{totalAdmins} / {usuarios.length}</span>
+              </div>
+              <div className={styles.track}>
+                <span className={styles.fill} style={{ width: `${adminPct}%`, background: "var(--color-primary-500)" }} />
+              </div>
             </div>
           </section>
 
           <section className={styles.block}>
-            <h3 className={styles.blockTitle}>Actividad reciente</h3>
+            <h3 className={styles.blockTitle}>ACTIVIDAD RECIENTE</h3>
             <ul className={styles.activityList}>
-              {activity.map((entry) => (
-                <li key={entry.text} className={styles.activityItem}>
-                  <span className={[styles.dot, styles[entry.dot]].join(" ")} aria-hidden="true" />
+              {mockActivities.map((act) => (
+                <li key={act.id} className={styles.activityItem}>
+                  <span className={[styles.dot, styles[act.dot]].join(" ")} aria-hidden="true" />
                   <div>
-                    <p className={styles.activityText}>{entry.text}</p>
-                    <p className={styles.activityDate}>{entry.date}</p>
+                    <p className={styles.activityText}>{act.text}</p>
+                    <p className={styles.activityDate}>{act.date}</p>
                   </div>
                 </li>
               ))}
@@ -202,8 +337,9 @@ export function UsersManagementPage() {
         isCreateDrawerOpen ? (
           <CreateUserDrawer
             open={isCreateDrawerOpen}
-            onClose={closeCreateDrawer}
-            existingEmails={users.map((user) => user.mail)}
+            onClose={() => setIsCreateDrawerOpen(false)}
+            municipios={municipios}
+            existingEmails={existingEmails}
             onSave={handleCreateUserSave}
           />
         ) : null

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { CloseButton } from '../atoms/CloseButton';
-import { ExcelDropzone } from '../molecules/ExcelDropzone';
+import { CloseButton } from '../../atoms/CloseButton';
+import { ExcelDropzone } from '../../molecules/ExcelDropzone';
 import './ExcelUploadModal.css';
 
 interface ExcelUploadModalProps {

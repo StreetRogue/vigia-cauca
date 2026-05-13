@@ -39,7 +39,7 @@ public class UsuarioActivoFilter extends OncePerRequestFilter {
 
             log.debug("Validando estado del usuario | keycloakId={}", keycloakId);
 
-            Usuario usuario = usuarioRepository.findByIdIam(keycloakId).orElse(null);
+            Usuario usuario = usuarioRepository.findByIdKeycloak(keycloakId).orElse(null);
 
             // ⚠️ Si no existe en DB, puedes decidir si bloquear o dejar pasar
             if (usuario == null) {

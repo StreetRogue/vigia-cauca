@@ -64,15 +64,15 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = UsuarioMapper.toEntity(dto);
 
         // Crear usuario en Auth0
-        String idIam = iamService.crearUsuario(
+        String idKeycloak = iamService.crearUsuario(
                 dto.getEmail(),
                 dto.getUsername(),
                 dto.getRol()
         );
 
-        usuario.setIdIam(idIam);
+        usuario.setIdKeycloak(idKeycloak);
 
-        log.info("Usuario creado en Iam | idIam={}", idIam);
+        log.info("Usuario creado en Iam | idKeycloak={}", idKeycloak);
 
         // Auditoría
         usuario.setCreadoPor(adminIdIam);
@@ -93,7 +93,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
 
-        if (usuario.getIdIam().equals(adminIdIam)
+        if (usuario.getIdKeycloak().equals(adminIdIam)
                 && EstadoUsuario.INACTIVO.equals(dto.getEstado())) {
             throw new InvalidOperationException("No puedes inactivarte a ti mismo");
         }
@@ -124,17 +124,17 @@ public class UsuarioServiceImpl implements UsuarioService {
             usuario.setEstado(dto.getEstado());
 
             if (dto.getEstado().equals(EstadoUsuario.INACTIVO)) {
-                iamService.bloquearUsuario(usuario.getIdIam());
+                iamService.bloquearUsuario(usuario.getIdKeycloak());
             }
 
             if (dto.getEstado().equals(EstadoUsuario.ACTIVO)) {
-                iamService.desbloquearUsuario(usuario.getIdIam());
+                iamService.desbloquearUsuario(usuario.getIdKeycloak());
             }
         }
 
         // SOLO si hay datos reales de Auth0
         if (dto.getEmail() != null || dto.getUsername() != null) {
-            iamService.actualizarUsuario(usuario.getIdIam(), dto);
+            iamService.actualizarUsuario(usuario.getIdKeycloak(), dto);
         }
 
         // Auditoría
@@ -162,9 +162,20 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public UsuarioResponseDTO getByIdIam(String adminIdIam) {
+    public UsuarioResponseDTO getByIdKeycloak(String adminIdKeycloak) {
 
-        Usuario usuario = usuarioRepository.findByIdIam(adminIdIam)
+        Usuario usuario = usuarioRepository.findByIdKeycloak(adminIdKeycloak)
+                .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
+
+        MunicipioResponseDTO municipio = ubicacionesClient.getMunicipio(usuario.getIdMunicipio());
+
+        return UsuarioMapper.toDTO(usuario, municipio);
+    }
+
+    @Override
+    public UsuarioResponseDTO getByEmail(String email) {
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
 
         MunicipioResponseDTO municipio = ubicacionesClient.getMunicipio(usuario.getIdMunicipio());

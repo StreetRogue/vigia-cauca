@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { novedadesService } from '../../../services/novedades.service';
 import type { NovedadDTORespuesta } from '../../../types/novedad.types';
+import { useAuth } from '../../../context/AuthContext';
 import styles from './NovedadesListPanel.module.css';
 
 interface Props {
@@ -10,6 +11,8 @@ interface Props {
   onExcel: () => void;
   onRowClick: (nov: NovedadDTORespuesta) => void;
   selectedId: string | null;
+  /** Rol del usuario autenticado; solo ADMIN puede eliminar (HU-2.5) */
+  userRole?: string;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -34,7 +37,9 @@ const CONFIDENCE_LABELS: Record<string, string> = {
 
 const PAGE_SIZE = 10;
 
-export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowClick, selectedId }: Props) {
+export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowClick, selectedId, userRole }: Props) {
+  const isAdmin = userRole === 'ADMIN';
+  const { user } = useAuth();
   const [novedades, setNovedades] = useState<NovedadDTORespuesta[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -65,7 +70,7 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const uid = localStorage.getItem('kc-user-id') ?? 'ANONIMO';
+      const uid = user?.sub ?? 'ANONIMO';
       await novedadesService.eliminar(deleteTarget.novedadId, uid);
       setDeleteTarget(null);
       load();
@@ -155,13 +160,16 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
                   >
                     ✎
                   </button>
-                  <button
-                    className={styles.deleteBtn}
-                    onClick={() => setDeleteTarget(nov)}
-                    title="Eliminar"
-                  >
-                    ✕
-                  </button>
+                  {/* Solo ADMIN puede eliminar novedades (HU-2.5) */}
+                  {isAdmin && (
+                    <button
+                      className={styles.deleteBtn}
+                      onClick={() => setDeleteTarget(nov)}
+                      title="Eliminar"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
