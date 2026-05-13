@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
+import { UserDropdownSection } from '../../organisms/UserDropdownSection/UserDropdownSection';
 import { useDashboard } from '../../../hooks/useDashboard';
 import { BentoKpiRow } from '../../organisms/BentoKpiRow/BentoKpiRow';
 import { HistoricoPanel } from '../../organisms/HistoricoPanel/HistoricoPanel';
@@ -24,9 +26,14 @@ const MESES  = [
 
 export function EstadisticasTemplate() {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const [anio, setAnio] = useState<number>(new Date().getFullYear());
   const [mes,  setMes ] = useState<number | undefined>(undefined);
+
+  const displayName = user?.name ?? user?.username ?? 'Usuario';
+  const displayRole = user?.rol ?? 'OPERADOR';
+  const isAdmin = user?.rol === 'ADMIN';
 
   const filtros: FiltrosDashboard = { anio, ...(mes ? { mes } : {}) };
   const { data, loading, error, refetch } = useDashboard(filtros);
@@ -85,7 +92,7 @@ export function EstadisticasTemplate() {
           </select>
         </div>
 
-        {/* Derecha: modo comparación */}
+        {/* Derecha: modo comparación + perfil usuario */}
         <div className={styles.navRight}>
           <button
             className={styles.compareBtn}
@@ -96,6 +103,7 @@ export function EstadisticasTemplate() {
             </svg>
             Comparar períodos
           </button>
+          <UserDropdownSection displayName={displayName} displayRol={displayRole} isAdmin={isAdmin} onLogout={logout} />
         </div>
       </header>
 

@@ -198,6 +198,14 @@
   background: #f39c12; /* Ajustado al naranja/gris del prototipo */
 }
 
+.table tbody tr.rowSelected {
+  background-color: #f0f4f8;
+}
+
+.table tbody tr.rowSelected:hover {
+  background-color: #e8f0f8;
+}
+
 .nameCell {
   display: flex;
   align-items: center;

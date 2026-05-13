@@ -3,6 +3,8 @@ package co.edu.unicauca.micronovedades.capaAccesoDatos.repositories;
 import co.edu.unicauca.micronovedades.capaAccesoDatos.models.NovedadEntity;
 import co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.CategoriaEvento;
 import co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.NivelVisibilidad;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,6 +25,9 @@ public interface NovedadRepository extends JpaRepository<NovedadEntity, UUID> {
 
     @EntityGraph(attributePaths = {"victimas", "afectacionHumana", "evidencias"})
     List<NovedadEntity> findByUsuarioId(UUID usuarioId);
+
+    @EntityGraph(attributePaths = {"victimas", "afectacionHumana", "evidencias"})
+    Page<NovedadEntity> findByUsuarioId(UUID usuarioId, Pageable pageable);
 
     // Filtrar por municipio
     List<NovedadEntity> findByMunicipio(String municipio);

@@ -1,4 +1,4 @@
-import { usuariosClient } from '../api/client';
+import { apiClient } from '../api/client';
 import { ENDPOINTS } from '../api/endpoints';
 import type {
   UsuarioResponseDTO,
@@ -7,7 +7,7 @@ import type {
   UsuariosPageResponse,
 } from '../types/usuario.types';
 
-export interface ListarUsuariosParams {
+export interface UsuariosFilter {
   rol?:         string;
   estado?:      string;
   idMunicipio?: number;
@@ -16,38 +16,39 @@ export interface ListarUsuariosParams {
 }
 
 export const usuariosService = {
-  /** Lista usuarios con paginado y filtros opcionales. */
-  async listarPaginado(params: ListarUsuariosParams = {}): Promise<UsuariosPageResponse> {
-    const { data } = await usuariosClient.get<UsuariosPageResponse>(
-      ENDPOINTS.usuarios.base,
-      { params },
-    );
-    return data;
-  },
+  /** Lista paginada con filtros opcionales */
+  list: (filter?: UsuariosFilter) =>
+    apiClient
+      .get<UsuariosPageResponse>(ENDPOINTS.usuarios.base, { params: filter })
+      .then((r) => r.data),
 
-  /** Obtiene un usuario por su UUID interno. */
-  async obtenerPorId(id: string): Promise<UsuarioResponseDTO> {
-    const { data } = await usuariosClient.get<UsuarioResponseDTO>(
-      ENDPOINTS.usuarios.porId(id),
-    );
-    return data;
-  },
+  /** Obtener por UUID */
+  getById: (id: string) =>
+    apiClient
+      .get<UsuarioResponseDTO>(ENDPOINTS.usuarios.porId(id))
+      .then((r) => r.data),
 
-  /** Registra un nuevo operador (requiere rol ADMIN). */
-  async registrar(payload: UsuarioCreateDTO): Promise<UsuarioResponseDTO> {
-    const { data } = await usuariosClient.post<UsuarioResponseDTO>(
-      ENDPOINTS.usuarios.registrar,
-      payload,
-    );
-    return data;
-  },
+  /** Crear nuevo usuario (ADMIN only) */
+  create: (payload: UsuarioCreateDTO) =>
+    apiClient
+      .post<UsuarioResponseDTO>(ENDPOINTS.usuarios.registrar, payload)
+      .then((r) => r.data),
 
-  /** Edita un usuario existente (requiere rol ADMIN). */
-  async actualizar(id: string, payload: UsuarioUpdateDTO): Promise<UsuarioResponseDTO> {
-    const { data } = await usuariosClient.put<UsuarioResponseDTO>(
-      ENDPOINTS.usuarios.porId(id),
-      payload,
-    );
-    return data;
-  },
+  /** Editar usuario completo (ADMIN only) */
+  update: (id: string, payload: UsuarioUpdateDTO) =>
+    apiClient
+      .put<UsuarioResponseDTO>(ENDPOINTS.usuarios.porId(id), payload)
+      .then((r) => r.data),
+
+  /** Soft-delete: pasa el usuario a INACTIVO */
+  delete: (id: string) =>
+    apiClient
+      .delete<void>(ENDPOINTS.usuarios.porId(id))
+      .then((r) => r.data),
+
+  /** Perfil propio del usuario autenticado */
+  getMe: () =>
+    apiClient
+      .get<UsuarioResponseDTO>(ENDPOINTS.usuarios.me)
+      .then((r) => r.data),
 };

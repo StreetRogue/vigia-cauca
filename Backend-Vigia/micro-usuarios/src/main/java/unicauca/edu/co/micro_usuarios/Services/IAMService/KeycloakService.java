@@ -18,6 +18,7 @@ import unicauca.edu.co.micro_usuarios.Exceptions.IamException;
 import unicauca.edu.co.micro_usuarios.Util.KeycloakProvider;
 
 import java.util.*;
+import java.util.Collections;
 
 @Slf4j
 @Service
@@ -34,7 +35,7 @@ public class KeycloakService implements IamService {
     }
 
     @Override
-    public String crearUsuario(String email, String username, Rol rol) {
+    public String crearUsuario(String email, String username, Rol rol, String password) {
         try {
             UsersResource userResource = keycloakProvider.getUsersResource();
 
@@ -42,6 +43,8 @@ public class KeycloakService implements IamService {
             userRepresentation.setEmail(email);
             userRepresentation.setUsername(username);
             userRepresentation.setEnabled(true);
+            userRepresentation.setEmailVerified(true);
+            userRepresentation.setRequiredActions(Collections.emptyList());
 
             Response response = userResource.create(userRepresentation);
             int status = response.getStatus();
@@ -51,9 +54,9 @@ public class KeycloakService implements IamService {
                 String userId = path.substring(path.lastIndexOf("/") + 1);
 
                 CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
-                credentialRepresentation.setTemporary(true);
+                credentialRepresentation.setTemporary(false);
                 credentialRepresentation.setType(OAuth2Constants.PASSWORD);
-                credentialRepresentation.setValue(generarPasswordTemporal());
+                credentialRepresentation.setValue(password != null ? password : generarPasswordTemporal());
                 userResource.get(userId).resetPassword(credentialRepresentation);
 
                 asignarRol(userId, rol);
@@ -142,6 +145,12 @@ public class KeycloakService implements IamService {
     }
 
     private String generarPasswordTemporal() {
-        return "Temp1234*";
+        String caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
+        StringBuilder password = new StringBuilder();
+        Random random = new Random();
+        for (int i = 0; i < 12; i++) {
+            password.append(caracteres.charAt(random.nextInt(caracteres.length())));
+        }
+        return password.toString();
     }
 }

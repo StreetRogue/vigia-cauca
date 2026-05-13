@@ -53,7 +53,13 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
     setLoading(true);
     setError('');
     try {
-      const res = await novedadesService.listarPaginado({ page, size: PAGE_SIZE });
+      const params: any = { page, size: PAGE_SIZE };
+      // Filtrar por rol: ADMIN ve todas, OPERADOR ve solo sus novedades
+      if (userRole && user?.sub) {
+        params.rol = userRole;
+        params.usuarioId = user.sub;
+      }
+      const res = await novedadesService.listarPaginado(params);
       setNovedades(res.content);
       setTotalPages(res.totalPages);
       setTotalElements(res.totalElements);
@@ -62,7 +68,7 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, userRole, user?.sub]);
 
   useEffect(() => { load(); }, [load, refreshKey]);
 

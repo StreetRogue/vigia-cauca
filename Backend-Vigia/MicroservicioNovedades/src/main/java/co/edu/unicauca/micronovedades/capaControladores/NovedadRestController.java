@@ -93,13 +93,21 @@ public class NovedadRestController {
     }
 
     /**
-     * GET /api/v1/microNovedades/novedades/paginado?page=0&size=20&sort=fechaHecho,desc
+     * GET /api/v1/microNovedades/novedades/paginado?page=0&size=20&sort=fechaHecho,desc&rol=ADMIN&usuarioId=...
+     * Si rol=ADMIN: retorna todas las novedades
+     * Si rol=OPERADOR: retorna solo las novedades creadas por ese usuario
      */
     @GetMapping("/paginado")
     public ResponseEntity<Page<NovedadDTORespuesta>> listarPaginado(
+            @RequestParam(required = false) String rol,
+            @RequestParam(required = false) UUID usuarioId,
             @PageableDefault(size = 20, sort = "fechaHecho") Pageable pageable
     ) {
-        return ResponseEntity.ok(novedadService.listarTodasPaginado(pageable));
+        // Si no viene rol, devolver todas (compatibilidad backwards)
+        if (rol == null || rol.isBlank()) {
+            return ResponseEntity.ok(novedadService.listarTodasPaginado(pageable));
+        }
+        return ResponseEntity.ok(novedadService.listarPaginadoPorRol(rol, usuarioId, pageable));
     }
 
     /**

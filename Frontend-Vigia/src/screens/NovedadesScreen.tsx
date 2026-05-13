@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { NovedadesProvider, useNovedades } from '../context/NovedadesContext';
 import { ManagementTemplate } from '../components/templates/ManagementTemplate/ManagementTemplate';
 import { NavMenu } from '../components/molecules/NavMenu';
+import { UserDropdownSection } from '../components/organisms/UserDropdownSection/UserDropdownSection';
 import { ExcelUploadModal } from '../components/organisms/ExcelUploadModal/ExcelUploadModal';
 import { NovedadesListPanel } from '../components/organisms/novedades/NovedadesListPanel';
 import { NovedadesDetailPanel } from '../components/organisms/novedades/NovedadesDetailPanel';
@@ -35,7 +36,7 @@ function getInitials(name: string) {
 }
 
 function NovedadesContent() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const {
     currentStep, setCurrentStep,
     showExcelModal, setShowExcelModal,
@@ -55,6 +56,9 @@ function NovedadesContent() {
     icon: <img src={ICON_MAP[item.label]} alt="" />,
   }));
   const initials = getInitials(user?.name ?? user?.username ?? 'U');
+  const displayName = user?.name ?? user?.username ?? 'Usuario';
+  const displayRole = user?.rol ?? 'OPERADOR';
+  const isAdmin = user?.rol === 'ADMIN';
 
   function handleNew() {
     resetForm();
@@ -81,11 +85,11 @@ function NovedadesContent() {
   const sidebarNav = <NavMenu items={items} selectedItem="NOVEDADES" />;
 
   const sidebarFooter = (
-    <div className="user-card">
-      <div className="avatar">{initials}</div>
-      <div className="user-card-info">
-        <span className="user-card-name">{user?.name ?? user?.username}</span>
-        <span className="user-card-role">{user?.rol ?? 'OPERADOR'}</span>
+    <div className={styles.sidebarUser}>
+      <div className={styles.sidebarAvatar}>{initials}</div>
+      <div>
+        <p className={styles.sidebarName}>{user?.name ?? user?.username}</p>
+        <p className={styles.sidebarRole}>{user?.rol ?? 'OPERADOR'}</p>
       </div>
     </div>
   );
@@ -98,13 +102,7 @@ function NovedadesContent() {
   );
 
   const topbarUser = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div className={styles.avatarCircle}>{initials}</div>
-      <div className={styles.topbarUserInfo}>
-        <span className={styles.topbarUserName}>{user?.name ?? user?.username}</span>
-        <span className={styles.topbarUserRole}>{user?.rol ?? 'OPERADOR'}</span>
-      </div>
-    </div>
+    <UserDropdownSection displayName={displayName} displayRol={displayRole} isAdmin={isAdmin} onLogout={logout} />
   );
 
   const formTitle = editingNovedadId ? 'EDITAR NOVEDAD' : 'REGISTRAR NUEVA NOVEDAD';
@@ -120,15 +118,6 @@ function NovedadesContent() {
             ✅ Novedad {editingNovedadId ? 'actualizada' : 'registrada'} con éxito
           </div>
         )}
-
-        <ExcelUploadModal
-          isOpen={showExcelModal}
-          onClose={() => setShowExcelModal(false)}
-          onUpload={file => {
-            handleExcelFile(file);
-            setShowExcelModal(false);
-          }}
-        />
 
         {currentStep === 5 ? (
           <div className="registration-card">
@@ -183,32 +172,43 @@ function NovedadesContent() {
   ) : null;
 
   return (
-    <ManagementTemplate
-      sidebarTitle="VIGIA CAUCA"
-      sidebarSubtitle="GESTION INTEGRAL"
-      sidebarNav={sidebarNav}
-      sidebarFooter={sidebarFooter}
-      breadcrumb={breadcrumb}
-      topbarUser={topbarUser}
-      mainPanel={
-        <NovedadesListPanel
-          refreshKey={refreshKey}
-          onNew={handleNew}
-          onEdit={handleEdit}
-          onExcel={() => setShowExcelModal(true)}
-          onRowClick={nov => setSelectedNovedad(nov)}
-          selectedId={selectedNovedad?.novedadId ?? null}
-          userRole={user?.rol}
-        />
-      }
-      rightPanel={
-        <NovedadesDetailPanel
-          novedad={selectedNovedad}
-          onEdit={handleEdit}
-        />
-      }
-      overlay={formOverlay}
-    />
+    <>
+      <ManagementTemplate
+        sidebarTitle="VIGIA CAUCA"
+        sidebarSubtitle="GESTION INTEGRAL"
+        sidebarNav={sidebarNav}
+        sidebarFooter={sidebarFooter}
+        breadcrumb={breadcrumb}
+        topbarUser={topbarUser}
+        mainPanel={
+          <NovedadesListPanel
+            refreshKey={refreshKey}
+            onNew={handleNew}
+            onEdit={handleEdit}
+            onExcel={() => setShowExcelModal(true)}
+            onRowClick={nov => setSelectedNovedad(nov)}
+            selectedId={selectedNovedad?.novedadId ?? null}
+            userRole={user?.rol}
+          />
+        }
+        rightPanel={
+          <NovedadesDetailPanel
+            novedad={selectedNovedad}
+            onEdit={handleEdit}
+          />
+        }
+        overlay={formOverlay}
+      />
+
+      <ExcelUploadModal
+        isOpen={showExcelModal}
+        onClose={() => setShowExcelModal(false)}
+        onUpload={file => {
+          handleExcelFile(file);
+          setShowExcelModal(false);
+        }}
+      />
+    </>
   );
 }
 

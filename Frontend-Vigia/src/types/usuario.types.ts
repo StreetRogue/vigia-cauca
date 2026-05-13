@@ -30,6 +30,7 @@ export interface UsuarioCreateDTO {
   email:       string;
   idMunicipio: number;
   username:    string;
+  password:    string;
   rol:         RolUsuario;
 }
 
