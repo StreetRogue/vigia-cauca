@@ -57,4 +57,16 @@ export const usuariosService = {
     apiClient
       .get<boolean>(`${ENDPOINTS.usuarios.base}/validate/cedula/${cedula}`)
       .then((r) => r.data),
+
+  /** Validar si un email ya existe (para validación en tiempo real) */
+  validateEmail: (email: string) =>
+    apiClient
+      .get<boolean>(`${ENDPOINTS.usuarios.base}/validate/email/${encodeURIComponent(email)}`)
+      .then((r) => r.data),
+
+  /** Validar si un username ya existe (para validación en tiempo real) */
+  validateUsername: (username: string) =>
+    apiClient
+      .get<boolean>(`${ENDPOINTS.usuarios.base}/validate/username/${username}`)
+      .then((r) => r.data),
 };

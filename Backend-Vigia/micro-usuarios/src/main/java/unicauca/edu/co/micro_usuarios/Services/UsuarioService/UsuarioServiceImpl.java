@@ -304,4 +304,14 @@ public class UsuarioServiceImpl implements UsuarioService {
     public boolean existsByCedula(String cedula) {
         return usuarioRepository.findByCedula(cedula).isPresent();
     }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return usuarioRepository.findByEmail(email).isPresent();
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        return usuarioRepository.findByUsername(username).isPresent();
+    }
 }
