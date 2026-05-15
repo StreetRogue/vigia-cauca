@@ -183,10 +183,25 @@ export function CreateUserDrawer({
       await onSave?.(payload);
       onClose();
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? `Error al ${isEditing ? 'actualizar' : 'crear'} el usuario. Intente de nuevo.`;
-      setFormError(msg);
+      const apiError = err as { response?: { data?: { message?: string; error?: string } } };
+      const errorMessage = apiError?.response?.data?.message;
+      const errorType = apiError?.response?.data?.error;
+
+      let displayMessage = `Error al ${isEditing ? 'actualizar' : 'crear'} el usuario.`;
+
+      // Mapear errores específicos del backend a mensajes amigables
+      if (errorType === 'CEDULA_ALREADY_EXISTS') {
+        displayMessage = errorMessage || 'Esta cédula ya está registrada.';
+      } else if (errorType === 'EMAIL_ALREADY_EXISTS') {
+        displayMessage = errorMessage || 'Este email ya está registrado.';
+      } else if (errorType === 'USERNAME_ALREADY_EXISTS') {
+        displayMessage = errorMessage || 'Este nombre de usuario ya existe.';
+      } else if (errorMessage) {
+        displayMessage = errorMessage;
+      }
+
+      setFormError(displayMessage);
+      console.error('Error al guardar usuario:', { err, errorType, errorMessage });
     } finally {
       setSaving(false);
     }

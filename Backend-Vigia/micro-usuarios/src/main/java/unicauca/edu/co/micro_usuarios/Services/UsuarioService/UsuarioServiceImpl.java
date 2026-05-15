@@ -16,6 +16,7 @@ import unicauca.edu.co.micro_usuarios.DTOs.Response.UsuarioResponseDTO;
 import unicauca.edu.co.micro_usuarios.Entities.EstadoUsuario;
 import unicauca.edu.co.micro_usuarios.Entities.Rol;
 import unicauca.edu.co.micro_usuarios.Entities.Usuario;
+import unicauca.edu.co.micro_usuarios.Exceptions.CedulaAlreadyExistsException;
 import unicauca.edu.co.micro_usuarios.Exceptions.EmailAlreadyExistsException;
 import unicauca.edu.co.micro_usuarios.Exceptions.InvalidOperationException;
 import unicauca.edu.co.micro_usuarios.Exceptions.UsernameAlreadyExistsException;
@@ -43,12 +44,16 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     public UsuarioResponseDTO registrarUsuario(UsuarioCreateDTO dto, String adminIdIam) {
         // Validaciones
+        if (usuarioRepository.findByCedula(dto.getCedula()).isPresent()) {
+            throw new CedulaAlreadyExistsException("La cédula " + dto.getCedula() + " ya está registrada");
+        }
+
         if (usuarioRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new EmailAlreadyExistsException("El email ya está registrado");
+            throw new EmailAlreadyExistsException("El email " + dto.getEmail() + " ya está registrado");
         }
 
         if (usuarioRepository.findByUsername(dto.getUsername()).isPresent()) {
-            throw new UsernameAlreadyExistsException("El username ya existe");
+            throw new UsernameAlreadyExistsException("El username " + dto.getUsername() + " ya existe");
         }
 
         MunicipioResponseDTO municipio;

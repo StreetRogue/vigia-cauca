@@ -3,9 +3,9 @@
   "realm": "security-realm-dev",
   "displayName": "Vigia Cauca",
   "enabled": true,
-  "accessTokenLifespan": 28800,
-  "ssoSessionIdleTimeout": 28800,
-  "ssoSessionMaxLifespan": 86400,
+  "accessTokenLifespan": 3600,
+  "ssoSessionIdleTimeout": 86400,
+  "ssoSessionMaxLifespan": 604800,
   "refreshTokenMaxReuse": 0,
   "bruteForceProtected": false,
   "roles": {

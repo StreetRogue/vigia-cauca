@@ -63,16 +63,27 @@ public class KeycloakService implements IamService {
 
                 return userId;
             } else if (status == 409) {
-                log.error("El usuario ya existe en Keycloak");
-                throw new IamException("El usuario ya existe en Keycloak");
+                log.error("El usuario {} ya existe en Keycloak", username);
+                throw new IamException("El usuario ya existe en el sistema de autenticación");
+            } else if (status == 400) {
+                log.error("Error de validación creando usuario en Keycloak: {}", username);
+                throw new IamException("Los datos del usuario no son válidos (revisa email y usuario)");
             } else {
-                log.error("Error creando el usuario en Keycloak");
-                throw new IamException("Error creando el usuario en Keycloak");
+                log.error("Error creando usuario en Keycloak | username={} | status={}", username, status);
+                throw new IamException("No se pudo registrar el usuario (error " + status + ")");
             }
 
+        } catch (IamException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("Error creando usuario en Keycloak | email={}", email, e);
-            throw new IamException("No se pudo crear el usuario en Keycloak");
+            log.error("Error inesperado creando usuario en Keycloak | email={} | error={}", email, e.getMessage(), e);
+            String errorMsg = e.getMessage();
+            if (errorMsg != null && errorMsg.contains("Connection refused")) {
+                throw new IamException("Servicio de autenticación no disponible. Intenta más tarde.");
+            } else if (errorMsg != null && errorMsg.contains("timeout")) {
+                throw new IamException("Tiempo de espera agotado con el servicio de autenticación.");
+            }
+            throw new IamException("Error del servicio de autenticación: " + (errorMsg != null ? errorMsg : "Desconocido"));
         }
     }
 
