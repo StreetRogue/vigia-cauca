@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { UsuarioResponseDTO } from '../../../types/usuario.types';
 import { usuariosService } from '../../../services/usuarios.service';
 import styles from './UserDetailPanel.module.css';
@@ -25,6 +25,36 @@ function getInitials(nombre: string): string {
 
 export function UserDetailPanel({ usuario, onEdit, onRefresh }: Props) {
   const [toggling, setToggling] = useState(false);
+  const [creadoPorNombre, setCreadoPorNombre] = useState<string | null>(null);
+  const [editadoPorNombre, setEditadoPorNombre] = useState<string | null>(null);
+  const [loadingAudit, setLoadingAudit] = useState(false);
+
+  useEffect(() => {
+    if (!usuario?.creadoPor && !usuario?.editadoPor) return;
+
+    setLoadingAudit(true);
+    const promises: Promise<any>[] = [];
+
+    if (usuario.creadoPor) {
+      promises.push(
+        usuariosService
+          .getByIdIam(usuario.creadoPor)
+          .then((u) => setCreadoPorNombre(u.nombre))
+          .catch(() => setCreadoPorNombre(usuario.creadoPor))
+      );
+    }
+
+    if (usuario.editadoPor) {
+      promises.push(
+        usuariosService
+          .getByIdIam(usuario.editadoPor)
+          .then((u) => setEditadoPorNombre(u.nombre))
+          .catch(() => setEditadoPorNombre(usuario.editadoPor))
+      );
+    }
+
+    Promise.all(promises).finally(() => setLoadingAudit(false));
+  }, [usuario?.creadoPor, usuario?.editadoPor]);
 
   if (!usuario) {
     return (
@@ -133,13 +163,19 @@ export function UserDetailPanel({ usuario, onEdit, onRefresh }: Props) {
           {usuario.creadoPor && (
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>Por</span>
-              <span className={styles.infoValue}>{usuario.creadoPor}</span>
+              <span className={styles.infoValue}>{loadingAudit ? '...' : creadoPorNombre ?? usuario.creadoPor}</span>
             </div>
           )}
           {usuario.fechaActualizacion && (
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>Actualizado</span>
               <span className={styles.infoValue}>{formatDate(usuario.fechaActualizacion)}</span>
+            </div>
+          )}
+          {usuario.editadoPor && (
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Por</span>
+              <span className={styles.infoValue}>{loadingAudit ? '...' : editadoPorNombre ?? usuario.editadoPor}</span>
             </div>
           )}
         </div>

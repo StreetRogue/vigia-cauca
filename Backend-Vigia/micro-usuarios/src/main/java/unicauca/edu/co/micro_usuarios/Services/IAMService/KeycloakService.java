@@ -63,16 +63,38 @@ public class KeycloakService implements IamService {
 
                 return userId;
             } else if (status == 409) {
-                log.error("El usuario ya existe en Keycloak");
-                throw new IamException("El usuario ya existe en Keycloak");
+                // Intenta extraer más detalles del conflicto
+                String responseBody = response.readEntity(String.class);
+                log.error("Conflicto creando usuario en Keycloak | username={} | response={}", username, responseBody);
+
+                String errorMsg = "El usuario ya existe en el sistema de autenticación";
+                if (responseBody.toLowerCase().contains("email")) {
+                    errorMsg = "Email ya existe en el sistema de autenticación";
+                } else if (responseBody.toLowerCase().contains("username")) {
+                    errorMsg = "Nombre de usuario ya existe en el sistema de autenticación";
+                }
+
+                throw new IamException(errorMsg);
+            } else if (status == 400) {
+                String responseBody = response.readEntity(String.class);
+                log.error("Error de validación creando usuario en Keycloak: {} | response={}", username, responseBody);
+                throw new IamException("Los datos del usuario no son válidos: " + responseBody);
             } else {
-                log.error("Error creando el usuario en Keycloak");
-                throw new IamException("Error creando el usuario en Keycloak");
+                log.error("Error creando usuario en Keycloak | username={} | status={}", username, status);
+                throw new IamException("No se pudo registrar el usuario (error " + status + ")");
             }
 
+        } catch (IamException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("Error creando usuario en Keycloak | email={}", email, e);
-            throw new IamException("No se pudo crear el usuario en Keycloak");
+            log.error("Error inesperado creando usuario en Keycloak | email={} | error={}", email, e.getMessage(), e);
+            String errorMsg = e.getMessage();
+            if (errorMsg != null && errorMsg.contains("Connection refused")) {
+                throw new IamException("Servicio de autenticación no disponible. Intenta más tarde.");
+            } else if (errorMsg != null && errorMsg.contains("timeout")) {
+                throw new IamException("Tiempo de espera agotado con el servicio de autenticación.");
+            }
+            throw new IamException("Error del servicio de autenticación: " + (errorMsg != null ? errorMsg : "Desconocido"));
         }
     }
 

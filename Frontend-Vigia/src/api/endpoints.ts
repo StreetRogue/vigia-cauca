@@ -42,6 +42,7 @@ export const ENDPOINTS = {
 
   usuarios: {
     base:       '/api/v1/usuarios',
+    me:         '/api/v1/usuarios/me',
     registrar:  '/api/v1/usuarios/registrar',
     porId:      (id: string) => `/api/v1/usuarios/${id}`,
     porAuth0Id: (id: string) => `/api/v1/usuarios/auth0/${id}`,

@@ -191,6 +191,7 @@
 
 .selectInvalid {
   border-color: #e74c3c;
+  background-color: #fef8f7;
 }
 
 .audit {

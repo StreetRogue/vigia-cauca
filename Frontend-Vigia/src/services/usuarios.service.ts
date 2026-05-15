@@ -28,6 +28,12 @@ export const usuariosService = {
       .get<UsuarioResponseDTO>(ENDPOINTS.usuarios.porId(id))
       .then((r) => r.data),
 
+  /** Obtener por ID de Keycloak/IAM */
+  getByIdIam: (idIam: string) =>
+    apiClient
+      .get<UsuarioResponseDTO>(ENDPOINTS.usuarios.porAuth0Id(idIam))
+      .then((r) => r.data),
+
   /** Crear nuevo usuario (ADMIN only) */
   create: (payload: UsuarioCreateDTO) =>
     apiClient
@@ -50,5 +56,23 @@ export const usuariosService = {
   getMe: () =>
     apiClient
       .get<UsuarioResponseDTO>(ENDPOINTS.usuarios.me)
+      .then((r) => r.data),
+
+  /** Validar si una cédula ya existe (para validación en tiempo real) */
+  validateCedula: (cedula: string) =>
+    apiClient
+      .get<boolean>(`${ENDPOINTS.usuarios.base}/validate/cedula/${cedula}`)
+      .then((r) => r.data),
+
+  /** Validar si un email ya existe (para validación en tiempo real) */
+  validateEmail: (email: string) =>
+    apiClient
+      .get<boolean>(`${ENDPOINTS.usuarios.base}/validate/email`, { params: { email } })
+      .then((r) => r.data),
+
+  /** Validar si un username ya existe (para validación en tiempo real) */
+  validateUsername: (username: string) =>
+    apiClient
+      .get<boolean>(`${ENDPOINTS.usuarios.base}/validate/username`, { params: { username } })
       .then((r) => r.data),
 };

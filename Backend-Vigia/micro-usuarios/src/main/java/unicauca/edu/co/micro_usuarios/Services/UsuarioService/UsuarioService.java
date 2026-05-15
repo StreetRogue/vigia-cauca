@@ -16,4 +16,8 @@ public interface UsuarioService {
 
     void eliminarUsuario(UUID id, String adminIdIam);
     void cambiarPasswordPropio(String idIam, String newPassword);
+
+    boolean existsByCedula(String cedula);
+    boolean existsByEmail(String email);
+    boolean existsByUsername(String username);
 }

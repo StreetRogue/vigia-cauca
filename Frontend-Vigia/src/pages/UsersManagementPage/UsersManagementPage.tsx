@@ -14,7 +14,6 @@ import type { MunicipioDTORespuesta } from "../../types/ubicaciones.types";
 import dashboardIcon    from "../../assets/Dashboard_Icon.svg";
 import novedadesIcon    from "../../assets/novedades_icon.svg";
 import usuariosIcon     from "../../assets/usuarios_icon.svg";
-import reportesIcon     from "../../assets/reportes_icon.svg";
 import configuracionIcon from "../../assets/configuracion_icon.svg";
 import styles from "./UsersManagementPage.module.css";
 
@@ -22,7 +21,6 @@ const menuItems =[
   { label: "DASHBOARD",     icon: <img src={dashboardIcon}     alt="" />, to: "/dashboard"      },
   { label: "NOVEDADES",     icon: <img src={novedadesIcon}     alt="" />, to: "/novedades"      },
   { label: "USUARIOS",      icon: <img src={usuariosIcon}      alt="" />, to: "/usuarios"       },
-  { label: "REPORTES",      icon: <img src={reportesIcon}      alt="" />, to: "/reportes"      },
   { label: "CONFIGURACION", icon: <img src={configuracionIcon} alt="" />, to: "/configuracion" },
 ];
 
@@ -42,14 +40,23 @@ function getInitials(nombre: string): string {
     .join("");
 }
 
-// Datos simulados para replicar visualmente la sección de Actividad del prototipo
-const mockActivities =[
-  { id: 1, text: "Usuario creado: Sandra Ruiz", date: "Hoy 08:42", dot: "green" },
-  { id: 2, text: "Rol modificado: Carlos Medina", date: "Ayer 16:30", dot: "orange" },
-  { id: 3, text: "Cuenta suspendida: Pedro Lemos", date: "07/04 11:05", dot: "red" },
-  { id: 4, text: "Acceso concedido: María Ríos", date: "06/04 09:18", dot: "blue" },
-  { id: 5, text: "Contraseña restablecida: J. Muñoz", date: "05/04 14:55", dot: "gray" },
-];
+interface AuditActivity {
+  id: string;
+  text: string;
+  date: string;
+  dot: 'green' | 'orange' | 'red' | 'blue' | 'gray';
+}
+
+function formatAuditDate(isoDate: string): string {
+  const date = new Date(isoDate);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const hour = date.getHours().toString().padStart(2, '0');
+  const minute = date.getMinutes().toString().padStart(2, '0');
+
+  return `${day}/${month}/${year} ${hour}:${minute}`;
+}
 
 export function UsersManagementPage() {
   const { user, logout } = useAuth();
@@ -66,6 +73,9 @@ export function UsersManagementPage() {
 
   // ── Municipios (para el drawer) ───────────────────────────────────────────
   const [municipios, setMunicipios] = useState<MunicipioDTORespuesta[]>([]);
+
+  // ── Auditoría ──────────────────────────────────────────────────────────────
+  const [activities, setActivities] = useState<AuditActivity[]>([]);
 
   // ── Drawer ────────────────────────────────────────────────────────────────
   const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
@@ -104,6 +114,68 @@ export function UsersManagementPage() {
 
   useEffect(() => { loadUsuarios(); }, [loadUsuarios]);
 
+  // ── Load audit activities ──────────────────────────────────────────────────
+  const loadAuditActivities = useCallback(async () => {
+    try {
+      // Obtener más usuarios para construir historial de auditoría
+      const res = await usuariosService.list({ page: 0, size: 100 });
+      const allUsers = res.content;
+
+      // Construir actividades basadas en fechas de creación y actualización
+      const activityMap = new Map<string, { item: AuditActivity; timestamp: number }>();
+
+      for (const usuario of allUsers) {
+        // Actividad de creación
+        if (usuario.fechaCreacion) {
+          const timestamp = new Date(usuario.fechaCreacion).getTime();
+          const createdKey = `created-${usuario.idUsuario}`;
+          activityMap.set(createdKey, {
+            item: {
+              id: createdKey,
+              text: `Usuario creado: ${usuario.nombre}`,
+              date: formatAuditDate(usuario.fechaCreacion),
+              dot: 'green' as const,
+            },
+            timestamp,
+          });
+        }
+
+        // Actividad de actualización (si es diferente a creación)
+        if (
+          usuario.fechaActualizacion &&
+          usuario.fechaActualizacion !== usuario.fechaCreacion
+        ) {
+          const timestamp = new Date(usuario.fechaActualizacion).getTime();
+          const updatedKey = `updated-${usuario.idUsuario}`;
+          activityMap.set(updatedKey, {
+            item: {
+              id: updatedKey,
+              text: `Usuario modificado: ${usuario.nombre}`,
+              date: formatAuditDate(usuario.fechaActualizacion),
+              dot: 'orange' as const,
+            },
+            timestamp,
+          });
+        }
+      }
+
+      // Ordenar por timestamp descendente y tomar últimas 5
+      const sortedActivities = Array.from(activityMap.values())
+        .sort((a, b) => b.timestamp - a.timestamp)
+        .slice(0, 5)
+        .map((x) => x.item);
+
+      setActivities(sortedActivities);
+    } catch (error) {
+      console.error('Error cargando auditoría:', error);
+      setActivities([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAuditActivities();
+  }, [loadAuditActivities]);
+
   // ── Search filter ─────────────────────────────────────────────────────────
   const q = search.trim().toLowerCase();
   const filtered = q
@@ -131,6 +203,7 @@ export function UsersManagementPage() {
     setSelectedUsuario(null);
     setSelectedUsuarioId(null);
     await loadUsuarios();
+    await loadAuditActivities();
   };
 
   const handleEditUserSave = async (payload: any) => {
@@ -139,6 +212,7 @@ export function UsersManagementPage() {
     setSelectedUsuario(null);
     setSelectedUsuarioId(null);
     await loadUsuarios();
+    await loadAuditActivities();
   };
 
   const handleRowClick = (usuario: UsuarioResponseDTO) => {
@@ -362,15 +436,21 @@ export function UsersManagementPage() {
           <section className={styles.block}>
             <h3 className={styles.blockTitle}>ACTIVIDAD RECIENTE</h3>
             <ul className={styles.activityList}>
-              {mockActivities.map((act) => (
-                <li key={act.id} className={styles.activityItem}>
-                  <span className={[styles.dot, styles[act.dot]].join(" ")} aria-hidden="true" />
-                  <div>
-                    <p className={styles.activityText}>{act.text}</p>
-                    <p className={styles.activityDate}>{act.date}</p>
-                  </div>
+              {activities.length > 0 ? (
+                activities.map((act) => (
+                  <li key={act.id} className={styles.activityItem}>
+                    <span className={[styles.dot, styles[act.dot]].join(" ")} aria-hidden="true" />
+                    <div>
+                      <p className={styles.activityText}>{act.text}</p>
+                      <p className={styles.activityDate}>{act.date}</p>
+                    </div>
+                  </li>
+                ))
+              ) : (
+                <li style={{ padding: '14px 0', color: 'var(--color-text-muted)', fontSize: '12px' }}>
+                  No hay actividad reciente
                 </li>
-              ))}
+              )}
             </ul>
           </section>
           </>

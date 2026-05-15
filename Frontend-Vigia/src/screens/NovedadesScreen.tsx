@@ -6,6 +6,7 @@ import { UserDropdownSection } from '../components/organisms/UserDropdownSection
 import { ExcelUploadModal } from '../components/organisms/ExcelUploadModal/ExcelUploadModal';
 import { NovedadesListPanel } from '../components/organisms/novedades/NovedadesListPanel';
 import { NovedadesDetailPanel } from '../components/organisms/novedades/NovedadesDetailPanel';
+import { NovedadesSummaryPanel } from '../components/organisms/novedades/NovedadesSummaryPanel';
 import { Stepper } from '../components/organisms/novedades/Stepper';
 import { Step1Localizacion } from '../components/organisms/novedades/Step1Localizacion';
 import { Step2Caracterizacion } from '../components/organisms/novedades/Step2Caracterizacion';
@@ -18,7 +19,6 @@ import type { NovedadDTORespuesta } from '../types/novedad.types';
 import dashboardIcon from '../assets/Dashboard_Icon.svg';
 import novedadesIcon from '../assets/novedades_icon.svg';
 import usuariosIcon from '../assets/usuarios_icon.svg';
-import reportesIcon from '../assets/reportes_icon.svg';
 import configuracionIcon from '../assets/configuracion_icon.svg';
 import './novedades.css';
 import styles from './NovedadesScreen.module.css';
@@ -27,7 +27,6 @@ const ICON_MAP: Record<string, string> = {
   DASHBOARD:     dashboardIcon,
   NOVEDADES:     novedadesIcon,
   USUARIOS:      usuariosIcon,
-  REPORTES:      reportesIcon,
   CONFIGURACION: configuracionIcon,
 };
 
@@ -48,6 +47,7 @@ function NovedadesContent() {
 
   const [mode, setMode] = useState<'list' | 'form'>('list');
   const [selectedNovedad, setSelectedNovedad] = useState<NovedadDTORespuesta | null>(null);
+  const [selectedNovedadId, setSelectedNovedadId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const role    = resolveAppRole([user?.rol ?? '']);
@@ -79,7 +79,18 @@ function NovedadesContent() {
     resetForm();
     setRefreshKey(k => k + 1);
     setSelectedNovedad(null);
+    setSelectedNovedadId(null);
     setMode('list');
+  }
+
+  function handleRowClick(nov: NovedadDTORespuesta) {
+    if (selectedNovedadId === nov.novedadId) {
+      setSelectedNovedad(null);
+      setSelectedNovedadId(null);
+    } else {
+      setSelectedNovedad(nov);
+      setSelectedNovedadId(nov.novedadId);
+    }
   }
 
   const sidebarNav = <NavMenu items={items} selectedItem="NOVEDADES" />;
@@ -186,16 +197,20 @@ function NovedadesContent() {
             onNew={handleNew}
             onEdit={handleEdit}
             onExcel={() => setShowExcelModal(true)}
-            onRowClick={nov => setSelectedNovedad(nov)}
-            selectedId={selectedNovedad?.novedadId ?? null}
+            onRowClick={handleRowClick}
+            selectedId={selectedNovedadId}
             userRole={user?.rol}
           />
         }
         rightPanel={
-          <NovedadesDetailPanel
-            novedad={selectedNovedad}
-            onEdit={handleEdit}
-          />
+          selectedNovedad ? (
+            <NovedadesDetailPanel
+              novedad={selectedNovedad}
+              onEdit={handleEdit}
+            />
+          ) : (
+            <NovedadesSummaryPanel />
+          )
         }
         overlay={formOverlay}
       />

@@ -82,6 +82,28 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
+    // Validaciones en tiempo real
+    @GetMapping("/validate/cedula/{cedula}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Boolean> validateCedula(@PathVariable String cedula) {
+        boolean exists = usuarioService.existsByCedula(cedula);
+        return ResponseEntity.ok(exists);
+    }
+
+    @GetMapping("/validate/email")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Boolean> validateEmail(@RequestParam String email) {
+        boolean exists = usuarioService.existsByEmail(email);
+        return ResponseEntity.ok(exists);
+    }
+
+    @GetMapping("/validate/username")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Boolean> validateUsername(@RequestParam String username) {
+        boolean exists = usuarioService.existsByUsername(username);
+        return ResponseEntity.ok(exists);
+    }
+
     // Listar usuarios (Se puede aplicar filtros)
     @GetMapping
     @PreAuthorize("hasAuthority('ADMIN')")

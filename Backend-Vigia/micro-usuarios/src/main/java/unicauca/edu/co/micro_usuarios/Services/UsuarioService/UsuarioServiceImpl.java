@@ -16,7 +16,9 @@ import unicauca.edu.co.micro_usuarios.DTOs.Response.UsuarioResponseDTO;
 import unicauca.edu.co.micro_usuarios.Entities.EstadoUsuario;
 import unicauca.edu.co.micro_usuarios.Entities.Rol;
 import unicauca.edu.co.micro_usuarios.Entities.Usuario;
+import unicauca.edu.co.micro_usuarios.Exceptions.CedulaAlreadyExistsException;
 import unicauca.edu.co.micro_usuarios.Exceptions.EmailAlreadyExistsException;
+import unicauca.edu.co.micro_usuarios.Exceptions.IamException;
 import unicauca.edu.co.micro_usuarios.Exceptions.InvalidOperationException;
 import unicauca.edu.co.micro_usuarios.Exceptions.UsernameAlreadyExistsException;
 import unicauca.edu.co.micro_usuarios.Exceptions.UsuarioNotFoundException;
@@ -43,12 +45,16 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     public UsuarioResponseDTO registrarUsuario(UsuarioCreateDTO dto, String adminIdIam) {
         // Validaciones
+        if (usuarioRepository.findByCedula(dto.getCedula()).isPresent()) {
+            throw new CedulaAlreadyExistsException("La cédula " + dto.getCedula() + " ya está registrada");
+        }
+
         if (usuarioRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new EmailAlreadyExistsException("El email ya está registrado");
+            throw new EmailAlreadyExistsException("El email " + dto.getEmail() + " ya está registrado");
         }
 
         if (usuarioRepository.findByUsername(dto.getUsername()).isPresent()) {
-            throw new UsernameAlreadyExistsException("El username ya existe");
+            throw new UsernameAlreadyExistsException("El username " + dto.getUsername() + " ya existe");
         }
 
         MunicipioResponseDTO municipio;
@@ -64,12 +70,34 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = UsuarioMapper.toEntity(dto);
 
         // Crear usuario en Keycloak con contraseña
-        String idKeycloak = iamService.crearUsuario(
-                dto.getEmail(),
-                dto.getUsername(),
-                dto.getRol(),
-                dto.getPassword()
-        );
+        String idKeycloak;
+        try {
+            idKeycloak = iamService.crearUsuario(
+                    dto.getEmail(),
+                    dto.getUsername(),
+                    dto.getRol(),
+                    dto.getPassword()
+            );
+        } catch (IamException e) {
+            // Si falla en Keycloak, intentar determinar qué campo causa el problema
+            String errorMsg = e.getMessage().toLowerCase();
+
+            // Keycloak retorna error 409 si email o username ya existen
+            if (errorMsg.contains("email") || errorMsg.contains("duplicat")) {
+                throw new EmailAlreadyExistsException(
+                    "El email " + dto.getEmail() + " ya está registrado en el sistema de autenticación"
+                );
+            }
+
+            if (errorMsg.contains("username")) {
+                throw new UsernameAlreadyExistsException(
+                    "El usuario " + dto.getUsername() + " ya existe en el sistema de autenticación"
+                );
+            }
+
+            // Si no se puede determinar el campo específico, relanzar el error original
+            throw e;
+        }
 
         usuario.setIdKeycloak(idKeycloak);
 
@@ -270,5 +298,20 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuarioEventPublisher.publicarActualizacion(dto);
 
         log.info("Usuario eliminado (soft delete) | id={} | adminIdIam={}", id, adminIdIam);
+    }
+
+    @Override
+    public boolean existsByCedula(String cedula) {
+        return usuarioRepository.findByCedula(cedula).isPresent();
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return usuarioRepository.findByEmail(email).isPresent();
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        return usuarioRepository.findByUsername(username).isPresent();
     }
 }
