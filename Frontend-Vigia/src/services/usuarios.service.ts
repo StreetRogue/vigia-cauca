@@ -51,4 +51,10 @@ export const usuariosService = {
     apiClient
       .get<UsuarioResponseDTO>(ENDPOINTS.usuarios.me)
       .then((r) => r.data),
+
+  /** Validar si una cédula ya existe (para validación en tiempo real) */
+  validateCedula: (cedula: string) =>
+    apiClient
+      .get<boolean>(`${ENDPOINTS.usuarios.base}/validate/cedula/${cedula}`)
+      .then((r) => r.data),
 };

@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "../../atoms/Button/Button";
 import { CloseButton } from "../../atoms/CloseButton";
 import { TextInput } from "../../atoms/TextInput/TextInput";
 import { FormField } from "../../molecules/FormField";
 import type { MunicipioDTORespuesta } from "../../../types/ubicaciones.types";
 import type { UsuarioResponseDTO } from "../../../types/usuario.types";
+import { usuariosService } from "../../../services/usuarios.service";
 import styles from "./CreateUserDrawer.module.css";
 
 export interface CreateUserDrawerProps {
@@ -60,6 +61,9 @@ export function CreateUserDrawer({
   const [errors,       setErrors]       = useState<FormErrors>({});
   const [formError,    setFormError]    = useState("");
   const [saving,       setSaving]       = useState(false);
+
+  // Ref para debounce de validación de cédula
+  const cedulaDebounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isEditing && initialData) {
@@ -156,6 +160,41 @@ export function CreateUserDrawer({
       }
       return newErrors;
     });
+  };
+
+  // Validación de cédula en tiempo real (debounce)
+  const handleCedulaChange = (value: string) => {
+    setCedula(value);
+
+    // Limpiar timer anterior
+    if (cedulaDebounceTimer.current) {
+      clearTimeout(cedulaDebounceTimer.current);
+    }
+
+    // Solo validar si el formato es correcto (10 dígitos)
+    if (value.trim() && /^\d{10}$/.test(value.trim())) {
+      // Esperar 500ms antes de hacer la petición
+      cedulaDebounceTimer.current = setTimeout(async () => {
+        try {
+          const exists = await usuariosService.validateCedula(value.trim());
+          if (exists) {
+            setErrors((prev) => ({
+              ...prev,
+              cedula: "Esta cédula ya está registrada.",
+            }));
+          } else {
+            setErrors((prev) => {
+              const newErrors = { ...prev };
+              delete newErrors.cedula;
+              return newErrors;
+            });
+          }
+        } catch (err) {
+          // Si hay error en la validación, no mostrar error
+          console.error("Error validando cédula:", err);
+        }
+      }, 500);
+    }
   };
 
   // Validación completa para submit
@@ -257,8 +296,7 @@ export function CreateUserDrawer({
           <FormField label="CÉDULA" required error={errors.cedula}>
             <TextInput
               value={cedula}
-              onChange={(e) => setCedula(e.target.value)}
-              onBlur={(e) => handleFieldBlur("cedula", e.target.value)}
+              onChange={(e) => handleCedulaChange(e.target.value)}
               placeholder="Ej. 1094123456"
               invalid={Boolean(errors.cedula)}
               required

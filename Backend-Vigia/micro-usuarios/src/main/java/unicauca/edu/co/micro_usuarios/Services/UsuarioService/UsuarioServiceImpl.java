@@ -299,4 +299,9 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         log.info("Usuario eliminado (soft delete) | id={} | adminIdIam={}", id, adminIdIam);
     }
+
+    @Override
+    public boolean existsByCedula(String cedula) {
+        return usuarioRepository.findByCedula(cedula).isPresent();
+    }
 }

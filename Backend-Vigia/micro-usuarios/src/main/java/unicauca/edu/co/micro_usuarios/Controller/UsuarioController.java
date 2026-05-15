@@ -82,6 +82,14 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
+    // Validar si una cédula ya existe (para validación en tiempo real)
+    @GetMapping("/validate/cedula/{cedula}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Boolean> validateCedula(@PathVariable String cedula) {
+        boolean exists = usuarioService.existsByCedula(cedula);
+        return ResponseEntity.ok(exists);
+    }
+
     // Listar usuarios (Se puede aplicar filtros)
     @GetMapping
     @PreAuthorize("hasAuthority('ADMIN')")
