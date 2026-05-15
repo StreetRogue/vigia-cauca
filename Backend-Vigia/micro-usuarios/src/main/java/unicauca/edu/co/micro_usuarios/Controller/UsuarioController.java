@@ -90,16 +90,16 @@ public class UsuarioController {
         return ResponseEntity.ok(exists);
     }
 
-    @GetMapping("/validate/email/{email}")
+    @GetMapping("/validate/email")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Boolean> validateEmail(@PathVariable String email) {
+    public ResponseEntity<Boolean> validateEmail(@RequestParam String email) {
         boolean exists = usuarioService.existsByEmail(email);
         return ResponseEntity.ok(exists);
     }
 
-    @GetMapping("/validate/username/{username}")
+    @GetMapping("/validate/username")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Boolean> validateUsername(@PathVariable String username) {
+    public ResponseEntity<Boolean> validateUsername(@RequestParam String username) {
         boolean exists = usuarioService.existsByUsername(username);
         return ResponseEntity.ok(exists);
     }

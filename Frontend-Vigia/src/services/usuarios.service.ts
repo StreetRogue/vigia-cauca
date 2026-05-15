@@ -61,12 +61,12 @@ export const usuariosService = {
   /** Validar si un email ya existe (para validación en tiempo real) */
   validateEmail: (email: string) =>
     apiClient
-      .get<boolean>(`${ENDPOINTS.usuarios.base}/validate/email/${encodeURIComponent(email)}`)
+      .get<boolean>(`${ENDPOINTS.usuarios.base}/validate/email`, { params: { email } })
       .then((r) => r.data),
 
   /** Validar si un username ya existe (para validación en tiempo real) */
   validateUsername: (username: string) =>
     apiClient
-      .get<boolean>(`${ENDPOINTS.usuarios.base}/validate/username/${username}`)
+      .get<boolean>(`${ENDPOINTS.usuarios.base}/validate/username`, { params: { username } })
       .then((r) => r.data),
 };
