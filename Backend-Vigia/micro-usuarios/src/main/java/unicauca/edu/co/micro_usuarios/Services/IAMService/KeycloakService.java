@@ -63,11 +63,22 @@ public class KeycloakService implements IamService {
 
                 return userId;
             } else if (status == 409) {
-                log.error("El usuario {} ya existe en Keycloak", username);
-                throw new IamException("El usuario ya existe en el sistema de autenticación");
+                // Intenta extraer más detalles del conflicto
+                String responseBody = response.readEntity(String.class);
+                log.error("Conflicto creando usuario en Keycloak | username={} | response={}", username, responseBody);
+
+                String errorMsg = "El usuario ya existe en el sistema de autenticación";
+                if (responseBody.toLowerCase().contains("email")) {
+                    errorMsg = "Email ya existe en el sistema de autenticación";
+                } else if (responseBody.toLowerCase().contains("username")) {
+                    errorMsg = "Nombre de usuario ya existe en el sistema de autenticación";
+                }
+
+                throw new IamException(errorMsg);
             } else if (status == 400) {
-                log.error("Error de validación creando usuario en Keycloak: {}", username);
-                throw new IamException("Los datos del usuario no son válidos (revisa email y usuario)");
+                String responseBody = response.readEntity(String.class);
+                log.error("Error de validación creando usuario en Keycloak: {} | response={}", username, responseBody);
+                throw new IamException("Los datos del usuario no son válidos: " + responseBody);
             } else {
                 log.error("Error creando usuario en Keycloak | username={} | status={}", username, status);
                 throw new IamException("No se pudo registrar el usuario (error " + status + ")");
