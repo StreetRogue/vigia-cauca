@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavMenu }            from '../../components/molecules/NavMenu';
 import { Button }             from '../../components/atoms/Button/Button';
 import { UserDropdownSection } from '../../components/organisms/UserDropdownSection/UserDropdownSection';
@@ -6,10 +6,10 @@ import { ManagementTemplate } from '../../components/templates/ManagementTemplat
 import { useAuth }            from '../../context/AuthContext';
 import { usuariosService }    from '../../services/usuarios.service';
 import { getMenuItemsForRole, resolveAppRole } from '../../constants/menuConfig';
+import type { UsuarioResponseDTO } from '../../types/usuario.types';
 import dashboardIcon     from '../../assets/Dashboard_Icon.svg';
 import novedadesIcon     from '../../assets/novedades_icon.svg';
 import usuariosIcon      from '../../assets/usuarios_icon.svg';
-import reportesIcon      from '../../assets/reportes_icon.svg';
 import configuracionIcon from '../../assets/configuracion_icon.svg';
 import styles            from './SettingsPage.module.css';
 
@@ -17,7 +17,6 @@ const ICON_MAP: Record<string, string> = {
   DASHBOARD:     dashboardIcon,
   NOVEDADES:     novedadesIcon,
   USUARIOS:      usuariosIcon,
-  REPORTES:      reportesIcon,
   CONFIGURACION: configuracionIcon,
 };
 
@@ -74,6 +73,7 @@ export function SettingsPage() {
     icon: <img src={ICON_MAP[item.label]} alt="" />,
   }));
 
+  const [fullUser, setFullUser] = useState<UsuarioResponseDTO | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(user?.name ?? '');
   const [editEmail, setEditEmail] = useState(user?.email ?? '');
@@ -81,7 +81,18 @@ export function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const displayName = user?.name ?? user?.username ?? 'Usuario';
+  useEffect(() => {
+    usuariosService.getMe()
+      .then((data) => {
+        setFullUser(data);
+        setEditName(data.nombre || '');
+        setEditEmail(data.email || '');
+        setEditPhone(data.telefono || '');
+      })
+      .catch(() => {/* fail silently */});
+  }, []);
+
+  const displayName = fullUser?.nombre ?? user?.name ?? user?.username ?? 'Usuario';
   const initials = getInitials(displayName);
 
   const handleSave = async () => {
@@ -110,9 +121,9 @@ export function SettingsPage() {
   };
 
   const handleCancel = () => {
-    setEditName(user?.name ?? '');
-    setEditEmail(user?.email ?? '');
-    setEditPhone('');
+    setEditName(fullUser?.nombre ?? user?.name ?? '');
+    setEditEmail(fullUser?.email ?? user?.email ?? '');
+    setEditPhone(fullUser?.telefono ?? '');
     setIsEditing(false);
     setMessage(null);
   };
@@ -164,9 +175,9 @@ export function SettingsPage() {
                 <p className={styles.avatarName}>{displayName}</p>
                 <span className={[
                   styles.roleBadge,
-                  user?.rol === 'ADMIN' ? styles.roleAdmin : styles.roleOperador,
+                  fullUser?.rol === 'ADMIN' ? styles.roleAdmin : styles.roleOperador,
                 ].join(' ')}>
-                  {user?.rol ?? 'OPERADOR'}
+                  {fullUser?.rol ?? user?.rol ?? 'OPERADOR'}
                 </span>
               </div>
             </div>
@@ -178,7 +189,7 @@ export function SettingsPage() {
             )}
 
             <div className={styles.infoGrid}>
-              <InfoRow label="Cédula"        value={undefined} />
+              <InfoRow label="Cédula"        value={fullUser?.cedula ?? undefined} />
               <EditableInfoRow
                 label="Nombre"
                 value={editName}
@@ -200,11 +211,11 @@ export function SettingsPage() {
                 isEditing={isEditing}
                 onChange={setEditPhone}
               />
-              <InfoRow label="Municipio"     value={undefined} />
-              <InfoRow label="Usuario"       value={user?.username} />
-              <InfoRow label="Rol"           value={user?.rol} />
-              <InfoRow label="Estado"        value={undefined} />
-              <InfoRow label="Registro"      value={undefined} />
+              <InfoRow label="Municipio"     value={fullUser?.municipio?.nombre ?? undefined} />
+              <InfoRow label="Usuario"       value={fullUser?.username ?? user?.username} />
+              <InfoRow label="Rol"           value={fullUser?.rol ?? user?.rol} />
+              <InfoRow label="Estado"        value={fullUser?.estado ?? undefined} />
+              <InfoRow label="Registro"      value={fullUser?.fechaCreacion ? new Date(fullUser.fechaCreacion).toLocaleDateString('es-CO') : undefined} />
             </div>
 
             {isEditing && (
@@ -238,27 +249,27 @@ export function SettingsPage() {
           <div className={styles.accountCard}>
             <div className={styles.accountAvatar}>{initials}</div>
             <p className={styles.accountName}>{displayName}</p>
-            <p className={styles.accountEmail}>{user?.email ?? '—'}</p>
+            <p className={styles.accountEmail}>{fullUser?.email ?? user?.email ?? '—'}</p>
             <span className={[
               styles.accountBadge,
-              styles.badgeActive,
+              fullUser?.estado === 'ACTIVO' ? styles.badgeActive : styles.badgeInactive,
             ].join(' ')}>
-              ACTIVO
+              {fullUser?.estado ?? 'ACTIVO'}
             </span>
           </div>
 
           <div className={styles.infoCards}>
             <div className={styles.infoCard}>
               <span className={styles.infoCardLabel}>Rol</span>
-              <span className={styles.infoCardValue}>{user?.rol ?? '—'}</span>
+              <span className={styles.infoCardValue}>{fullUser?.rol ?? user?.rol ?? '—'}</span>
             </div>
             <div className={styles.infoCard}>
               <span className={styles.infoCardLabel}>Municipio</span>
-              <span className={styles.infoCardValue}>—</span>
+              <span className={styles.infoCardValue}>{fullUser?.municipio?.nombre ?? '—'}</span>
             </div>
             <div className={styles.infoCard}>
               <span className={styles.infoCardLabel}>Usuario</span>
-              <span className={styles.infoCardValue}>{user?.username ?? '—'}</span>
+              <span className={styles.infoCardValue}>{fullUser?.username ?? user?.username ?? '—'}</span>
             </div>
           </div>
 

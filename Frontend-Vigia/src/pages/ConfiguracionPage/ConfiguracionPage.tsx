@@ -1,12 +1,14 @@
+import { useEffect, useState } from 'react';
 import { NavMenu }            from '../../components/molecules/NavMenu';
 import { Button }             from '../../components/atoms/Button/Button';
 import { ManagementTemplate } from '../../components/templates/ManagementTemplate/ManagementTemplate';
 import { useAuth }            from '../../context/AuthContext';
+import { usuariosService }    from '../../services/usuarios.service';
 import { getMenuItemsForRole, resolveAppRole } from '../../constants/menuConfig';
+import type { UsuarioResponseDTO } from '../../types/usuario.types';
 import dashboardIcon     from '../../assets/Dashboard_Icon.svg';
 import novedadesIcon     from '../../assets/novedades_icon.svg';
 import usuariosIcon      from '../../assets/usuarios_icon.svg';
-import reportesIcon      from '../../assets/reportes_icon.svg';
 import configuracionIcon from '../../assets/configuracion_icon.svg';
 import styles            from './ConfiguracionPage.module.css';
 
@@ -14,7 +16,6 @@ const ICON_MAP: Record<string, string> = {
   DASHBOARD:     dashboardIcon,
   NOVEDADES:     novedadesIcon,
   USUARIOS:      usuariosIcon,
-  REPORTES:      reportesIcon,
   CONFIGURACION: configuracionIcon,
 };
 
@@ -33,13 +34,22 @@ function InfoRow({ label, value }: { label: string; value: string | null | undef
 
 export function ConfiguracionPage() {
   const { user, logout } = useAuth();
+  const [fullUser, setFullUser] = useState<UsuarioResponseDTO | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    usuariosService.getMe()
+      .then(setFullUser)
+      .catch(() => {/* fail silently */})
+      .finally(() => setLoading(false));
+  }, []);
 
   const menuItems = getMenuItemsForRole(resolveAppRole([user?.rol ?? ''])).map((item) => ({
     ...item,
     icon: <img src={ICON_MAP[item.label]} alt="" />,
   }));
 
-  const displayName = user?.name ?? user?.username ?? 'Usuario';
+  const displayName = fullUser?.nombre ?? user?.name ?? user?.username ?? 'Usuario';
   const initials    = getInitials(displayName);
 
   return (
@@ -83,23 +93,23 @@ export function ConfiguracionPage() {
                 <p className={styles.avatarName}>{displayName}</p>
                 <span className={[
                   styles.roleBadge,
-                  user?.rol === 'ADMIN' ? styles.roleAdmin : styles.roleOperador,
+                  fullUser?.rol === 'ADMIN' ? styles.roleAdmin : styles.roleOperador,
                 ].join(' ')}>
-                  {user?.rol ?? 'OPERADOR'}
+                  {fullUser?.rol ?? user?.rol ?? 'OPERADOR'}
                 </span>
               </div>
             </div>
 
             <div className={styles.infoGrid}>
-              <InfoRow label="Cédula"        value={undefined} />
-              <InfoRow label="Nombre"        value={user?.name} />
-              <InfoRow label="Email"         value={user?.email} />
-              <InfoRow label="Teléfono"      value={undefined} />
-              <InfoRow label="Municipio"     value={undefined} />
-              <InfoRow label="Usuario"       value={user?.username} />
-              <InfoRow label="Rol"           value={user?.rol} />
-              <InfoRow label="Estado"        value={undefined} />
-              <InfoRow label="Registro"      value={undefined} />
+              <InfoRow label="Cédula"        value={fullUser?.cedula ?? undefined} />
+              <InfoRow label="Nombre"        value={fullUser?.nombre ?? user?.name} />
+              <InfoRow label="Email"         value={fullUser?.email ?? user?.email} />
+              <InfoRow label="Teléfono"      value={fullUser?.telefono ?? undefined} />
+              <InfoRow label="Municipio"     value={fullUser?.municipio?.nombre ?? undefined} />
+              <InfoRow label="Usuario"       value={fullUser?.username ?? user?.username} />
+              <InfoRow label="Rol"           value={fullUser?.rol ?? user?.rol} />
+              <InfoRow label="Estado"        value={fullUser?.estado ?? undefined} />
+              <InfoRow label="Registro"      value={fullUser?.fechaCreacion ? new Date(fullUser.fechaCreacion).toLocaleDateString('es-CO') : undefined} />
             </div>
           </section>
         </>
@@ -112,27 +122,27 @@ export function ConfiguracionPage() {
           <div className={styles.accountCard}>
             <div className={styles.accountAvatar}>{initials}</div>
             <p className={styles.accountName}>{displayName}</p>
-            <p className={styles.accountEmail}>{user?.email ?? '—'}</p>
+            <p className={styles.accountEmail}>{fullUser?.email ?? user?.email ?? '—'}</p>
             <span className={[
               styles.accountBadge,
-              styles.badgeActive,
+              fullUser?.estado === 'ACTIVO' ? styles.badgeActive : styles.badgeInactive,
             ].join(' ')}>
-              ACTIVO
+              {fullUser?.estado ?? 'ACTIVO'}
             </span>
           </div>
 
           <div className={styles.infoCards}>
             <div className={styles.infoCard}>
               <span className={styles.infoCardLabel}>Rol</span>
-              <span className={styles.infoCardValue}>{user?.rol ?? '—'}</span>
+              <span className={styles.infoCardValue}>{fullUser?.rol ?? user?.rol ?? '—'}</span>
             </div>
             <div className={styles.infoCard}>
               <span className={styles.infoCardLabel}>Municipio</span>
-              <span className={styles.infoCardValue}>—</span>
+              <span className={styles.infoCardValue}>{fullUser?.municipio?.nombre ?? '—'}</span>
             </div>
             <div className={styles.infoCard}>
               <span className={styles.infoCardLabel}>Usuario</span>
-              <span className={styles.infoCardValue}>{user?.username ?? '—'}</span>
+              <span className={styles.infoCardValue}>{fullUser?.username ?? user?.username ?? '—'}</span>
             </div>
           </div>
 

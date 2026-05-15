@@ -49,26 +49,86 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
   const [deleteTarget, setDeleteTarget] = useState<NovedadDTORespuesta | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Filtros
+  const [search, setSearch] = useState('');
+  const [filterMunicipio, setFilterMunicipio] = useState('');
+  const [filterCategoria, setFilterCategoria] = useState('');
+  const [filterConfianza, setFilterConfianza] = useState('');
+  const [filterConMuertes, setFilterConMuertes] = useState(false);
+
+  // Listas para dropdowns
+  const [municipios, setMunicipios] = useState<string[]>([]);
+  const categoriasList = Object.keys(CATEGORY_LABELS);
+  const confianzaList = Object.keys(CONFIDENCE_LABELS);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const params: any = { page, size: PAGE_SIZE };
+      const params: any = { page: 0, size: 100 }; // Cargar más para filtrar localmente
       // Filtrar por rol: ADMIN ve todas, OPERADOR ve solo sus novedades
       if (userRole && user?.sub) {
         params.rol = userRole;
         params.usuarioId = user.sub;
       }
       const res = await novedadesService.listarPaginado(params);
-      setNovedades(res.content);
-      setTotalPages(res.totalPages);
-      setTotalElements(res.totalElements);
+      let allData = res.content || [];
+
+      // Extraer municipios únicos
+      const uniqueMunicipios = Array.from(new Set(allData.map(n => n.municipio))).sort();
+      setMunicipios(uniqueMunicipios);
+
+      // Aplicar filtros localmente
+      let filtered = allData;
+
+      // Filtro por búsqueda (municipio o categoría)
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        filtered = filtered.filter(n =>
+          n.municipio.toLowerCase().includes(q) ||
+          CATEGORY_LABELS[n.categoria]?.toLowerCase().includes(q) ||
+          n.categoria.toLowerCase().includes(q)
+        );
+      }
+
+      // Filtro por municipio
+      if (filterMunicipio) {
+        filtered = filtered.filter(n => n.municipio === filterMunicipio);
+      }
+
+      // Filtro por categoría
+      if (filterCategoria) {
+        filtered = filtered.filter(n => n.categoria === filterCategoria);
+      }
+
+      // Filtro por confianza
+      if (filterConfianza) {
+        filtered = filtered.filter(n => n.nivelConfianza === filterConfianza);
+      }
+
+      // Filtro por muertes
+      if (filterConMuertes) {
+        filtered = filtered.filter(n => (n.afectacionHumana?.muertosTotales ?? 0) > 0);
+      }
+
+      // Paginar los resultados filtrados
+      const totalElements = filtered.length;
+      const totalPages = Math.ceil(totalElements / PAGE_SIZE);
+      const paginatedData = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+      setNovedades(paginatedData);
+      setTotalPages(totalPages);
+      setTotalElements(totalElements);
     } catch {
       setError('Error al cargar las novedades. Verifique la conexión.');
     } finally {
       setLoading(false);
     }
-  }, [page, userRole, user?.sub]);
+  }, [page, userRole, user?.sub, search, filterMunicipio, filterCategoria, filterConfianza, filterConMuertes]);
+
+  useEffect(() => {
+    setPage(0); // Reset a página 0 cuando cambian los filtros
+  }, [search, filterMunicipio, filterCategoria, filterConfianza, filterConMuertes]);
 
   useEffect(() => { load(); }, [load, refreshKey]);
 
@@ -92,6 +152,16 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
     return `${d}/${m}/${y}`;
   }
 
+  const hasActiveFilters = search || filterMunicipio || filterCategoria || filterConfianza || filterConMuertes;
+
+  function resetFilters() {
+    setSearch('');
+    setFilterMunicipio('');
+    setFilterCategoria('');
+    setFilterConfianza('');
+    setFilterConMuertes(false);
+  }
+
   return (
     <div className={styles.panel}>
       <div className={styles.toolbar}>
@@ -103,6 +173,67 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
           <button className={styles.btnSecondary} onClick={onExcel}>CARGAR EXCEL</button>
           <button className={styles.btnPrimary} onClick={onNew}>+ NUEVA NOVEDAD</button>
         </div>
+      </div>
+
+      {/* Filtros */}
+      <div className={styles.filtersBar}>
+        <div className={styles.searchBox}>
+          <span className={styles.searchIcon} aria-hidden="true" />
+          <input
+            className={styles.searchInput}
+            placeholder="Buscar por municipio, categoría..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <select
+          className={styles.filterSelect}
+          value={filterMunicipio}
+          onChange={(e) => setFilterMunicipio(e.target.value)}
+        >
+          <option value="">Municipio</option>
+          {municipios.map(m => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
+
+        <select
+          className={styles.filterSelect}
+          value={filterCategoria}
+          onChange={(e) => setFilterCategoria(e.target.value)}
+        >
+          <option value="">Categoría</option>
+          {categoriasList.map(c => (
+            <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
+          ))}
+        </select>
+
+        <select
+          className={styles.filterSelect}
+          value={filterConfianza}
+          onChange={(e) => setFilterConfianza(e.target.value)}
+        >
+          <option value="">Confianza</option>
+          {confianzaList.map(cf => (
+            <option key={cf} value={cf}>{CONFIDENCE_LABELS[cf]}</option>
+          ))}
+        </select>
+
+        <label className={styles.checkboxLabel}>
+          <input
+            type="checkbox"
+            checked={filterConMuertes}
+            onChange={(e) => setFilterConMuertes(e.target.checked)}
+          />
+          <span>Con muertes</span>
+        </label>
+
+        {hasActiveFilters && (
+          <button className={styles.resetBtn} onClick={resetFilters}>
+            ✕ Limpiar
+          </button>
+        )}
       </div>
 
       {error && <div className={styles.errorBanner}>{error}</div>}

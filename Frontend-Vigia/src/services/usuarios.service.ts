@@ -28,6 +28,12 @@ export const usuariosService = {
       .get<UsuarioResponseDTO>(ENDPOINTS.usuarios.porId(id))
       .then((r) => r.data),
 
+  /** Obtener por ID de Keycloak/IAM */
+  getByIdIam: (idIam: string) =>
+    apiClient
+      .get<UsuarioResponseDTO>(ENDPOINTS.usuarios.porAuth0Id(idIam))
+      .then((r) => r.data),
+
   /** Crear nuevo usuario (ADMIN only) */
   create: (payload: UsuarioCreateDTO) =>
     apiClient
