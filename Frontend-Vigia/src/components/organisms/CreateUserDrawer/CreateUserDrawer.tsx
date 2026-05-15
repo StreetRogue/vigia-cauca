@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "../../atoms/Button/Button";
 import { CloseButton } from "../../atoms/CloseButton";
 import { TextInput } from "../../atoms/TextInput/TextInput";
@@ -61,6 +61,9 @@ export function CreateUserDrawer({
   const [formError,    setFormError]    = useState("");
   const [saving,       setSaving]       = useState(false);
 
+  // Refs para debounce
+  const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
+
   useEffect(() => {
     if (isEditing && initialData) {
       setCedula(initialData.cedula);
@@ -87,68 +90,105 @@ export function CreateUserDrawer({
 
   if (!open) return null;
 
-  const validate = (): FormErrors => {
+  // Validaciones individuales de campos
+  const validateField = (field: string, value: string): string | undefined => {
+    switch (field) {
+      case "cedula":
+        if (!value.trim()) return "Campo obligatorio.";
+        if (!/^\d{7,11}$/.test(value.trim())) return "Debe contener solo números (7-11 dígitos).";
+        return undefined;
+
+      case "nombre":
+        if (!value.trim()) return "Campo obligatorio.";
+        if (value.trim().length < 3) return "Nombre muy corto (mínimo 3 caracteres).";
+        return undefined;
+
+      case "telefono":
+        if (!value.trim()) return "Campo obligatorio.";
+        if (!/^3\d{9}$/.test(value.trim())) return "Debe ser un celular válido (10 dígitos, empezar por 3).";
+        return undefined;
+
+      case "email":
+        if (!value.trim()) return "Campo obligatorio.";
+        const norm = value.trim().toLowerCase();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(norm)) return "Correo institucional inválido.";
+        if (existingEmails.map((x) => x.toLowerCase()).includes(norm)) return "Correo ya en uso.";
+        return undefined;
+
+      case "username":
+        if (!value.trim()) return "Campo obligatorio.";
+        if (value.trim().length < 3) return "Mínimo 3 caracteres.";
+        if (!/^[a-zA-Z0-9_]+$/.test(value.trim())) return "Solo letras, números y guion bajo.";
+        return undefined;
+
+      case "password":
+        if (!isEditing) {
+          if (!value.trim()) return "Campo obligatorio.";
+          if (value.length < 8) return "Mínimo 8 caracteres.";
+          if (!/[A-Z]/.test(value)) return "Debe incluir al menos una mayúscula.";
+          if (!/[0-9]/.test(value)) return "Debe incluir al menos un número.";
+        } else if (value.trim()) {
+          if (value.length < 8) return "Mínimo 8 caracteres.";
+          if (!/[A-Z]/.test(value)) return "Debe incluir al menos una mayúscula.";
+          if (!/[0-9]/.test(value)) return "Debe incluir al menos un número.";
+        }
+        return undefined;
+
+      case "rol":
+        if (!value.trim()) return "Debes seleccionar un rol.";
+        return undefined;
+
+      case "idMunicipio":
+        if (!value.trim()) return "Debes seleccionar un municipio.";
+        return undefined;
+
+      default:
+        return undefined;
+    }
+  };
+
+  // Debounced validation para cada campo
+  const handleFieldChange = (field: string, value: string) => {
+    // Limpiar timeout anterior si existe
+    if (debounceTimers.current[field]) {
+      clearTimeout(debounceTimers.current[field]);
+    }
+
+    // Nuevo timeout para validar después de 300ms
+    debounceTimers.current[field] = setTimeout(() => {
+      const error = validateField(field, value);
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        if (error) {
+          newErrors[field as keyof FormErrors] = error;
+        } else {
+          delete newErrors[field as keyof FormErrors];
+        }
+        return newErrors;
+      });
+    }, 300);
+  };
+
+  // Validación completa para submit
+  const validateComplete = (): FormErrors => {
     const e: FormErrors = {};
+    const fields = ["cedula", "nombre", "email", "telefono", "username", "password", "rol", "idMunicipio"] as const;
 
-    if (!cedula.trim()) {
-      e.cedula = "Campo obligatorio.";
-    } else if (!/^\d{7,11}$/.test(cedula.trim())) {
-      e.cedula = "Debe contener solo números (7-11 dígitos).";
-    }
-
-    if (!nombre.trim()) {
-      e.nombre = "Campo obligatorio.";
-    } else if (nombre.trim().length < 3) {
-      e.nombre = "Nombre muy corto (mínimo 3 caracteres).";
-    }
-
-    if (!telefono.trim()) {
-      e.telefono = "Campo obligatorio.";
-    } else if (!/^3\d{9}$/.test(telefono.trim())) {
-      e.telefono = "Debe ser un celular válido (10 dígitos, empezar por 3).";
-    }
-
-    if (!email.trim()) {
-      e.email = "Campo obligatorio.";
-    } else {
-      const norm = email.trim().toLowerCase();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(norm)) {
-        e.email = "Correo institucional inválido.";
-      } else if (existingEmails.map((x) => x.toLowerCase()).includes(norm)) {
-        e.email = "Correo ya en uso.";
+    fields.forEach((field) => {
+      let value = "";
+      switch (field) {
+        case "cedula": value = cedula; break;
+        case "nombre": value = nombre; break;
+        case "email": value = email; break;
+        case "telefono": value = telefono; break;
+        case "username": value = username; break;
+        case "password": value = password; break;
+        case "rol": value = rol; break;
+        case "idMunicipio": value = idMunicipio; break;
       }
-    }
-
-    if (!username.trim()) {
-      e.username = "Campo obligatorio.";
-    } else if (username.trim().length < 3) {
-      e.username = "Mínimo 3 caracteres.";
-    } else if (!/^[a-zA-Z0-9_]+$/.test(username.trim())) {
-      e.username = "Solo letras, números y guion bajo.";
-    }
-
-    if (!isEditing) {
-      if (!password.trim()) {
-        e.password = "Campo obligatorio.";
-      } else if (password.length < 8) {
-        e.password = "Mínimo 8 caracteres.";
-      } else if (!/[A-Z]/.test(password)) {
-        e.password = "Debe incluir al menos una mayúscula.";
-      } else if (!/[0-9]/.test(password)) {
-        e.password = "Debe incluir al menos un número.";
-      }
-    } else if (password.trim()) {
-      if (password.length < 8) {
-        e.password = "Mínimo 8 caracteres.";
-      } else if (!/[A-Z]/.test(password)) {
-        e.password = "Debe incluir al menos una mayúscula.";
-      } else if (!/[0-9]/.test(password)) {
-        e.password = "Debe incluir al menos un número.";
-      }
-    }
-
-    if (!rol.trim())         e.rol         = "Debes seleccionar un rol.";
-    if (!idMunicipio.trim()) e.idMunicipio = "Debes seleccionar un municipio.";
+      const error = validateField(field, value);
+      if (error) e[field] = error;
+    });
 
     return e;
   };
@@ -156,7 +196,7 @@ export function CreateUserDrawer({
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const nextErrors = validate();
+    const nextErrors = validateComplete();
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
@@ -228,7 +268,10 @@ export function CreateUserDrawer({
           <FormField label="CÉDULA" required error={errors.cedula}>
             <TextInput
               value={cedula}
-              onChange={(e) => setCedula(e.target.value)}
+              onChange={(e) => {
+                setCedula(e.target.value);
+                handleFieldChange("cedula", e.target.value);
+              }}
               placeholder="Ej. 1094123456"
               invalid={Boolean(errors.cedula)}
               required
@@ -238,7 +281,10 @@ export function CreateUserDrawer({
           <FormField label="NOMBRE COMPLETO" required error={errors.nombre}>
             <TextInput
               value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
+              onChange={(e) => {
+                setNombre(e.target.value);
+                handleFieldChange("nombre", e.target.value);
+              }}
               placeholder="Ej. Maria Garcia Ruiz"
               invalid={Boolean(errors.nombre)}
               required
@@ -249,7 +295,10 @@ export function CreateUserDrawer({
             <FormField label="EMAIL INSTITUCIONAL" required error={errors.email}>
               <TextInput
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  handleFieldChange("email", e.target.value);
+                }}
                 placeholder="usuario@cauca.gov.co"
                 type="email"
                 invalid={Boolean(errors.email)}
@@ -260,7 +309,10 @@ export function CreateUserDrawer({
             <FormField label="TELEFONO" required error={errors.telefono}>
               <TextInput
                 value={telefono}
-                onChange={(e) => setTelefono(e.target.value)}
+                onChange={(e) => {
+                  setTelefono(e.target.value);
+                  handleFieldChange("telefono", e.target.value);
+                }}
                 placeholder="Ej. 3104567890"
                 invalid={Boolean(errors.telefono)}
                 required
@@ -276,7 +328,10 @@ export function CreateUserDrawer({
           >
             <TextInput
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                handleFieldChange("username", e.target.value);
+              }}
               placeholder="usuario123"
               invalid={Boolean(errors.username)}
               required
@@ -289,7 +344,10 @@ export function CreateUserDrawer({
             <div className={styles.passwordInputWrapper}>
               <TextInput
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  handleFieldChange("password", e.target.value);
+                }}
                 placeholder="Contraseña segura"
                 type={showPassword ? "text" : "password"}
                 invalid={Boolean(errors.password)}
@@ -312,7 +370,10 @@ export function CreateUserDrawer({
               <select
                 className={[styles.select, errors.rol ? styles.selectInvalid : ""].filter(Boolean).join(" ")}
                 value={rol}
-                onChange={(e) => setRol(e.target.value)}
+                onChange={(e) => {
+                  setRol(e.target.value);
+                  handleFieldChange("rol", e.target.value);
+                }}
                 aria-invalid={errors.rol ? "true" : undefined}
                 required
               >
@@ -327,7 +388,10 @@ export function CreateUserDrawer({
               <select
                 className={[styles.select, errors.idMunicipio ? styles.selectInvalid : ""].filter(Boolean).join(" ")}
                 value={idMunicipio}
-                onChange={(e) => setIdMunicipio(e.target.value)}
+                onChange={(e) => {
+                  setIdMunicipio(e.target.value);
+                  handleFieldChange("idMunicipio", e.target.value);
+                }}
                 aria-invalid={errors.idMunicipio ? "true" : undefined}
                 required
               >
