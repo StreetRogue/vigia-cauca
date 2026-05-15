@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../../atoms/Button/Button";
 import { CloseButton } from "../../atoms/CloseButton";
 import { TextInput } from "../../atoms/TextInput/TextInput";
@@ -61,9 +61,6 @@ export function CreateUserDrawer({
   const [formError,    setFormError]    = useState("");
   const [saving,       setSaving]       = useState(false);
 
-  // Refs para debounce
-  const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
-
   useEffect(() => {
     if (isEditing && initialData) {
       setCedula(initialData.cedula);
@@ -95,7 +92,7 @@ export function CreateUserDrawer({
     switch (field) {
       case "cedula":
         if (!value.trim()) return "Campo obligatorio.";
-        if (!/^\d{7,11}$/.test(value.trim())) return "Debe contener solo números (7-11 dígitos).";
+        if (!/^\d{10}$/.test(value.trim())) return "Debe contener exactamente 10 dígitos.";
         return undefined;
 
       case "nombre":
@@ -147,26 +144,18 @@ export function CreateUserDrawer({
     }
   };
 
-  // Debounced validation para cada campo
-  const handleFieldChange = (field: string, value: string) => {
-    // Limpiar timeout anterior si existe
-    if (debounceTimers.current[field]) {
-      clearTimeout(debounceTimers.current[field]);
-    }
-
-    // Nuevo timeout para validar después de 300ms
-    debounceTimers.current[field] = setTimeout(() => {
-      const error = validateField(field, value);
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        if (error) {
-          newErrors[field as keyof FormErrors] = error;
-        } else {
-          delete newErrors[field as keyof FormErrors];
-        }
-        return newErrors;
-      });
-    }, 300);
+  // Validación al perder foco (blur)
+  const handleFieldBlur = (field: string, value: string) => {
+    const error = validateField(field, value);
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      if (error) {
+        newErrors[field as keyof FormErrors] = error;
+      } else {
+        delete newErrors[field as keyof FormErrors];
+      }
+      return newErrors;
+    });
   };
 
   // Validación completa para submit
@@ -268,10 +257,8 @@ export function CreateUserDrawer({
           <FormField label="CÉDULA" required error={errors.cedula}>
             <TextInput
               value={cedula}
-              onChange={(e) => {
-                setCedula(e.target.value);
-                handleFieldChange("cedula", e.target.value);
-              }}
+              onChange={(e) => setCedula(e.target.value)}
+              onBlur={(e) => handleFieldBlur("cedula", e.target.value)}
               placeholder="Ej. 1094123456"
               invalid={Boolean(errors.cedula)}
               required
@@ -281,10 +268,8 @@ export function CreateUserDrawer({
           <FormField label="NOMBRE COMPLETO" required error={errors.nombre}>
             <TextInput
               value={nombre}
-              onChange={(e) => {
-                setNombre(e.target.value);
-                handleFieldChange("nombre", e.target.value);
-              }}
+              onChange={(e) => setNombre(e.target.value)}
+              onBlur={(e) => handleFieldBlur("nombre", e.target.value)}
               placeholder="Ej. Maria Garcia Ruiz"
               invalid={Boolean(errors.nombre)}
               required
@@ -295,10 +280,8 @@ export function CreateUserDrawer({
             <FormField label="EMAIL INSTITUCIONAL" required error={errors.email}>
               <TextInput
                 value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  handleFieldChange("email", e.target.value);
-                }}
+                onChange={(e) => setEmail(e.target.value)}
+                onBlur={(e) => handleFieldBlur("email", e.target.value)}
                 placeholder="usuario@cauca.gov.co"
                 type="email"
                 invalid={Boolean(errors.email)}
@@ -309,10 +292,8 @@ export function CreateUserDrawer({
             <FormField label="TELEFONO" required error={errors.telefono}>
               <TextInput
                 value={telefono}
-                onChange={(e) => {
-                  setTelefono(e.target.value);
-                  handleFieldChange("telefono", e.target.value);
-                }}
+                onChange={(e) => setTelefono(e.target.value)}
+                onBlur={(e) => handleFieldBlur("telefono", e.target.value)}
                 placeholder="Ej. 3104567890"
                 invalid={Boolean(errors.telefono)}
                 required
@@ -328,10 +309,8 @@ export function CreateUserDrawer({
           >
             <TextInput
               value={username}
-              onChange={(e) => {
-                setUsername(e.target.value);
-                handleFieldChange("username", e.target.value);
-              }}
+              onChange={(e) => setUsername(e.target.value)}
+              onBlur={(e) => handleFieldBlur("username", e.target.value)}
               placeholder="usuario123"
               invalid={Boolean(errors.username)}
               required
@@ -344,10 +323,8 @@ export function CreateUserDrawer({
             <div className={styles.passwordInputWrapper}>
               <TextInput
                 value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  handleFieldChange("password", e.target.value);
-                }}
+                onChange={(e) => setPassword(e.target.value)}
+                onBlur={(e) => handleFieldBlur("password", e.target.value)}
                 placeholder="Contraseña segura"
                 type={showPassword ? "text" : "password"}
                 invalid={Boolean(errors.password)}
@@ -370,10 +347,8 @@ export function CreateUserDrawer({
               <select
                 className={[styles.select, errors.rol ? styles.selectInvalid : ""].filter(Boolean).join(" ")}
                 value={rol}
-                onChange={(e) => {
-                  setRol(e.target.value);
-                  handleFieldChange("rol", e.target.value);
-                }}
+                onChange={(e) => setRol(e.target.value)}
+                onBlur={(e) => handleFieldBlur("rol", e.target.value)}
                 aria-invalid={errors.rol ? "true" : undefined}
                 required
               >
@@ -388,10 +363,8 @@ export function CreateUserDrawer({
               <select
                 className={[styles.select, errors.idMunicipio ? styles.selectInvalid : ""].filter(Boolean).join(" ")}
                 value={idMunicipio}
-                onChange={(e) => {
-                  setIdMunicipio(e.target.value);
-                  handleFieldChange("idMunicipio", e.target.value);
-                }}
+                onChange={(e) => setIdMunicipio(e.target.value)}
+                onBlur={(e) => handleFieldBlur("idMunicipio", e.target.value)}
                 aria-invalid={errors.idMunicipio ? "true" : undefined}
                 required
               >
