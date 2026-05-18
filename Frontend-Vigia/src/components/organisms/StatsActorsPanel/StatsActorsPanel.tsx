@@ -25,18 +25,6 @@ const ACTOR_COLOR: Record<Actor, string> = {
   OTRO:                   'var(--dash-text-3)',
 };
 
-// ── Mock ──────────────────────────────────────────────────────────────────────
-const MOCK: EstadisticaActorDTO[] = [
-  { actor: 'ELN',                    totalEventos: 312, frecuenciaRelativa: 36.8, frecuenciaAcumulada: 36.8 },
-  { actor: 'SEGUNDA_MARQUETALIA',    totalEventos: 198, frecuenciaRelativa: 23.4, frecuenciaAcumulada: 60.2 },
-  { actor: 'FUERZA_PUBLICA',         totalEventos: 142, frecuenciaRelativa: 16.8, frecuenciaAcumulada: 77.0 },
-  { actor: 'GRUPO_ARMADO_ORGANIZADO',totalEventos:  87, frecuenciaRelativa: 10.3, frecuenciaAcumulada: 87.3 },
-  { actor: 'NO_IDENTIFICADO',        totalEventos:  61, frecuenciaRelativa:  7.2, frecuenciaAcumulada: 94.5 },
-  { actor: 'COMUNIDAD_CIVIL',        totalEventos:  27, frecuenciaRelativa:  3.2, frecuenciaAcumulada: 97.7 },
-  { actor: 'GUARDIA_INDIGENA',       totalEventos:  14, frecuenciaRelativa:  1.7, frecuenciaAcumulada: 99.4 },
-  { actor: 'OTRO',                   totalEventos:   5, frecuenciaRelativa:  0.6, frecuenciaAcumulada: 100.0},
-];
-
 function fmt(n: number) { return n.toLocaleString('es-CO'); }
 
 interface StatsActorsPanelProps {
@@ -45,7 +33,7 @@ interface StatsActorsPanelProps {
 }
 
 export function StatsActorsPanel({ actores, loading }: StatsActorsPanelProps) {
-  const data   = actores?.length ? actores : MOCK;
+  const data   = actores ?? [];
   const sorted = [...data].sort((a, b) => b.totalEventos - a.totalEventos);
   const max    = Math.max(...sorted.map((a) => a.totalEventos), 1);
 

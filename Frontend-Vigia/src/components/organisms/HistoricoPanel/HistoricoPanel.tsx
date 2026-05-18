@@ -1,22 +1,6 @@
 import type { SerieTemporalDTO } from '../../../types/estadisticas.types';
 import styles from './HistoricoPanel.module.css';
 
-// ── Mock para desarrollo sin backend ─────────────────────────────────────────
-const MOCK: SerieTemporalDTO[] = [
-  { anio: 2025, mes: 1,  nombreMes: 'ENE', totalEventos: 52,  totalMuertos: 14, totalHeridos: 28, totalDesplazados: 210, frecuenciaRelativa: 6.1,  frecuenciaAcumulada: 52  },
-  { anio: 2025, mes: 2,  nombreMes: 'FEB', totalEventos: 38,  totalMuertos: 9,  totalHeridos: 18, totalDesplazados: 145, frecuenciaRelativa: 4.5,  frecuenciaAcumulada: 90  },
-  { anio: 2025, mes: 3,  nombreMes: 'MAR', totalEventos: 71,  totalMuertos: 19, totalHeridos: 34, totalDesplazados: 310, frecuenciaRelativa: 8.4,  frecuenciaAcumulada: 161 },
-  { anio: 2025, mes: 4,  nombreMes: 'ABR', totalEventos: 60,  totalMuertos: 16, totalHeridos: 27, totalDesplazados: 240, frecuenciaRelativa: 7.1,  frecuenciaAcumulada: 221 },
-  { anio: 2025, mes: 5,  nombreMes: 'MAY', totalEventos: 88,  totalMuertos: 22, totalHeridos: 41, totalDesplazados: 390, frecuenciaRelativa: 10.4, frecuenciaAcumulada: 309 },
-  { anio: 2025, mes: 6,  nombreMes: 'JUN', totalEventos: 74,  totalMuertos: 18, totalHeridos: 35, totalDesplazados: 320, frecuenciaRelativa: 8.7,  frecuenciaAcumulada: 383 },
-  { anio: 2025, mes: 7,  nombreMes: 'JUL', totalEventos: 95,  totalMuertos: 26, totalHeridos: 48, totalDesplazados: 440, frecuenciaRelativa: 11.2, frecuenciaAcumulada: 478 },
-  { anio: 2025, mes: 8,  nombreMes: 'AGO', totalEventos: 82,  totalMuertos: 20, totalHeridos: 39, totalDesplazados: 360, frecuenciaRelativa: 9.7,  frecuenciaAcumulada: 560 },
-  { anio: 2025, mes: 9,  nombreMes: 'SEP', totalEventos: 67,  totalMuertos: 15, totalHeridos: 30, totalDesplazados: 290, frecuenciaRelativa: 7.9,  frecuenciaAcumulada: 627 },
-  { anio: 2025, mes: 10, nombreMes: 'OCT', totalEventos: 78,  totalMuertos: 21, totalHeridos: 37, totalDesplazados: 345, frecuenciaRelativa: 9.2,  frecuenciaAcumulada: 705 },
-  { anio: 2025, mes: 11, nombreMes: 'NOV', totalEventos: 91,  totalMuertos: 24, totalHeridos: 44, totalDesplazados: 410, frecuenciaRelativa: 10.7, frecuenciaAcumulada: 796 },
-  { anio: 2025, mes: 12, nombreMes: 'DIC', totalEventos: 51,  totalMuertos: 10, totalHeridos: 22, totalDesplazados: 181, frecuenciaRelativa: 6.0,  frecuenciaAcumulada: 847 },
-];
-
 // ── Mini-chart SVG ────────────────────────────────────────────────────────────
 interface MiniChartProps {
   data: number[];
@@ -108,7 +92,7 @@ interface HistoricoPanelProps {
 }
 
 export function HistoricoPanel({ serie, loading }: HistoricoPanelProps) {
-  const raw    = serie?.length ? serie : MOCK;
+  const raw    = serie ?? [];
   const sorted = [...raw].sort((a, b) =>
     a.anio !== b.anio ? a.anio - b.anio : a.mes - b.mes,
   );

@@ -17,6 +17,12 @@ function decodeToken(token: string): any {
   }
 }
 
+function isTokenExpired(token: string): boolean {
+  const decoded = decodeToken(token);
+  if (!decoded?.exp) return true;
+  return decoded.exp * 1000 < Date.now();
+}
+
 // ── Cliente Axios único ───────────────────────────────────────────────────────
 function createGatewayClient(): AxiosInstance {
   const instance = axios.create({
@@ -28,18 +34,14 @@ function createGatewayClient(): AxiosInstance {
   // Request: adjunta Bearer token en cada petición autenticada
   instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     const token = getToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-      const decoded = decodeToken(token);
-      if (config.url?.includes('usuarios/registrar')) {
-        console.log('[DEBUG] Token decodificado:', decoded);
-        console.log('[DEBUG] Rol en token:', decoded?.realm_access?.roles || decoded?.roles || 'No disponible');
-      }
+    if (token && isTokenExpired(token)) {
+      localStorage.removeItem('kc-token');
+      localStorage.removeItem('kc-refresh');
+      localStorage.removeItem('kc-role');
     }
-    if (config.url?.includes('usuarios/registrar')) {
-      console.log('[DEBUG] Crear usuario - URL:', config.url);
-      console.log('[DEBUG] Crear usuario - Payload:', config.data);
-      console.log('[DEBUG] Token:', token ? 'Presente' : 'NO PRESENTE');
+    const validToken = getToken();
+    if (validToken) {
+      config.headers.Authorization = `Bearer ${validToken}`;
     }
     return config;
   });

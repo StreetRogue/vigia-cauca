@@ -2,16 +2,6 @@ import { KpiCard } from '../../molecules/KpiCard/KpiCard';
 import styles from './KpiStrip.module.css';
 import type { ResumenKPIDTO } from '../../../types/estadisticas.types';
 
-// ── Mock para cuando aún no llegan datos del back ─────────────────────────────
-const MOCK: ResumenKPIDTO = {
-  totalEventos:    1247,
-  totalMuertos:    342,
-  totalHeridos:    891,
-  totalDesplazados: 12450,
-  totalConfinados: 3210,
-  filtrosAplicados: {},
-};
-
 function fmt(n: number): string {
   return n.toLocaleString('es-CO');
 }
@@ -22,7 +12,7 @@ interface KpiStripProps {
 }
 
 export function KpiStrip({ resumen, loading }: KpiStripProps) {
-  const d = resumen ?? MOCK;
+  const d = resumen ?? { totalEventos: 0, totalMuertos: 0, totalHeridos: 0, totalDesplazados: 0, totalConfinados: 0, filtrosAplicados: {} };
 
   return (
     <div className={`${styles.strip} ${loading ? styles.loading : ''}`}>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { NovedadesProvider, useNovedades } from '../context/NovedadesContext';
+import { novedadesService } from '../services/novedades.service';
 import { ManagementTemplate } from '../components/templates/ManagementTemplate/ManagementTemplate';
 import { NavMenu } from '../components/molecules/NavMenu';
 import { UserDropdownSection } from '../components/organisms/UserDropdownSection/UserDropdownSection';
@@ -132,7 +133,18 @@ function NovedadesContent() {
 
         {currentStep === 5 ? (
           <div className="registration-card">
-            <Step5Success />
+            <Step5Success onViewNovedad={(novedadId) => {
+              novedadesService.obtenerPorId(novedadId)
+                .then((novedad) => {
+                  setMode('list');
+                  setSelectedNovedad(novedad);
+                  setSelectedNovedadId(novedad.novedadId);
+                  setRefreshKey(k => k + 1);
+                })
+                .catch((err) => {
+                  console.error('Error al cargar novedad:', err);
+                });
+            }} />
             <div className="card-actions" style={{ justifyContent: 'flex-end' }}>
               <button className="btn-primary" onClick={handleFormDone}>
                 VOLVER AL LISTADO

@@ -6,18 +6,6 @@ import { StatsCategoriesPanel } from '../../organisms/StatsCategoriesPanel/Stats
 import type { FiltrosDashboard, ResumenKPIDTO } from '../../../types/estadisticas.types';
 import styles from './ComparacionTemplate.module.css';
 
-// ── Mocks para comparación sin backend ───────────────────────────────────────
-const MOCK_A: ResumenKPIDTO = {
-  anio: 0, municipio: '', filtrosAplicados: {},
-  totalEventos: 48, totalMuertos: 14, totalHeridos: 21,
-  totalDesplazados: 180, totalConfinados: 35,
-};
-const MOCK_B: ResumenKPIDTO = {
-  anio: 0, municipio: '', filtrosAplicados: {},
-  totalEventos: 67, totalMuertos: 9, totalHeridos: 31,
-  totalDesplazados: 241, totalConfinados: 28,
-};
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const ANIOS = [2023, 2024, 2025, 2026];
 const MESES = [
@@ -112,8 +100,8 @@ export function ComparacionTemplate() {
     refetch({ anio: anioA, mes: mesA }, { anio: anioB, mes: mesB });
   }, [refetch, anioA, mesA, anioB, mesB]);
 
-  const rA = dataA?.resumen ?? MOCK_A;
-  const rB = dataB?.resumen ?? MOCK_B;
+  const rA = dataA?.resumen;
+  const rB = dataB?.resumen;
 
   const kpis = [
     { label: 'Eventos',     a: rA?.totalEventos,    b: rB?.totalEventos,    color: 'var(--metric-eventos)'    },

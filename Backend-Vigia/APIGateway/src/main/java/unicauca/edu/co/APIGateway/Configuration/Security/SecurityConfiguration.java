@@ -68,6 +68,11 @@ public class SecurityConfiguration {
                         .pathMatchers("/api/public/**").permitAll()
                         .pathMatchers("/api/auth/**").permitAll()
                         .pathMatchers("/api/*/reportes/sse/**").permitAll()
+                        // Dashboard, estadísticas, reportes y ubicaciones son públicos
+                        // El backend filtra PUBLICA/PRIVADA según X-User-Role
+                        .pathMatchers("/api/*/reportes/estadisticas/**").permitAll()
+                        .pathMatchers("/api/*/reportes/documentos/**").permitAll()
+                        .pathMatchers("/api/*/microUbicaciones/**").permitAll()
 
                         // Operador
                         .pathMatchers("/api/operador/**").hasAuthority("OPERADOR")
