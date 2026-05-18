@@ -4,16 +4,22 @@ import co.edu.unicauca.microreportes.capaAccesoDatos.models.NovedadSnapshotEntit
 import co.edu.unicauca.microreportes.capaAccesoDatos.models.enums.NivelVisibilidad;
 import co.edu.unicauca.microreportes.capaAccesoDatos.repositories.NovedadSnapshotRepository;
 import co.edu.unicauca.microreportes.capaAccesoDatos.repositories.specs.NovedadSnapshotSpecification;
+import co.edu.unicauca.microreportes.fachadaServices.DTO.peticion.FiltroEstadisticaDTO;
 import co.edu.unicauca.microreportes.fachadaServices.DTO.peticion.FiltroReporteDTO;
+import co.edu.unicauca.microreportes.fachadaServices.DTO.respuesta.DashboardCompletoDTO;
 import co.edu.unicauca.microreportes.fachadaServices.DTO.respuesta.NovedadReporteDTO;
 import co.edu.unicauca.microreportes.fachadaServices.mapper.SnapshotMapper;
 import co.edu.unicauca.microreportes.fachadaServices.mapper.VisibilidadHelper;
+import co.edu.unicauca.microreportes.fachadaServices.services.IEstadisticaService;
 import co.edu.unicauca.microreportes.fachadaServices.services.IReporteService;
+import co.edu.unicauca.microreportes.fachadaServices.util.PdfReporteBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +46,18 @@ public class ReporteServiceImpl implements IReporteService {
     private final SnapshotMapper snapshotMapper;
     private final VisibilidadHelper visibilidadHelper;
 
+    /**
+     * Inyectado con @Lazy para romper la dependencia cíclica potencial
+     * entre ReporteServiceImpl → EstadisticaServiceImpl → IVictimaService.
+     */
+    private IEstadisticaService estadisticaService;
+
+    @Autowired
+    @Lazy
+    public void setEstadisticaService(IEstadisticaService estadisticaService) {
+        this.estadisticaService = estadisticaService;
+    }
+
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     // Columnas del reporte — sin usuarioId, sin nivelVisibilidad (datos internos)
@@ -50,6 +68,23 @@ public class ReporteServiceImpl implements IReporteService {
             "HERIDOS TOTALES", "HERIDOS CIVILES", "DESPLAZADOS", "CONFINADOS",
             "DESCRIPCIÓN"
     };
+
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] generarReportePDF(FiltroEstadisticaDTO filtro, String rol) {
+        log.info("[PDF] Generando reporte PDF con filtros: {} rol: {}", filtro, rol);
+
+        DashboardCompletoDTO dashboard = estadisticaService.obtenerDashboardCompleto(filtro, rol);
+
+        FiltroReporteDTO filtroDetalle = FiltroReporteDTO.builder()
+                .anio(filtro.getAnio())
+                .municipio(filtro.getMunicipio())
+                .categoria(filtro.getCategoria())
+                .build();
+        List<NovedadReporteDTO> detalles = previsualizarReporte(filtroDetalle, rol);
+
+        return PdfReporteBuilder.construir(dashboard, detalles, filtro);
+    }
 
     @Override
     @Transactional(readOnly = true)

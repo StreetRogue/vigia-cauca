@@ -3,6 +3,7 @@ package co.edu.unicauca.microreportes.capaControladores;
 import co.edu.unicauca.microreportes.capaAccesoDatos.models.enums.Actor;
 import co.edu.unicauca.microreportes.capaAccesoDatos.models.enums.CategoriaEvento;
 import co.edu.unicauca.microreportes.capaAccesoDatos.models.enums.NivelConfianza;
+import co.edu.unicauca.microreportes.fachadaServices.DTO.peticion.FiltroEstadisticaDTO;
 import co.edu.unicauca.microreportes.fachadaServices.DTO.peticion.FiltroReporteDTO;
 import co.edu.unicauca.microreportes.fachadaServices.DTO.respuesta.NovedadReporteDTO;
 import co.edu.unicauca.microreportes.fachadaServices.services.IReporteService;
@@ -22,6 +23,7 @@ import java.util.List;
  * Flujo del frontend:
  * 1. Previsualizar: GET /previsualizar → muestra tabla de datos
  * 2. Descargar: GET /descargar → genera y devuelve archivo Excel
+ * 3. Descargar PDF: GET /descargar-pdf → genera reporte gráfico PDF
  */
 @RestController
 @RequestMapping("/api/v1/reportes/documentos")
@@ -49,9 +51,6 @@ public class ReporteRestController {
     /**
      * GET /api/v1/reportes/documentos/descargar
      * Genera y descarga reporte en formato Excel con filtros dinámicos.
-     *
-     * El archivo resultante refleja exactamente la información visible
-     * según los filtros activos y el rol del usuario.
      */
     @GetMapping("/descargar")
     public ResponseEntity<byte[]> descargar(
@@ -63,7 +62,6 @@ public class ReporteRestController {
             @RequestParam(required = false) NivelConfianza nivelConfianza,
             @RequestHeader(value = "X-User-Role", defaultValue = "VISITANTE") String rol
     ) {
-        // 1. Construir el DTO de filtros dinámicos
         FiltroReporteDTO filtro = FiltroReporteDTO.builder()
                 .fechaInicio(fechaInicio)
                 .fechaFin(fechaFin)
@@ -73,22 +71,55 @@ public class ReporteRestController {
                 .nivelConfianza(nivelConfianza)
                 .build();
 
-        // 2. Generar el chorro de bytes del Excel en el Service
         byte[] excel = reporteService.generarReporteExcel(filtro, rol);
 
-        // 3. Definir nombre dinámico para el archivo (ej: reporte_vigia_popayan_2025-02-22.xlsx)
         String nombreLugar = (municipio != null && !municipio.isBlank()) ? municipio.toLowerCase() : "cauca";
         String fechaHoy = LocalDate.now().toString();
         String filename = String.format("reporte_vigia_%s_%s.xlsx", nombreLugar, fechaHoy);
 
-        // 4. Retornar la respuesta con los headers de descarga
         return ResponseEntity.ok()
-                // Indica al navegador que es un archivo adjunto
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                // Tipo de medio estándar para archivos .xlsx modernos
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                // Tamaño del archivo
                 .contentLength(excel.length)
                 .body(excel);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * GET /api/v1/reportes/documentos/descargar-pdf
+     * Genera y descarga un reporte PDF gráfico idéntico al dashboard.
+     * Acepta los mismos filtros que el endpoint del dashboard.
+     */
+    @GetMapping("/descargar-pdf")
+    public ResponseEntity<byte[]> descargarPdf(
+            @RequestParam(required = false) Integer anio,
+            @RequestParam(required = false) Integer mes,
+            @RequestParam(required = false) String municipio,
+            @RequestParam(required = false) CategoriaEvento categoria,
+            @RequestParam(required = false) Actor actor,
+            @RequestParam(required = false) NivelConfianza nivelConfianza,
+            @RequestHeader(value = "X-User-Role", defaultValue = "VISITANTE") String rol
+    ) {
+        FiltroEstadisticaDTO filtro = FiltroEstadisticaDTO.builder()
+                .anio(anio)
+                .mes(mes)
+                .municipio(municipio)
+                .categoria(categoria)
+                .actor(actor)
+                .nivelConfianza(nivelConfianza)
+                .build();
+
+        byte[] pdf = reporteService.generarReportePDF(filtro, rol);
+
+        String nombreLugar = (municipio != null && !municipio.isBlank()) ? municipio.toLowerCase() : "cauca";
+        String fechaHoy = LocalDate.now().toString();
+        String filename = String.format("reporte_vigia_%s_%s.pdf", nombreLugar, fechaHoy);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .contentLength(pdf.length)
+                .body(pdf);
     }
 }

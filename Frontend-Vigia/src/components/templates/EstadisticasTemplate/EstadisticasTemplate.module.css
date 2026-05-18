@@ -122,6 +122,30 @@
   border-color: var(--dash-accent);
 }
 
+.loginBtn {
+  cursor: pointer;
+  padding: 6px 14px;
+  border-radius: 5px;
+  border: 1px solid var(--color-primary-500);
+  background: rgba(30, 80, 160, 0.08);
+  color: var(--color-primary-300, #7eb8f7);
+  font-family: var(--font-family-primary);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.loginBtn:hover {
+  background: rgba(30, 80, 160, 0.18);
+  border-color: var(--color-primary-400);
+  color: var(--dash-text-0);
+}
+
 /* ── Error banner ────────────────────────────────────────────────────────── */
 .errorBanner {
   background: rgba(192, 57, 43, 0.12);

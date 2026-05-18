@@ -6,35 +6,19 @@ const GENDER_LABEL: Record<string, string> = {
   MASCULINO:       'Masculino',
   FEMENINO:        'Femenino',
   LGBTI_PLUS:      'LGBTI+',
+  'LGBTI+':        'LGBTI+',
   NO_ESPECIFICADO: 'No especificado',
+  'NO ESPECIFICADO': 'No especificado',
 };
 const GENDER_COLOR: Record<string, string> = {
-  MASCULINO:       'var(--metric-desplazados)',
-  FEMENINO:        'var(--metric-confinados)',
-  LGBTI_PLUS:      'var(--dash-amber)',
+  MASCULINO:       'var(--color-primary-500)',
+  FEMENINO:        '#127850',
+  LGBTI_PLUS:      '#bf5f00',
+  'LGBTI+':        '#bf5f00',
   NO_ESPECIFICADO: 'var(--dash-text-2)',
+  'NO ESPECIFICADO': 'var(--dash-text-2)',
 };
 
-// ── Mock ──────────────────────────────────────────────────────────────────────
-const MOCK: EstadisticasVictimasDTO = {
-  filtrosAplicados: {},
-  totalVictimas: 1071,
-  porGenero: [
-    { etiqueta: 'MASCULINO',       frecuenciaAbsoluta: 712, frecuenciaRelativa: 66.5, frecuenciaAcumulada: 66.5 },
-    { etiqueta: 'FEMENINO',        frecuenciaAbsoluta: 298, frecuenciaRelativa: 27.8, frecuenciaAcumulada: 94.3 },
-    { etiqueta: 'LGBTI_PLUS',      frecuenciaAbsoluta:  38, frecuenciaRelativa:  3.5, frecuenciaAcumulada: 97.8 },
-    { etiqueta: 'NO_ESPECIFICADO', frecuenciaAbsoluta:  23, frecuenciaRelativa:  2.2, frecuenciaAcumulada: 100  },
-  ],
-  porRangoEdad: [
-    { etiqueta: '0-12',   frecuenciaAbsoluta: 143, frecuenciaRelativa: 13.4, frecuenciaAcumulada: 13.4 },
-    { etiqueta: '13-17',  frecuenciaAbsoluta: 198, frecuenciaRelativa: 18.5, frecuenciaAcumulada: 31.9 },
-    { etiqueta: '18-28',  frecuenciaAbsoluta: 287, frecuenciaRelativa: 26.8, frecuenciaAcumulada: 58.7 },
-    { etiqueta: '29-45',  frecuenciaAbsoluta: 241, frecuenciaRelativa: 22.5, frecuenciaAcumulada: 81.2 },
-    { etiqueta: '46-60',  frecuenciaAbsoluta: 132, frecuenciaRelativa: 12.3, frecuenciaAcumulada: 93.5 },
-    { etiqueta: '60+',    frecuenciaAbsoluta:  70, frecuenciaRelativa:  6.5, frecuenciaAcumulada: 100  },
-  ],
-  porGrupoPoblacional: [],  // lo maneja GrupoPoblacionalPanel
-};
 
 // ── Donut SVG ─────────────────────────────────────────────────────────────────
 interface DonutProps { segments: { pct: number; color: string }[] }
@@ -81,12 +65,13 @@ function AgeHisto({ edades }: AgeHistoProps) {
 
   return (
     <div className={styles.histo}>
-      {edades.map((e) => {
+      {edades.map((e: any) => {
+        const label = e.etiqueta ?? e.rangoEdad ?? '';
         const h = (e.frecuenciaAbsoluta / max) * 100;
         return (
-          <div key={e.etiqueta} className={styles.histoBar}>
+          <div key={label} className={styles.histoBar}>
             <div className={styles.histoFill} style={{ height: `${h}%` }} />
-            <span className={styles.histoLabel}>{e.etiqueta}</span>
+            <span className={styles.histoLabel}>{label}</span>
           </div>
         );
       })}
@@ -101,15 +86,26 @@ interface StatsDemographicsPanelProps {
 }
 
 export function StatsDemographicsPanel({ victimas, loading }: StatsDemographicsPanelProps) {
-  const d = victimas ?? MOCK;
+  // Datos reales del backend; objeto vacío cuando el filtro no arroja víctimas
+  const d = victimas ?? {
+    filtrosAplicados: {},
+    totalVictimas: 0,
+    porGenero: [],
+    porRangoEdad: [],
+    porGrupoPoblacional: [],
+  };
 
-  const genderSegments = d.porGenero.map((g) => ({
-    pct:   g.frecuenciaRelativa,
-    color: GENDER_COLOR[g.etiqueta] ?? 'var(--dash-text-2)',
-    label: GENDER_LABEL[g.etiqueta] ?? g.etiqueta,
-    abs:   g.frecuenciaAbsoluta,
-    rel:   g.frecuenciaRelativa,
-  }));
+  const genderSegments = d.porGenero.map((g: any) => {
+    const rawEtiqueta = g.etiqueta ?? g.genero ?? '';
+    const key = String(rawEtiqueta).toUpperCase().trim();
+    return {
+      pct:   g.frecuenciaRelativa,
+      color: GENDER_COLOR[key] ?? 'var(--dash-text-2)',
+      label: GENDER_LABEL[key] ?? rawEtiqueta,
+      abs:   g.frecuenciaAbsoluta,
+      rel:   g.frecuenciaRelativa,
+    };
+  });
 
   return (
     <div className={`${styles.panel} ${loading ? styles.loading : ''}`}>
@@ -150,14 +146,16 @@ export function StatsDemographicsPanel({ victimas, loading }: StatsDemographicsP
         <span className={styles.sectionLabel}>Por rango de edad</span>
         <AgeHisto edades={d.porRangoEdad} />
         <div className={styles.ageLegend}>
-          {d.porRangoEdad.map((e) => (
-            <span key={e.etiqueta} className={styles.agePill}>
-              {e.etiqueta}
+          {d.porRangoEdad.map((e: any) => {
+            const label = e.etiqueta ?? e.rangoEdad ?? '';
+            return (
+            <span key={label} className={styles.agePill}>
+              {label}
               <strong style={{ color: 'var(--metric-eventos)' }}>
                 {' '}{e.frecuenciaRelativa.toFixed(1)}%
               </strong>
             </span>
-          ))}
+          )})}
         </div>
       </div>
     </div>

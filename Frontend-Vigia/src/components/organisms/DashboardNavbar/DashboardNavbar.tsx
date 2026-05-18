@@ -214,9 +214,10 @@ function UserSection({ displayName, displayRol, isAdmin, onLogout }: UserSection
 
 interface DashboardNavbarProps {
   onFilterChange?: (filtros: FiltrosDashboard) => void;
+  currentFiltros?: FiltrosDashboard;
 }
 
-export function DashboardNavbar({ onFilterChange }: DashboardNavbarProps = {}) {
+export function DashboardNavbar({ onFilterChange, currentFiltros }: DashboardNavbarProps = {}) {
   const [menuOpen, setMenuOpen]             = useState(false);
   const [openFilter, setOpenFilter]         = useState<FilterLabel | null>(null);
   const [filterValues, setFilterValues]     = useState<Record<FilterLabel, string>>(DEFAULT_FILTER_VALUES);
@@ -227,16 +228,57 @@ export function DashboardNavbar({ onFilterChange }: DashboardNavbarProps = {}) {
   const { pathname} = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
 
-  const displayName = user?.name ?? user?.username ?? 'Usuario';
-  const displayRol  = user?.rol ?? 'OPERADOR';
+  const displayName = user?.name ?? user?.username ?? 'Visitante';
+  const displayRol  = user?.rol ?? 'OBSERVADOR';
   const isAdmin     = user?.rol === 'ADMIN';
 
-  // Cargar municipios
+  // Cargar municipios desde backend (accesible sin autenticación)
   useEffect(() => {
     ubicacionesService.getMunicipios()
       .then((data) => setMunicipioNames(['Todos', ...data.map((m) => m.nombre)]))
       .catch(() => setMunicipioNames(['Todos']));
   }, []);
+
+  // Sincronizar currentFiltros con filterValues del navbar
+  useEffect(() => {
+    if (!currentFiltros) return;
+
+    setFilterValues((prev) => {
+      const updated = { ...prev };
+
+      if (currentFiltros.anio != null && currentFiltros.anio !== 0) {
+        updated['AÑO'] = String(currentFiltros.anio);
+      } else {
+        updated['AÑO'] = 'Todos';
+      }
+
+      if (currentFiltros.mes != null && currentFiltros.mes !== 0) {
+        updated['MES'] = MESES[currentFiltros.mes];
+      } else {
+        updated['MES'] = 'Todos';
+      }
+
+      if (currentFiltros.municipio) {
+        updated['MUNICIPIO'] = currentFiltros.municipio;
+      } else {
+        updated['MUNICIPIO'] = 'Todos';
+      }
+
+      if (currentFiltros.categoria) {
+        updated['CATEGORÍA'] = currentFiltros.categoria;
+      } else {
+        updated['CATEGORÍA'] = 'Todos';
+      }
+
+      if (currentFiltros.nivelConfianza) {
+        updated['CONFIANZA'] = currentFiltros.nivelConfianza;
+      } else {
+        updated['CONFIANZA'] = 'Todos';
+      }
+
+      return updated;
+    });
+  }, [currentFiltros]);
 
   // Cerrar filtro dropdown al clic fuera
   useEffect(() => {

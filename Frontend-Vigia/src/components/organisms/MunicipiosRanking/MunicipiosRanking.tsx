@@ -1,20 +1,6 @@
 import type { EstadisticaMunicipioDTO } from '../../../types/estadisticas.types';
 import styles from './MunicipiosRanking.module.css';
 
-// ── Mock ──────────────────────────────────────────────────────────────────────
-const MOCK: EstadisticaMunicipioDTO[] = [
-  { municipio: 'Popayán',               totalEventos: 127, totalMuertos: 34, totalHeridos: 56, totalDesplazados: 210, frecuenciaRelativa: 15.0, frecuenciaAcumulada: 15.0 },
-  { municipio: 'Santander de Quilichao',totalEventos: 98,  totalMuertos: 12, totalHeridos: 23, totalDesplazados: 150, frecuenciaRelativa: 11.6, frecuenciaAcumulada: 26.6 },
-  { municipio: 'El Tambo',              totalEventos: 85,  totalMuertos: 21, totalHeridos: 38, totalDesplazados: 340, frecuenciaRelativa: 10.0, frecuenciaAcumulada: 36.6 },
-  { municipio: 'Toribío',               totalEventos: 74,  totalMuertos: 18, totalHeridos: 31, totalDesplazados: 290, frecuenciaRelativa: 8.7,  frecuenciaAcumulada: 45.3 },
-  { municipio: 'Argelia',               totalEventos: 68,  totalMuertos: 15, totalHeridos: 27, totalDesplazados: 210, frecuenciaRelativa: 8.0,  frecuenciaAcumulada: 53.3 },
-  { municipio: 'Balboa',                totalEventos: 61,  totalMuertos: 11, totalHeridos: 22, totalDesplazados: 180, frecuenciaRelativa: 7.2,  frecuenciaAcumulada: 60.5 },
-  { municipio: 'Mercaderes',            totalEventos: 54,  totalMuertos: 9,  totalHeridos: 18, totalDesplazados: 145, frecuenciaRelativa: 6.4,  frecuenciaAcumulada: 66.9 },
-  { municipio: 'Miranda',               totalEventos: 47,  totalMuertos: 8,  totalHeridos: 14, totalDesplazados: 120, frecuenciaRelativa: 5.5,  frecuenciaAcumulada: 72.4 },
-  { municipio: 'Corinto',               totalEventos: 41,  totalMuertos: 6,  totalHeridos: 12, totalDesplazados: 95,  frecuenciaRelativa: 4.8,  frecuenciaAcumulada: 77.2 },
-  { municipio: 'Caloto',                totalEventos: 36,  totalMuertos: 5,  totalHeridos: 10, totalDesplazados: 78,  frecuenciaRelativa: 4.2,  frecuenciaAcumulada: 81.4 },
-];
-
 function fmt(n: number) { return n.toLocaleString('es-CO'); }
 
 // Colores por rango de frecuencia relativa
@@ -31,7 +17,7 @@ interface MunicipiosRankingProps {
 }
 
 export function MunicipiosRanking({ municipios, loading }: MunicipiosRankingProps) {
-  const data   = municipios?.length ? municipios : MOCK;
+  const data   = municipios ?? [];
   const sorted = [...data].sort((a, b) => b.totalEventos - a.totalEventos).slice(0, 10);
   const maxEv  = Math.max(...sorted.map((m) => m.totalEventos), 1);
 

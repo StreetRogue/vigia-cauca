@@ -31,6 +31,7 @@ export const ENDPOINTS = {
   reportes: {
     previsualizar:    '/api/v1/reportes/documentos/previsualizar',
     descargar:        '/api/v1/reportes/documentos/descargar',
+    descargarPdf:     '/api/v1/reportes/documentos/descargar-pdf',
     sseStream:        '/api/v1/reportes/sse/stream',
     sseStatus:        '/api/v1/reportes/sse/status',
   },

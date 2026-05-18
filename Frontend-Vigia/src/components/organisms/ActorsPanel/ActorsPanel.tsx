@@ -27,14 +27,6 @@ const ACTOR_COLOR: Record<Actor, string> = {
   OTRO:                  'var(--dash-text-2)',
 };
 
-// ── Mock fallback ─────────────────────────────────────────────────────────────
-const MOCK: EstadisticaActorDTO[] = [
-  { actor: 'ELN',                   totalEventos: 85 },
-  { actor: 'SEGUNDA_MARQUETALIA',   totalEventos: 68 },
-  { actor: 'FUERZA_PUBLICA',        totalEventos: 52 },
-  { actor: 'GRUPO_ARMADO_ORGANIZADO', totalEventos: 38 },
-  { actor: 'OTRO',                  totalEventos: 24 },
-];
 
 interface ActorsPanelProps {
   actores?: EstadisticaActorDTO[];
@@ -42,7 +34,7 @@ interface ActorsPanelProps {
 }
 
 export function ActorsPanel({ actores, loading }: ActorsPanelProps) {
-  const data = actores ?? MOCK;
+  const data = actores ?? [];
   const sorted = [...data].sort((a, b) => b.totalEventos - a.totalEventos);
   const max = Math.max(...sorted.map((a) => a.totalEventos), 1);
 

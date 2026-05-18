@@ -60,6 +60,7 @@ export interface NovedadesContextType {
 
   editingNovedadId: string | null;
   setEditingNovedadId: React.Dispatch<React.SetStateAction<string | null>>;
+  createdNovedad: NovedadDTORespuesta | null;
   initFromNovedad: (novedad: NovedadDTORespuesta) => void;
 
   // Step 1
@@ -125,6 +126,7 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [excelError, setExcelError] = useState('');
   const [editingNovedadId, setEditingNovedadId] = useState<string | null>(null);
+  const [createdNovedad, setCreatedNovedad] = useState<NovedadDTORespuesta | null>(null);
 
   // Step 1
   const [fecha, setFecha] = useState('');
@@ -322,7 +324,8 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
       if (editingNovedadId) {
         await novedadesService.actualizar(editingNovedadId, payload);
       } else {
-        await novedadesService.crear(payload);
+        const created = await novedadesService.crear(payload);
+        setCreatedNovedad(created);
       }
       setShowSuccessToast(true);
       setCurrentStep(5);
@@ -361,7 +364,7 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
   const value: NovedadesContextType = {
     currentStep, setCurrentStep, showExcelModal, setShowExcelModal,
     showSuccessToast, setShowSuccessToast, excelError, setExcelError,
-    editingNovedadId, setEditingNovedadId, initFromNovedad,
+    editingNovedadId, setEditingNovedadId, createdNovedad, initFromNovedad,
     fecha, setFecha, horaInicio, setHoraInicio, horaFin, setHoraFin, municipio, setMunicipio, localidad, setLocalidad,
     errFecha, setErrFecha, errHoraInicio, setErrHoraInicio, errHoraFin, setErrHoraFin, errMunicipio, setErrMunicipio, errLocalidad, setErrLocalidad,
     categoria, setCategoria, actores, setActores, actorSeleccionado, setActorSeleccionado, nivelConfianza, setNivelConfianza,

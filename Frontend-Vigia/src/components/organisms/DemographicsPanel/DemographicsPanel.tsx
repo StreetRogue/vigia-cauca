@@ -3,38 +3,29 @@ import { DonutChart } from '../../atoms/DonutChart/DonutChart';
 import styles from './DemographicsPanel.module.css';
 import type { EstadisticasVictimasDTO, DistribucionDTO } from '../../../types/estadisticas.types';
 
-// ── Colores para géneros ──────────────────────────────────────────────────────
 const GENDER_COLORS: Record<string, string> = {
   MASCULINO:       'var(--color-primary-500)',
   FEMENINO:        '#127850',
   LGBTI_PLUS:      '#bf5f00',
+  'LGBTI+':        '#bf5f00',
   NO_ESPECIFICADO: 'var(--dash-text-2)',
+  'NO ESPECIFICADO': 'var(--dash-text-2)',
 };
 
 const GENDER_LABEL: Record<string, string> = {
   MASCULINO:       'MASCULINO',
   FEMENINO:        'FEMENINO',
   LGBTI_PLUS:      'LGBTI+',
+  'LGBTI+':        'LGBTI+',
   NO_ESPECIFICADO: 'NO ESPEC.',
+  'NO ESPECIFICADO': 'NO ESPEC.',
 };
 
-// ── Mock fallback ─────────────────────────────────────────────────────────────
-const MOCK: EstadisticasVictimasDTO = {
+const EMPTY: EstadisticasVictimasDTO = {
   filtrosAplicados: {},
-  totalVictimas: 1234,
-  porGenero: [
-    { etiqueta: 'MASCULINO',  frecuenciaAbsoluta: 804, frecuenciaRelativa: 65, frecuenciaAcumulada: 65 },
-    { etiqueta: 'FEMENINO',   frecuenciaAbsoluta: 309, frecuenciaRelativa: 25, frecuenciaAcumulada: 90 },
-    { etiqueta: 'LGBTI_PLUS', frecuenciaAbsoluta: 121, frecuenciaRelativa: 10, frecuenciaAcumulada: 100 },
-  ],
-  porRangoEdad: [
-    { etiqueta: '0-9',   frecuenciaAbsoluta: 99,  frecuenciaRelativa: 8,  frecuenciaAcumulada: 8 },
-    { etiqueta: '10-17', frecuenciaAbsoluta: 222, frecuenciaRelativa: 18, frecuenciaAcumulada: 26 },
-    { etiqueta: '18-25', frecuenciaAbsoluta: 370, frecuenciaRelativa: 30, frecuenciaAcumulada: 56 },
-    { etiqueta: '26-40', frecuenciaAbsoluta: 296, frecuenciaRelativa: 24, frecuenciaAcumulada: 80 },
-    { etiqueta: '41-60', frecuenciaAbsoluta: 185, frecuenciaRelativa: 15, frecuenciaAcumulada: 95 },
-    { etiqueta: '61+',   frecuenciaAbsoluta: 62,  frecuenciaRelativa: 5,  frecuenciaAcumulada: 100 },
-  ],
+  totalVictimas: 0,
+  porGenero: [],
+  porRangoEdad: [],
   porGrupoPoblacional: [],
 };
 
@@ -44,15 +35,19 @@ interface DemographicsPanelProps {
 }
 
 export function DemographicsPanel({ victimas, loading }: DemographicsPanelProps) {
-  const d = victimas ?? MOCK;
+  const d = victimas ?? EMPTY;
 
   // Géneros → donut
-  const genders = d.porGenero.map((g: DistribucionDTO) => ({
-    label: GENDER_LABEL[g.etiqueta] ?? g.etiqueta,
-    pct:   g.frecuenciaRelativa,
-    color: GENDER_COLORS[g.etiqueta] ?? 'var(--dash-text-2)',
-    abs:   g.frecuenciaAbsoluta,
-  }));
+  const genders = d.porGenero.map((g: any) => {
+    const rawEtiqueta = g.etiqueta ?? g.genero ?? '';
+    const key = String(rawEtiqueta).toUpperCase().trim();
+    return {
+      label: GENDER_LABEL[key] ?? rawEtiqueta,
+      pct:   g.frecuenciaRelativa,
+      color: GENDER_COLORS[key] ?? 'var(--dash-text-2)',
+      abs:   g.frecuenciaAbsoluta,
+    };
+  });
 
   // Rangos de edad → histograma
   const ages   = d.porRangoEdad;

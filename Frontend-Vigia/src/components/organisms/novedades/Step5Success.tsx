@@ -1,7 +1,11 @@
 import { useNovedades } from '../../../context/NovedadesContext';
 import './Step5Success.css';
 
-export function Step5Success() {
+interface Step5SuccessProps {
+  onViewNovedad?: (novedadId: string) => void;
+}
+
+export function Step5Success({ onViewNovedad }: Step5SuccessProps) {
   const {
     fecha,
     municipio,
@@ -10,11 +14,12 @@ export function Step5Success() {
     categoria,
     nivelConfianza,
     nivelVisibilidad,
-    resetForm
+    resetForm,
+    createdNovedad
   } = useNovedades();
 
-  // En una app real, el ID provendría del backend tras guardar. Generamos uno dummy.
-  const idNovedad = `NOV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+  // Usa el ID real de la novedad creada si está disponible
+  const idNovedad = createdNovedad?.novedadId || `NOV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
 
   const isConfirmed = nivelConfianza.toUpperCase() === 'CONFIRMADO';
 
@@ -76,7 +81,7 @@ export function Step5Success() {
       </div>
 
       <div className="success-actions">
-        <button className="btn-primary" onClick={() => console.log('Ver detalle de novedad', idNovedad)}>
+        <button className="btn-primary" onClick={() => onViewNovedad?.(idNovedad)}>
           VER NOVEDAD
         </button>
         <button className="btn-outline-primary" onClick={resetForm}>
