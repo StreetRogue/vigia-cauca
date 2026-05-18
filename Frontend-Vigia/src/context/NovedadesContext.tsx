@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { novedadesService } from '../services/novedades.service';
+import { estadisticasService } from '../services/estadisticas.service';
 import { useAuth } from './AuthContext';
 import type { NovedadDTOPeticion, NovedadDTORespuesta, Genero, GrupoPoblacional } from '../types/novedad.types';
 
@@ -327,6 +328,8 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
         const created = await novedadesService.crear(payload);
         setCreatedNovedad(created);
       }
+      // Invalidar caché del dashboard para que refleje la nueva novedad
+      estadisticasService.invalidarCache();
       setShowSuccessToast(true);
       setCurrentStep(5);
       setTimeout(() => setShowSuccessToast(false), 3500);

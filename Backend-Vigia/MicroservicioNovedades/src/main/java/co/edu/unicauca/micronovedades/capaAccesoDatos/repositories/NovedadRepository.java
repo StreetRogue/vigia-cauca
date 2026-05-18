@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -43,6 +44,26 @@ public interface NovedadRepository extends JpaRepository<NovedadEntity, UUID> {
 
     @Query("SELECT n FROM NovedadEntity n WHERE n.usuarioId = :usuarioId AND n.oculto = false")
     List<NovedadEntity> findByUsuarioIdVisible(@Param("usuarioId") UUID usuarioId);
+
+    // Búsqueda de duplicados para carga masiva de Excel
+    @Query("SELECT DISTINCT n FROM NovedadEntity n " +
+            "LEFT JOIN FETCH n.actores " +
+            "WHERE n.fechaHecho = :fechaHecho " +
+            "AND n.horaInicio = :horaInicio " +
+            "AND n.horaFin = :horaFin " +
+            "AND UPPER(TRIM(n.municipio)) = UPPER(TRIM(:municipio)) " +
+            "AND UPPER(TRIM(n.localidadEspecifica)) = UPPER(TRIM(:localidadEspecifica)) " +
+            "AND n.categoria = :categoria " +
+            "AND SIZE(n.actores) = :cantidadActores")
+    List<NovedadEntity> buscarCandidatasDuplicadas(
+            @Param("fechaHecho") LocalDate fechaHecho,
+            @Param("horaInicio") LocalTime horaInicio,
+            @Param("horaFin") LocalTime horaFin,
+            @Param("municipio") String municipio,
+            @Param("localidadEspecifica") String localidadEspecifica,
+            @Param("categoria") CategoriaEvento categoria,
+            @Param("cantidadActores") long cantidadActores
+    );
 
     // Búsqueda avanzada para reportes con filtros opcionales
     @Query("SELECT n FROM NovedadEntity n " +

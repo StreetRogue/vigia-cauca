@@ -1,6 +1,8 @@
 package co.edu.unicauca.micronovedades.fachadaServices.services.impl;
 
+import co.edu.unicauca.micronovedades.capaAccesoDatos.models.NovedadEntity;
 import co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.*;
+import co.edu.unicauca.micronovedades.capaAccesoDatos.repositories.NovedadRepository;
 import co.edu.unicauca.micronovedades.capaControladores.controladorExcepciones.BadRequestException;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion.AfectacionHumanaDTOPeticion;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion.NovedadDTOPeticion;
@@ -33,6 +35,7 @@ import java.util.*;
 public class ExcelNovedadService {
 
     private final INovedadService novedadService;
+    private final NovedadRepository novedadRepository;
 
     /** Cabeceras esperadas en el Excel de carga masiva (en orden). */
     static final String[] HEADERS_PLANTILLA = {
@@ -139,6 +142,7 @@ public class ExcelNovedadService {
 
         List<NovedadDTORespuesta> creadas = new ArrayList<>();
         List<Map<String, Object>> errores = new ArrayList<>();
+        Set<String> firmasProcesadas = new HashSet<>();
 
         try (InputStream is = file.getInputStream();
              XSSFWorkbook workbook = new XSSFWorkbook(is)) {
@@ -159,8 +163,10 @@ public class ExcelNovedadService {
             Map<String, Integer> colIndex = mapearColumnas(headerRow);
             validarHeadersObligatorios(colIndex);
 
-            // Procesar filas de datos
+            // Paso 1: Parsear y validar todas las filas acumulando las válidas
             int totalFilas = 0;
+            List<NovedadDTOPeticion> loteValido = new ArrayList<>();
+
             for (int r = headerRowIndex + 1; r <= sheet.getLastRowNum(); r++) {
                 Row row = sheet.getRow(r);
                 if (row == null || esFilaVacia(row)) continue;
@@ -168,14 +174,39 @@ public class ExcelNovedadService {
 
                 try {
                     NovedadDTOPeticion peticion = parsearFila(row, colIndex, usuarioId);
-                    NovedadDTORespuesta respuesta = novedadService.crearNovedad(peticion);
-                    creadas.add(respuesta);
+                    String firma = construirFirmaDuplicada(peticion);
+                    if (firmasProcesadas.contains(firma) || existeDuplicadaEnBaseDatos(peticion)) {
+                        Map<String, Object> error = new LinkedHashMap<>();
+                        error.put("fila", r + 1);
+                        error.put("error", "Novedad duplicada: ya existe con los mismos FECHA, HORA, MUNICIPIO, LOCALIDAD, CATEGORIA y ACTORES");
+                        errores.add(error);
+                        log.warn("Fila {} omitida por duplicado: {}", r + 1, firma);
+                        continue;
+                    }
+                    loteValido.add(peticion);
+                    firmasProcesadas.add(firma);
                 } catch (Exception e) {
                     Map<String, Object> error = new LinkedHashMap<>();
                     error.put("fila", r + 1);
                     error.put("error", e.getMessage());
                     errores.add(error);
                     log.warn("Error en fila {}: {}", r + 1, e.getMessage());
+                }
+            }
+
+            // Paso 2: Insertar todas las válidas en UNA sola transacción + 1 evento RabbitMQ
+            if (!loteValido.isEmpty()) {
+                try {
+                    List<NovedadDTORespuesta> resultado_lote = novedadService.crearEnLote(loteValido);
+                    creadas.addAll(resultado_lote);
+                    log.info("[Excel] {} novedades insertadas en batch", resultado_lote.size());
+                } catch (Exception e) {
+                    log.error("[Excel] Error en batch insert: {}", e.getMessage());
+                    // Si falla el batch, registrar error general
+                    Map<String, Object> error = new LinkedHashMap<>();
+                    error.put("fila", "lote completo");
+                    error.put("error", "Error al insertar el lote: " + e.getMessage());
+                    errores.add(error);
                 }
             }
 
@@ -297,6 +328,94 @@ public class ExcelNovedadService {
         if (lista.isEmpty()) throw new BadRequestException("ACTORES no puede estar vacío");
         if (lista.size() > 10) throw new BadRequestException("Se permiten máximo 10 actores por fila");
         return lista;
+    }
+
+    private String construirFirmaDuplicada(NovedadDTORespuesta novedad) {
+        return construirFirmaDuplicada(
+                novedad.getFechaHecho(),
+                novedad.getHoraInicio(),
+                novedad.getHoraFin(),
+                novedad.getMunicipio(),
+                novedad.getLocalidadEspecifica(),
+                novedad.getCategoria(),
+                novedad.getActores()
+        );
+    }
+
+    private String construirFirmaDuplicada(NovedadDTOPeticion peticion) {
+        return construirFirmaDuplicada(
+                peticion.getFechaHecho(),
+                peticion.getHoraInicio(),
+                peticion.getHoraFin(),
+                peticion.getMunicipio(),
+                peticion.getLocalidadEspecifica(),
+                peticion.getCategoria(),
+                peticion.getActores()
+        );
+    }
+
+    private String construirFirmaDuplicada(LocalDate fechaHecho,
+                                           LocalTime horaInicio,
+                                           LocalTime horaFin,
+                                           String municipio,
+                                           String localidad,
+                                           CategoriaEvento categoria,
+                                           Collection<Actor> actores) {
+        List<String> actoresNormalizados = actores == null
+                ? Collections.emptyList()
+                : actores.stream()
+                .filter(Objects::nonNull)
+                .map(Enum::name)
+                .map(String::trim)
+                .map(String::toUpperCase)
+                .sorted()
+                .toList();
+
+        return String.join("|",
+                fechaHecho != null ? fechaHecho.toString() : "",
+                horaInicio != null ? horaInicio.toString() : "",
+                horaFin != null ? horaFin.toString() : "",
+                normalizarTexto(municipio),
+                normalizarTexto(localidad),
+                categoria != null ? categoria.name() : "",
+                String.join(",", actoresNormalizados)
+        );
+    }
+
+    private boolean existeDuplicadaEnBaseDatos(NovedadDTOPeticion peticion) {
+        List<NovedadEntity> candidatas = novedadRepository.buscarCandidatasDuplicadas(
+                peticion.getFechaHecho(),
+                peticion.getHoraInicio(),
+                peticion.getHoraFin(),
+                peticion.getMunicipio(),
+                peticion.getLocalidadEspecifica(),
+                peticion.getCategoria(),
+                peticion.getActores().size()
+        );
+
+        Set<String> actoresNuevos = normalizarActores(peticion.getActores());
+        for (NovedadEntity candidata : candidatas) {
+            if (actoresNuevos.equals(normalizarActores(candidata.getActores()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Set<String> normalizarActores(Collection<Actor> actores) {
+        if (actores == null || actores.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return actores.stream()
+                .filter(Objects::nonNull)
+                .map(Enum::name)
+                .map(String::trim)
+                .map(s -> s.toUpperCase(Locale.ROOT))
+                .collect(java.util.stream.Collectors.toCollection(TreeSet::new));
+    }
+
+    private String normalizarTexto(String valor) {
+        return valor == null ? "" : valor.trim().toUpperCase(Locale.ROOT);
     }
 
     // ==========================================
