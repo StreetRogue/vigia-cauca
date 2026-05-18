@@ -16,10 +16,12 @@ export function ReportModal({ isOpen, onClose, filtros }: ReportModalProps) {
   const [error, setError] = useState('');
   const [downloading, setDownloading] = useState(false);
   const [downloadingPDF, setDownloadingPDF] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       cargarVistaPrevia();
+      setSearchQuery('');
     } else {
       setData([]);
       setError('');
@@ -142,41 +144,70 @@ export function ReportModal({ isOpen, onClose, filtros }: ReportModalProps) {
 
         {/* ── Body ── */}
         <div className="modal-body">
-          <p style={{ fontSize: '13px', color: '#555', margin: 0 }}>
+          <p style={{ fontSize: '13px', color: '#555', margin: 0, marginBottom: '12px' }}>
             Vista previa de los registros que se incluirán en el informe según los filtros actuales del dashboard.
           </p>
+
+          {data.length > 0 && (
+            <div className="search-box">
+              <span className="search-icon" aria-hidden="true" />
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Buscar por municipio, categoría, actores..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          )}
 
           <div className="table-container" style={{ maxHeight: '350px', overflowY: 'auto', border: '1px solid #eeeeee', borderRadius: '4px' }}>
             {loading ? (
               <div style={{ padding: '30px', textAlign: 'center', fontSize: '13px', color: '#666' }}>Cargando vista previa...</div>
             ) : data.length === 0 ? (
               <div style={{ padding: '30px', textAlign: 'center', fontSize: '13px', color: '#666' }}>No hay registros para los filtros seleccionados.</div>
-            ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
-                <thead style={{ background: '#f9f9f9', position: 'sticky', top: 0, zIndex: 1 }}>
-                  <tr>
-                    <th style={{ padding: '12px 10px', textAlign: 'left', borderBottom: '1px solid #eeeeee', color: '#555' }}>Fecha</th>
-                    <th style={{ padding: '12px 10px', textAlign: 'left', borderBottom: '1px solid #eeeeee', color: '#555' }}>Municipio</th>
-                    <th style={{ padding: '12px 10px', textAlign: 'left', borderBottom: '1px solid #eeeeee', color: '#555' }}>Categoría</th>
-                    <th style={{ padding: '12px 10px', textAlign: 'left', borderBottom: '1px solid #eeeeee', color: '#555' }}>Actores</th>
-                    <th style={{ padding: '12px 10px', textAlign: 'center', borderBottom: '1px solid #eeeeee', color: '#555' }}>Muertos</th>
-                    <th style={{ padding: '12px 10px', textAlign: 'center', borderBottom: '1px solid #eeeeee', color: '#555' }}>Heridos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.map((row, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid #f4f4f4', transition: 'background 0.2s' }}>
-                      <td style={{ padding: '10px' }}>{row.fechaHecho}</td>
-                      <td style={{ padding: '10px' }}>{row.municipio}</td>
-                      <td style={{ padding: '10px' }}>{row.categoria?.replace(/_/g, ' ')}</td>
-                      <td style={{ padding: '10px' }}>{row.actoresDisplay}</td>
-                      <td style={{ padding: '10px', textAlign: 'center' }}>{row.muertosTotales}</td>
-                      <td style={{ padding: '10px', textAlign: 'center' }}>{row.heridosTotales}</td>
+            ) : (() => {
+              const filtered = data.filter(row => {
+                const q = searchQuery.toLowerCase();
+                return (
+                  row.municipio?.toLowerCase().includes(q) ||
+                  row.categoria?.toLowerCase().includes(q) ||
+                  row.actoresDisplay?.toLowerCase().includes(q) ||
+                  row.fechaHecho?.toLowerCase().includes(q)
+                );
+              });
+
+              return filtered.length === 0 ? (
+                <div style={{ padding: '30px', textAlign: 'center', fontSize: '13px', color: '#666' }}>
+                  No hay registros que coincidan con "{searchQuery}"
+                </div>
+              ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                  <thead style={{ background: '#f9f9f9', position: 'sticky', top: 0, zIndex: 1 }}>
+                    <tr>
+                      <th style={{ padding: '12px 10px', textAlign: 'left', borderBottom: '1px solid #eeeeee', color: '#555' }}>Fecha</th>
+                      <th style={{ padding: '12px 10px', textAlign: 'left', borderBottom: '1px solid #eeeeee', color: '#555' }}>Municipio</th>
+                      <th style={{ padding: '12px 10px', textAlign: 'left', borderBottom: '1px solid #eeeeee', color: '#555' }}>Categoría</th>
+                      <th style={{ padding: '12px 10px', textAlign: 'left', borderBottom: '1px solid #eeeeee', color: '#555' }}>Actores</th>
+                      <th style={{ padding: '12px 10px', textAlign: 'center', borderBottom: '1px solid #eeeeee', color: '#555' }}>Muertos</th>
+                      <th style={{ padding: '12px 10px', textAlign: 'center', borderBottom: '1px solid #eeeeee', color: '#555' }}>Heridos</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                  </thead>
+                  <tbody>
+                    {filtered.map((row, i) => (
+                      <tr key={i} style={{ borderBottom: '1px solid #f4f4f4', transition: 'background 0.2s' }}>
+                        <td style={{ padding: '10px' }}>{row.fechaHecho}</td>
+                        <td style={{ padding: '10px' }}>{row.municipio}</td>
+                        <td style={{ padding: '10px' }}>{row.categoria?.replace(/_/g, ' ')}</td>
+                        <td style={{ padding: '10px' }}>{row.actoresDisplay}</td>
+                        <td style={{ padding: '10px', textAlign: 'center' }}>{row.muertosTotales}</td>
+                        <td style={{ padding: '10px', textAlign: 'center' }}>{row.heridosTotales}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              );
+            })()}
           </div>
 
           {error && <p className="field-error" style={{ color: '#d93025', fontSize: '12px', margin: '4px 0 0 0' }}>{error}</p>}
@@ -185,7 +216,17 @@ export function ReportModal({ isOpen, onClose, filtros }: ReportModalProps) {
         {/* ── Footer ── */}
         <div className="modal-footer">
           <div style={{ fontSize: '12px', color: '#666' }}>
-            Total registros a exportar: <strong style={{ color: '#122d5d', fontSize: '14px' }}>{data.length}</strong>
+            Total registros a exportar: <strong style={{ color: '#122d5d', fontSize: '14px' }}>
+              {searchQuery ? data.filter(row => {
+                const q = searchQuery.toLowerCase();
+                return (
+                  row.municipio?.toLowerCase().includes(q) ||
+                  row.categoria?.toLowerCase().includes(q) ||
+                  row.actoresDisplay?.toLowerCase().includes(q) ||
+                  row.fechaHecho?.toLowerCase().includes(q)
+                );
+              }).length : data.length}
+            </strong>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button className="btn-secondary" onClick={onClose} type="button">
