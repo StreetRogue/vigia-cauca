@@ -13,6 +13,9 @@ public interface INovedadService {
 
     NovedadDTORespuesta crearNovedad(NovedadDTOPeticion peticion);
 
+    /** Carga masiva optimizada: una transacción, un evento RabbitMQ. */
+    List<NovedadDTORespuesta> crearEnLote(List<NovedadDTOPeticion> peticiones);
+
     NovedadDTORespuesta obtenerPorId(UUID novedadId);
 
     List<NovedadDTORespuesta> listarTodas();

@@ -17,17 +17,19 @@ function decodeToken(token: string): any {
   }
 }
 
-function isTokenExpired(token: string): boolean {
+function isTokenExpired(token: string, bufferSeconds = 60): boolean {
   const decoded = decodeToken(token);
   if (!decoded?.exp) return true;
-  return decoded.exp * 1000 < Date.now();
+  // Considera el token expirado 60 segundos antes (buffer para refrescar antes de expirar)
+  const expiresAt = decoded.exp * 1000 - (bufferSeconds * 1000);
+  return expiresAt < Date.now();
 }
 
 // ── Cliente Axios único ───────────────────────────────────────────────────────
 function createGatewayClient(): AxiosInstance {
   const instance = axios.create({
     baseURL: GATEWAY,
-    timeout: 15_000,
+    timeout: 30_000, // 30 segundos para soportar cargas masivas
     headers: { 'Content-Type': 'application/json' },
   });
 

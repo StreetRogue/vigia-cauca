@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +56,53 @@ public class NovedadServiceImpl implements INovedadService {
 
         log.info("Novedad creada con ID: {}", guardada.getNovedadId());
         return mapper.toDTO(guardada);
+    }
+
+    /**
+     * Carga masiva desde Excel: una sola transacción, auditoría en batch,
+     * y un único evento RabbitMQ al final. Mucho más eficiente que crear una a una.
+     */
+    @Override
+    @Transactional
+    public List<NovedadDTORespuesta> crearEnLote(List<NovedadDTOPeticion> peticiones) {
+        if (peticiones == null || peticiones.isEmpty()) return List.of();
+
+        // 1. Validar y mapear todas
+        List<NovedadEntity> entidades = new ArrayList<>();
+        for (NovedadDTOPeticion p : peticiones) {
+            validarReglasNegocio(p);
+            entidades.add(mapper.toEntity(p));
+        }
+
+        // 2. Guardar TODAS en una sola transacción
+        List<NovedadEntity> guardadas = novedadRepository.saveAll(entidades);
+
+        // 3. Registrar auditoría en batch (una sola operación de BD)
+        UUID usuarioId = peticiones.get(0).getUsuarioId();
+        List<AuditoriaNovedadEntity> auditorias = guardadas.stream()
+                .map(n -> AuditoriaNovedadEntity.builder()
+                        .novedad(n)
+                        .usuarioId(usuarioId)
+                        .accion(AccionAuditoria.CREATE)
+                        .datosNuevos(serializarParaAuditoria(n))
+                        .build())
+                .toList();
+        auditoriaRepository.saveAll(auditorias);
+
+        // 4. Un solo evento RabbitMQ con resumen de la importación
+        try {
+            Map<String, Object> evento = new HashMap<>();
+            evento.put("tipo", "IMPORTACION_EXCEL");
+            evento.put("cantidad", guardadas.size());
+            evento.put("usuarioId", usuarioId.toString());
+            evento.put("timestamp", java.time.LocalDateTime.now().toString());
+            rabbitTemplate.convertAndSend(queueName, objectMapper.writeValueAsString(evento));
+        } catch (Exception e) {
+            log.warn("[crearEnLote] No se pudo publicar evento RabbitMQ: {}", e.getMessage());
+        }
+
+        log.info("[crearEnLote] {} novedades creadas en una transacción", guardadas.size());
+        return mapper.toDTOList(guardadas);
     }
 
     @Override

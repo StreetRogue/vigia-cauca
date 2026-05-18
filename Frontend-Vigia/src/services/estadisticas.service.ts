@@ -1,5 +1,6 @@
 import { reportesClient } from '../api/client';
 import { ENDPOINTS } from '../api/endpoints';
+import { cacheService, TTL } from './cache.service';
 import type { FiltrosDashboard, DashboardCompletoDTO, ResumenKPIDTO, SerieTemporalDTO, EstadisticaActorDTO, EstadisticaMunicipioDTO, EstadisticaCategoriaDTO } from '../types/estadisticas.types';
 
 // ── Helper: convierte filtros en query params (omite undefined/null) ───────────
@@ -21,59 +22,86 @@ function toParams(filtros?: FiltrosDashboard): Record<string, string> {
 
 export const estadisticasService = {
   /**
-   * Obtiene el dashboard completo en una sola llamada.
-   * Usar este endpoint cuando se cargue la página principal del dashboard.
+   * Obtiene el dashboard completo en una sola llamada — cacheado 3 min.
    */
   async getDashboard(filtros?: FiltrosDashboard): Promise<DashboardCompletoDTO> {
-    const { data } = await reportesClient.get<DashboardCompletoDTO>(
-      ENDPOINTS.estadisticas.dashboard,
-      { params: toParams(filtros) },
-    );
-    return data;
+    const key = cacheService.buildKey('dashboard', toParams(filtros) as Record<string, unknown>);
+    return cacheService.remember(key, TTL.DASHBOARD, async () => {
+      const { data } = await reportesClient.get<DashboardCompletoDTO>(
+        ENDPOINTS.estadisticas.dashboard,
+        { params: toParams(filtros) },
+      );
+      return data;
+    });
   },
 
-  /** Solo KPIs (5 tarjetas). Útil para recargas parciales. */
+  /** Solo KPIs — cacheado 3 min. */
   async getResumen(filtros?: FiltrosDashboard): Promise<ResumenKPIDTO> {
-    const { data } = await reportesClient.get<ResumenKPIDTO>(
-      ENDPOINTS.estadisticas.resumen,
-      { params: toParams(filtros) },
-    );
-    return data;
+    const key = cacheService.buildKey('resumen', toParams(filtros) as Record<string, unknown>);
+    return cacheService.remember(key, TTL.ESTADISTICAS, async () => {
+      const { data } = await reportesClient.get<ResumenKPIDTO>(
+        ENDPOINTS.estadisticas.resumen,
+        { params: toParams(filtros) },
+      );
+      return data;
+    });
   },
 
-  /** Serie temporal mes a mes para gráfico de barras/líneas. */
+  /** Serie temporal — cacheada 3 min. */
   async getSerieTemporal(filtros?: FiltrosDashboard): Promise<SerieTemporalDTO[]> {
-    const { data } = await reportesClient.get<SerieTemporalDTO[]>(
-      ENDPOINTS.estadisticas.serieTemporal,
-      { params: toParams(filtros) },
-    );
-    return data;
+    const key = cacheService.buildKey('serieTemporal', toParams(filtros) as Record<string, unknown>);
+    return cacheService.remember(key, TTL.ESTADISTICAS, async () => {
+      const { data } = await reportesClient.get<SerieTemporalDTO[]>(
+        ENDPOINTS.estadisticas.serieTemporal,
+        { params: toParams(filtros) },
+      );
+      return data;
+    });
   },
 
-  /** Distribución de eventos por actor armado. */
+  /** Distribución por actor — cacheada 3 min. */
   async getPorActor(filtros?: FiltrosDashboard): Promise<EstadisticaActorDTO[]> {
-    const { data } = await reportesClient.get<EstadisticaActorDTO[]>(
-      ENDPOINTS.estadisticas.porActor,
-      { params: toParams(filtros) },
-    );
-    return data;
+    const key = cacheService.buildKey('porActor', toParams(filtros) as Record<string, unknown>);
+    return cacheService.remember(key, TTL.ESTADISTICAS, async () => {
+      const { data } = await reportesClient.get<EstadisticaActorDTO[]>(
+        ENDPOINTS.estadisticas.porActor,
+        { params: toParams(filtros) },
+      );
+      return data;
+    });
   },
 
-  /** Datos de intensidad por municipio para el mapa de calor. */
+  /** Mapa de calor por municipio — cacheado 3 min. */
   async getMapaCalor(filtros?: FiltrosDashboard): Promise<EstadisticaMunicipioDTO[]> {
-    const { data } = await reportesClient.get<EstadisticaMunicipioDTO[]>(
-      ENDPOINTS.estadisticas.mapaCalor,
-      { params: toParams(filtros) },
-    );
-    return data;
+    const key = cacheService.buildKey('mapaCalor', toParams(filtros) as Record<string, unknown>);
+    return cacheService.remember(key, TTL.ESTADISTICAS, async () => {
+      const { data } = await reportesClient.get<EstadisticaMunicipioDTO[]>(
+        ENDPOINTS.estadisticas.mapaCalor,
+        { params: toParams(filtros) },
+      );
+      return data;
+    });
   },
 
-  /** Desglose por categoría de evento. */
+  /** Desglose por categoría — cacheado 3 min. */
   async getPorCategoria(filtros?: FiltrosDashboard): Promise<EstadisticaCategoriaDTO[]> {
-    const { data } = await reportesClient.get<EstadisticaCategoriaDTO[]>(
-      ENDPOINTS.estadisticas.porCategoria,
-      { params: toParams(filtros) },
-    );
-    return data;
+    const key = cacheService.buildKey('porCategoria', toParams(filtros) as Record<string, unknown>);
+    return cacheService.remember(key, TTL.ESTADISTICAS, async () => {
+      const { data } = await reportesClient.get<EstadisticaCategoriaDTO[]>(
+        ENDPOINTS.estadisticas.porCategoria,
+        { params: toParams(filtros) },
+      );
+      return data;
+    });
+  },
+
+  /** Invalida todo el caché del dashboard (llamar cuando se crea/edita una novedad) */
+  invalidarCache(): void {
+    cacheService.invalidate('dashboard');
+    cacheService.invalidate('resumen');
+    cacheService.invalidate('serieTemporal');
+    cacheService.invalidate('porActor');
+    cacheService.invalidate('mapaCalor');
+    cacheService.invalidate('porCategoria');
   },
 };
