@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { novedadesService } from '../../../services/novedades.service';
+import { estadisticasService } from '../../../services/estadisticas.service';
 import type { NovedadDTORespuesta } from '../../../types/novedad.types';
 import { useAuth } from '../../../context/AuthContext';
 import { cacheManager } from '../../../utils/cacheManager';
@@ -154,6 +155,7 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
       await novedadesService.eliminar(deleteTarget.novedadId, user.sub);
       setDeleteTarget(null);
       cacheManager.clear();
+      estadisticasService.invalidarCache();
       await fetchFromServer(true);
       // Notificar a otros componentes que se actualicen
       window.dispatchEvent(new CustomEvent('novedadOcultada'));
@@ -346,6 +348,7 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
                         try {
                           await novedadesService.desocultar(nov.novedadId, user.sub);
                           cacheManager.clear();
+                          estadisticasService.invalidarCache();
                           await fetchFromServer(true);
                           // Notificar a otros componentes que se actualicen
                           window.dispatchEvent(new CustomEvent('novedadDesoculta'));

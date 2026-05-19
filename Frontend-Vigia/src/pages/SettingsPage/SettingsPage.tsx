@@ -105,7 +105,7 @@ export function SettingsPage() {
 
     setSaving(true);
     try {
-      await usuariosService.update(user.sub, {
+      await usuariosService.updateMe({
         nombre: editName,
         email: editEmail,
         telefono: editPhone || undefined,

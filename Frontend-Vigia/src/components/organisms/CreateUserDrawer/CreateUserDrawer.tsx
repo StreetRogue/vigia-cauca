@@ -406,7 +406,7 @@ export function CreateUserDrawer({
               >
                 <option value="" disabled>Seleccionar...</option>
                 {municipios.map((m) => (
-                  <option key={m.idMunicipio} value={m.idMunicipio}>{m.nombre}</option>
+                  <option key={m.idMunicipio} value={String(m.idMunicipio)}>{m.nombre}</option>
                 ))}
               </select>
             </FormField>

@@ -40,7 +40,7 @@ export function UserDetailPanel({ usuario, onEdit, onRefresh }: Props) {
         usuariosService
           .getByIdIam(usuario.creadoPor)
           .then((u) => setCreadoPorNombre(u.nombre))
-          .catch(() => setCreadoPorNombre(usuario.creadoPor))
+          .catch(() => setCreadoPorNombre('Administrador'))
       );
     }
 
@@ -49,7 +49,7 @@ export function UserDetailPanel({ usuario, onEdit, onRefresh }: Props) {
         usuariosService
           .getByIdIam(usuario.editadoPor)
           .then((u) => setEditadoPorNombre(u.nombre))
-          .catch(() => setEditadoPorNombre(usuario.editadoPor))
+          .catch(() => setEditadoPorNombre('Administrador'))
       );
     }
 

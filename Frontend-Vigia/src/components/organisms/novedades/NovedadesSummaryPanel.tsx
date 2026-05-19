@@ -103,6 +103,11 @@ export function NovedadesSummaryPanel() {
 
   useSSE({ onMessage: handleSSE });
 
+  // Invalidar caché de estadísticas al montar el componente para asegurar datos frescos
+  useEffect(() => {
+    estadisticasService.invalidarCache();
+  }, []);
+
   // Escuchar eventos de novedad ocultada/desocultada para refrescar en tiempo real
   useEffect(() => {
     const handleNovedadChange = () => {
@@ -132,9 +137,12 @@ export function NovedadesSummaryPanel() {
         .finally(() => { setLoadingKpi(false); });
 
     } else {
-      // ADMIN / COORDINADOR: KPIs globales del microservicio de reportes
-      estadisticasService.getResumen({})
-        .then(data => setResumen(data))
+      // ADMIN / COORDINADOR: Obtiene todas las novedades y calcula localmente
+      // para evitar inconsistencias con la tabla de estadísticas agregadas
+      novedadesService.listar(false)
+        .then(lista => {
+          setResumen(calcularKPIsLocales(lista));
+        })
         .catch(err => console.error('[SummaryPanel] Error KPIs:', err))
         .finally(() => setLoadingKpi(false));
     }

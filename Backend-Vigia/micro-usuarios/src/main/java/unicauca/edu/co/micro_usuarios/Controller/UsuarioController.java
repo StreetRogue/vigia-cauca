@@ -73,6 +73,15 @@ public class UsuarioController {
         return ResponseEntity.ok(response);
     }
 
+    // Actualizar perfil propio — cualquier usuario autenticado
+    @PutMapping("/me")
+    public ResponseEntity<UsuarioResponseDTO> actualizarPerfilMe(
+            @RequestBody UsuarioUpdateDTO dto,
+            @AuthenticationPrincipal Jwt jwt) {
+        UsuarioResponseDTO response = usuarioService.actualizarPerfilPropio(jwt.getSubject(), dto);
+        return ResponseEntity.ok(response);
+    }
+
     // Cambio de contraseña propio — cualquier usuario autenticado
     @PatchMapping("/me/password")
     public ResponseEntity<Void> cambiarPasswordMe(

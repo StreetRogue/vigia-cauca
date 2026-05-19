@@ -66,6 +66,11 @@ export const usuariosService = {
       apiClient.get<UsuarioResponseDTO>(ENDPOINTS.usuarios.me).then(r => r.data)
     ),
 
+  /** Actualizar perfil propio (nombre, email, telefono) — invalida caché */
+  updateMe: (payload: Pick<UsuarioUpdateDTO, 'nombre' | 'email' | 'telefono'>) =>
+    apiClient.put<UsuarioResponseDTO>(ENDPOINTS.usuarios.meUpdate, payload)
+      .then(r => { cacheService.invalidate('usuario:me'); return r.data; }),
+
   // Validaciones en tiempo real — NO se cachean (necesitan datos frescos)
   validateCedula: (cedula: string) =>
     apiClient.get<boolean>(`${ENDPOINTS.usuarios.base}/validate/cedula/${cedula}`).then(r => r.data),
