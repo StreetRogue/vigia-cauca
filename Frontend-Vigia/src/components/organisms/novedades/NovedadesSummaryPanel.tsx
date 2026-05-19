@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from '../../../context/AuthContext';
+import { useSSE } from '../../../hooks/useSSE';
 import { estadisticasService } from '../../../services/estadisticas.service';
 import { novedadesService } from '../../../services/novedades.service';
+import { auditoriaService } from '../../../services/auditoria.service';
 import type { ResumenKPIDTO } from '../../../types/estadisticas.types';
-import type { NovedadDTORespuesta } from '../../../types/novedad.types';
+import type { NovedadDTORespuesta, AuditoriaDTORespuesta } from '../../../types/novedad.types';
 import styles from './NovedadesSummaryPanel.module.css';
 
 interface AuditActivity {
@@ -22,6 +25,53 @@ function formatAuditDate(isoDate: string): string {
   return `${day}/${month}/${year} ${hour}:${minute}`;
 }
 
+function formatAuditText(audit: AuditoriaDTORespuesta): string {
+  const accionTexto: Record<string, string> = {
+    'CREATE': 'Novedad creada',
+    'UPDATE': 'Novedad actualizada',
+    'DELETE': 'Novedad ocultada',
+    'EXCEL_IMPORT': 'Cargado desde Excel',
+  };
+  return accionTexto[audit.accion] ?? `Acción: ${audit.accion}`;
+}
+
+function getAuditDot(accion: string): 'green' | 'orange' | 'red' | 'blue' | 'gray' {
+  switch (accion) {
+    case 'CREATE':
+      return 'blue';
+    case 'UPDATE':
+      return 'orange';
+    case 'DELETE':
+      return 'red';
+    case 'EXCEL_IMPORT':
+      return 'green';
+    default:
+      return 'gray';
+  }
+}
+
+/** Calcula KPIs localmente a partir de una lista de novedades del operador. */
+function calcularKPIsLocales(lista: NovedadDTORespuesta[]): ResumenKPIDTO {
+  let muertos = 0, heridos = 0, desplazados = 0, confinados = 0;
+  for (const nov of lista) {
+    const ah = nov.afectacionHumana;
+    if (ah) {
+      muertos     += ah.muertosTotales    ?? 0;
+      heridos     += ah.heridosTotales    ?? 0;
+      desplazados += ah.desplazadosTotales ?? 0;
+      confinados  += ah.confinadosTotales  ?? 0;
+    }
+  }
+  return {
+    totalEventos:     lista.length,
+    totalMuertos:     muertos,
+    totalHeridos:     heridos,
+    totalDesplazados: desplazados,
+    totalConfinados:  confinados,
+    filtrosAplicados: {},
+  };
+}
+
 const CATEGORY_LABELS: Record<string, string> = {
   ENFRENTAMIENTO:        'Enfrentamiento',
   HOSTIGAMIENTO:         'Hostigamiento',
@@ -37,35 +87,71 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export function NovedadesSummaryPanel() {
-  const [resumen, setResumen]     = useState<ResumenKPIDTO | null>(null);
+  const { user } = useAuth();
+  const isOperador = user?.rol === 'OPERADOR';
+
+  const [resumen, setResumen]       = useState<ResumenKPIDTO | null>(null);
   const [activities, setActivities] = useState<AuditActivity[]>([]);
-  const [loadingKpi, setLoadingKpi]       = useState(true);
-  const [loadingFeed, setLoadingFeed]     = useState(true);
+  const [loadingKpi, setLoadingKpi]   = useState(true);
+  const [loadingFeed, setLoadingFeed] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleSSE = useCallback(() => {
+    estadisticasService.invalidarCache();
+    setRefreshKey(k => k + 1);
+  }, []);
+
+  useSSE({ onMessage: handleSSE });
+
+  // Escuchar eventos de novedad ocultada/desocultada para refrescar en tiempo real
+  useEffect(() => {
+    const handleNovedadChange = () => {
+      setRefreshKey(k => k + 1);
+    };
+    window.addEventListener('novedadOcultada', handleNovedadChange);
+    window.addEventListener('novedadDesoculta', handleNovedadChange);
+    return () => {
+      window.removeEventListener('novedadOcultada', handleNovedadChange);
+      window.removeEventListener('novedadDesoculta', handleNovedadChange);
+    };
+  }, []);
 
   useEffect(() => {
-    // Carga 1: KPIs del endpoint optimizado de estadísticas (muy rápido)
-    estadisticasService.getResumen({ anio: new Date().getFullYear() })
-      .then(data => setResumen(data))
-      .catch(err => console.error('[SummaryPanel] Error KPIs:', err))
-      .finally(() => setLoadingKpi(false));
+    setLoadingKpi(true);
+    setLoadingFeed(true);
 
-    // Carga 2: Solo 5 novedades recientes para el feed de auditoría
-    novedadesService.listarPaginado({ page: 0, size: 5 })
-      .then(res => {
-        const recientes: NovedadDTORespuesta[] = res.content || [];
-        const acts: AuditActivity[] = recientes.map(nov => ({
-          id: nov.novedadId,
-          text: `Novedad registrada: ${CATEGORY_LABELS[nov.categoria] ?? nov.categoria}`,
-          date: nov.fechaCreacion ? formatAuditDate(nov.fechaCreacion) : nov.fechaHecho,
-          dot: nov.nivelConfianza === 'CONFIRMADO' ? 'green'
-            : nov.nivelConfianza === 'PRELIMINAR'  ? 'orange'
-            : 'blue',
-        }));
-        setActivities(acts);
+    if (isOperador && user?.sub) {
+      // OPERADOR: obtiene sus propias novedades y calcula todo localmente
+      // (una sola llamada, sin depender del microservicio de reportes)
+      novedadesService.listarPorUsuario(user.sub)
+        .then(lista => {
+          // KPIs calculados en el cliente
+          setResumen(calcularKPIsLocales(lista));
+        })
+        .catch(err => console.error('[SummaryPanel] Error operador:', err))
+        .finally(() => { setLoadingKpi(false); });
+
+    } else {
+      // ADMIN / COORDINADOR: KPIs globales del microservicio de reportes
+      estadisticasService.getResumen({})
+        .then(data => setResumen(data))
+        .catch(err => console.error('[SummaryPanel] Error KPIs:', err))
+        .finally(() => setLoadingKpi(false));
+    }
+
+    // Cargar actividad reciente (auditoría) para todos los usuarios
+    auditoriaService.obtenerActividadReciente(5)
+      .then(auditItems => {
+        setActivities(auditItems.map(audit => ({
+          id:   audit.auditoriaId,
+          text: formatAuditText(audit),
+          date: formatAuditDate(audit.fecha),
+          dot:  getAuditDot(audit.accion),
+        })));
       })
       .catch(err => console.error('[SummaryPanel] Error feed:', err))
       .finally(() => setLoadingFeed(false));
-  }, []);
+  }, [isOperador, user?.sub, refreshKey]);
 
   const totalEventos    = resumen?.totalEventos    ?? 0;
   const totalMuertos    = resumen?.totalMuertos    ?? 0;

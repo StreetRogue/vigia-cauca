@@ -43,15 +43,23 @@ public class EstadisticaServiceImpl implements IEstadisticaService {
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = "kpis",
-            key = "#filtro.anio + '_' + #filtro.mes + '_' + #filtro.municipio + '_' + #filtro.categoria + '_' + #rol")
+            key = "#filtro.anio + '_' + #filtro.mes + '_' + #filtro.municipio + '_' + #filtro.categoria + '_' + #filtro.usuarioCreadorId + '_' + #rol")
     public ResumenKPIDTO obtenerResumenKPI(FiltroEstadisticaDTO filtro, String rol) {
-        List<NivelVisibilidad> visibilidades = visibilidadHelper.visibilidadesPorRol(rol);
 
-        List<Object[]> resultado = agregadaRepository.obtenerKPIs(
-                filtro.getAnio(), filtro.getMes(),
-                filtro.getMunicipio(), filtro.getCategoria(),
-                visibilidades
-        );
+        List<Object[]> resultado;
+
+        if (filtro.getUsuarioCreadorId() != null) {
+            // Vista de operador: solo sus propias novedades desde el snapshot
+            resultado = snapshotRepository.obtenerKPIsPorUsuario(filtro.getUsuarioCreadorId());
+        } else {
+            // Vista de admin/coordinador: estadísticas globales pre-agregadas
+            List<NivelVisibilidad> visibilidades = visibilidadHelper.visibilidadesPorRol(rol);
+            resultado = agregadaRepository.obtenerKPIs(
+                    filtro.getAnio(), filtro.getMes(),
+                    filtro.getMunicipio(), filtro.getCategoria(),
+                    visibilidades
+            );
+        }
 
         if (resultado.isEmpty() || resultado.get(0) == null) {
             return ResumenKPIDTO.builder()

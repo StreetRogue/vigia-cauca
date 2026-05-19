@@ -71,7 +71,7 @@ management:
 # RabbitMQ Queues
 rabbitmq:
   queue:
-    novedades: ${RABBITMQ_QUEUE_NOVEDADES:cola.novedades.estadisticas}
+    novedades: ${RABBITMQ_QUEUE_NOVEDADES:cola.novedades.notificaciones}
   exchange:
     novedades: ${RABBITMQ_EXCHANGE_NOVEDADES:exchange.novedades}
   routing-key:

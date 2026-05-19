@@ -18,7 +18,7 @@ public interface INovedadService {
 
     NovedadDTORespuesta obtenerPorId(UUID novedadId);
 
-    List<NovedadDTORespuesta> listarTodas();
+    List<NovedadDTORespuesta> listarTodas(boolean includeOcultas);
 
     Page<NovedadDTORespuesta> listarTodasPaginado(Pageable pageable);
 
@@ -31,4 +31,6 @@ public interface INovedadService {
     NovedadDTORespuesta actualizarNovedad(UUID novedadId, NovedadDTOPeticion peticion);
 
     void eliminarNovedad(UUID novedadId, UUID usuarioIdSolicitante);
+
+    NovedadDTORespuesta desocultarNovedad(UUID novedadId, UUID usuarioIdSolicitante);
 }

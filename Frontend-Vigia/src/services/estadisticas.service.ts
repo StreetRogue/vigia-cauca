@@ -15,6 +15,7 @@ function toParams(filtros?: FiltrosDashboard): Record<string, string> {
   if (filtros.nivelConfianza)          params.nivelConfianza  = filtros.nivelConfianza;
   if (filtros.genero)                  params.genero          = filtros.genero;
   if (filtros.grupoPoblacional)        params.grupoPoblacional = filtros.grupoPoblacional;
+  if (filtros.usuarioId)               params.usuarioId       = filtros.usuarioId;
   return params;
 }
 
@@ -95,7 +96,11 @@ export const estadisticasService = {
     });
   },
 
-  /** Invalida todo el caché del dashboard (llamar cuando se crea/edita una novedad) */
+  /**
+   * Invalida todo el caché del dashboard (llamar cuando se crea/edita/elimina una novedad).
+   * Como las claves de operador incluyen el usuarioId en el prefijo, el invalidate
+   * por prefijo borra tanto las entradas globales como las filtradas por usuario.
+   */
   invalidarCache(): void {
     cacheService.invalidate('dashboard');
     cacheService.invalidate('resumen');

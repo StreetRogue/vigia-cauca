@@ -51,6 +51,11 @@ public class NovedadEventConsumer {
                 case "NOVEDAD_CREADA" -> proyeccionService.procesarNovedadCreada(evento);
                 case "NOVEDAD_ACTUALIZADA" -> proyeccionService.procesarNovedadActualizada(evento);
                 case "NOVEDAD_ELIMINADA" -> proyeccionService.procesarNovedadEliminada(evento);
+                case "IMPORTACION_EXCEL" -> {
+                    // Para importaciones en lote, procesar como creación individual
+                    proyeccionService.procesarNovedadCreada(evento);
+                    log.info("Evento de importación Excel procesado: {}", evento.getNovedadId());
+                }
                 default -> log.warn("Tipo de evento desconocido: {}", evento.getTipo());
             }
 

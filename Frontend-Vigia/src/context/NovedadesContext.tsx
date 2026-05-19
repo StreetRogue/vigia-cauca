@@ -354,6 +354,7 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
     novedadesService
       .cargarExcel(file, usuarioId)
       .then(() => {
+        estadisticasService.invalidarCache();
         setShowExcelModal(false);
         setShowSuccessToast(true);
         setTimeout(() => setShowSuccessToast(false), 3500);

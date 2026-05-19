@@ -105,12 +105,14 @@ export interface EvidenciaDTORespuesta {
 }
 
 export interface AuditoriaDTORespuesta {
-  idAuditoria: string;
-  novedadId:   string;
-  usuarioId:   string;
-  accion:      'CREATE' | 'UPDATE' | 'DELETE';
-  cambios:     Record<string, unknown>;
-  fechaHora:   string;
+  auditoriaId:    string;
+  novedadId:      string | null;
+  usuarioId:      string;
+  accion:         'CREATE' | 'UPDATE' | 'DELETE' | 'EXCEL_IMPORT';
+  datosAnteriores: string | null;
+  datosNuevos:    string | null;
+  cambios:        string | null;
+  fecha:          string;
 }
 
 export interface NovedadDTORespuesta {

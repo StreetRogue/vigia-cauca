@@ -4,10 +4,12 @@ import co.edu.unicauca.microreportes.capaAccesoDatos.models.EstadisticaAgregadaE
 import co.edu.unicauca.microreportes.capaAccesoDatos.models.enums.CategoriaEvento;
 import co.edu.unicauca.microreportes.capaAccesoDatos.models.enums.NivelVisibilidad;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,11 +22,22 @@ public interface EstadisticaAgregadaRepository extends JpaRepository<Estadistica
             CategoriaEvento categoria, NivelVisibilidad nivelVisibilidad
     );
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT e FROM EstadisticaAgregadaEntity e WHERE e.anio = :anio AND e.mes = :mes AND e.municipio = :municipio AND e.categoria = :categoria AND e.nivelVisibilidad = :nivelVisibilidad")
+    Optional<EstadisticaAgregadaEntity> findForUpdate(
+            @Param("anio") Integer anio,
+            @Param("mes") Integer mes,
+            @Param("municipio") String municipio,
+            @Param("categoria") CategoriaEvento categoria,
+            @Param("nivelVisibilidad") NivelVisibilidad nivelVisibilidad
+    );
+
     /**
      * KPIs globales del resumen (cards del dashboard).
      *
      * Todos los filtros son opcionales: null = sin restricción.
      * Cuando anio es null se agregan todos los años disponibles.
+     * NOTA: Las estadísticas se basan en snapshots, que se actualizan cuando se marca como oculto.
      */
     @Query("SELECT " +
             "COALESCE(SUM(e.totalEventos),0), " +
