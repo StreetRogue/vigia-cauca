@@ -22,11 +22,12 @@ const ALL_MENU_ITEMS: MenuItem[] = [
   { label: "DASHBOARD",     to: "/dashboard"      },
   { label: "NOVEDADES",     to: "/novedades"      },
   { label: "USUARIOS",      to: "/usuarios"       },
+  { label: "AUDITORIAS",    to: "/auditorias"     },
   { label: "CONFIGURACION", to: "/configuracion"  },
 ];
 
 const ROLE_MENUS: Record<AppRole, string[]> = {
-  ADMIN:     ["DASHBOARD", "NOVEDADES", "USUARIOS", "CONFIGURACION"],
+  ADMIN:     ["DASHBOARD", "NOVEDADES", "USUARIOS", "AUDITORIAS", "CONFIGURACION"],
   OPERADOR:  ["DASHBOARD", "NOVEDADES", "CONFIGURACION"],
   VISITANTE: ["DASHBOARD"],
 };

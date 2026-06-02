@@ -15,8 +15,9 @@ export const ENDPOINTS = {
     victimaPorId:     (nid: string, vid: string) => `/api/v1/microNovedades/novedades/${nid}/victimas/${vid}`,
     evidencias:       (nid: string) => `/api/v1/microNovedades/novedades/${nid}/evidencias`,
     evidenciaPorId:   (nid: string, eid: string) => `/api/v1/microNovedades/novedades/${nid}/evidencias/${eid}`,
-    auditorias:       (nid: string) => `/api/v1/microNovedades/auditorias/novedad/${nid}`,
+    auditorias:           (nid: string) => `/api/v1/microNovedades/auditorias/novedad/${nid}`,
     auditoriasPorUsuario: (uid: string) => `/api/v1/microNovedades/auditorias/usuario/${uid}`,
+    auditoriasReciente:   (limite = 200) => `/api/v1/microNovedades/auditorias/reciente?limite=${limite}`,
   },
 
   estadisticas: {

@@ -3,6 +3,7 @@ import { LoginPage, UsersManagementPage, SettingsPage } from "./pages";
 import { NovedadesScreen } from "./screens/NovedadesScreen";
 import { DashboardScreen } from "./screens/DashboardScreen";
 import { EstadisticasScreen } from "./screens/EstadisticasScreen";
+import { AuditoriasScreen } from "./screens/AuditoriasScreen";
 import { useAuth } from "./context/AuthContext";
 import type { JSX } from "react";
 
@@ -34,6 +35,14 @@ function App() {
         element={
           <RequireRole roles={["ADMIN", "OPERADOR"]}>
             <NovedadesScreen />
+          </RequireRole>
+        }
+      />
+      <Route
+        path="/auditorias"
+        element={
+          <RequireRole roles={["ADMIN"]}>
+            <AuditoriasScreen />
           </RequireRole>
         }
       />
