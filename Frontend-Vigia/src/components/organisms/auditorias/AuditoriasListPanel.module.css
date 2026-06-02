@@ -1,0 +1,273 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--dash-panel, #0f2140);
+  overflow: hidden;
+}
+
+/* ── Toolbar ── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--dash-border, rgba(255,255,255,0.08));
+  flex-shrink: 0;
+}
+
+.toolbarLeft {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-text-on-dark, #e2e8f0);
+  margin: 0;
+}
+
+.count {
+  font-size: 11px;
+  color: var(--dash-text-1, #8ba3c7);
+  font-weight: 400;
+}
+
+/* ── Filtros ── */
+.filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--dash-border, rgba(255,255,255,0.08));
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filterLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--dash-text-1, #8ba3c7);
+}
+
+.modeButtons {
+  display: flex;
+  gap: 4px;
+}
+
+.modeBtn {
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid var(--dash-border, rgba(255,255,255,0.12));
+  border-radius: 4px;
+  background: transparent;
+  color: var(--dash-text-1, #8ba3c7);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.modeBtn:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--color-text-on-dark, #e2e8f0);
+}
+
+.modeBtnActive {
+  background: var(--color-primary-500, #1e4fa3);
+  border-color: var(--color-primary-500, #1e4fa3);
+  color: #fff;
+}
+
+.searchRow {
+  display: flex;
+  gap: 6px;
+}
+
+.searchInput {
+  padding: 5px 10px;
+  font-size: 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--dash-border, rgba(255,255,255,0.12));
+  border-radius: 4px;
+  color: var(--color-text-on-dark, #e2e8f0);
+  width: 260px;
+  outline: none;
+  font-family: 'Courier New', monospace;
+}
+
+.searchInput::placeholder {
+  color: var(--dash-text-1, #8ba3c7);
+  font-family: inherit;
+}
+
+.searchInput:focus {
+  border-color: var(--color-primary-400, #3b73d4);
+}
+
+.searchBtn {
+  padding: 5px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--color-primary-500, #1e4fa3);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.searchBtn:hover {
+  background: var(--color-primary-400, #3b73d4);
+}
+
+.filterSelect {
+  padding: 5px 10px;
+  font-size: 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--dash-border, rgba(255,255,255,0.12));
+  border-radius: 4px;
+  color: var(--color-text-on-dark, #e2e8f0);
+  outline: none;
+  cursor: pointer;
+}
+
+.filterSelect option {
+  background: #0d1f3c;
+  color: #e2e8f0;
+}
+
+/* ── Error ── */
+.errorBanner {
+  margin: 8px 20px;
+  padding: 8px 12px;
+  background: rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  border-radius: 4px;
+  color: #f87171;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* ── Tabla ── */
+.tableWrap {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--dash-text-1, #8ba3c7);
+  background: var(--dash-panel, #0f2140);
+  border-bottom: 1px solid var(--dash-border, rgba(255,255,255,0.08));
+  white-space: nowrap;
+}
+
+.numTh { width: 40px; text-align: center; }
+
+.table tbody td {
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--color-text-on-dark, #e2e8f0);
+  vertical-align: middle;
+}
+
+.numCell {
+  text-align: center;
+  color: var(--dash-text-1, #8ba3c7);
+  font-size: 11px;
+}
+
+.dateCell { font-size: 12px; white-space: nowrap; }
+.timeCell { font-size: 12px; white-space: nowrap; color: var(--dash-text-1, #8ba3c7); }
+
+.idCell {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: var(--dash-text-1, #8ba3c7);
+}
+
+.row {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.row:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+.rowSelected {
+  background: rgba(59, 115, 212, 0.15) !important;
+  border-left: 3px solid var(--color-primary-400, #3b73d4);
+}
+
+/* ── Acción badges ── */
+.accionBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  background: rgba(255,255,255,0.1);
+  color: #e2e8f0;
+}
+
+.acc_CREATE {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.acc_UPDATE {
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.acc_DELETE {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.acc_EXCEL_IMPORT {
+  background: rgba(99, 102, 241, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+/* ── Estados vacío / cargando ── */
+.loadingRow,
+.emptyRow {
+  text-align: center;
+  padding: 48px 24px !important;
+  color: var(--dash-text-1, #8ba3c7);
+  font-size: 13px;
+}

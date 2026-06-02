@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { novedadesService } from '../services/novedades.service';
 import { estadisticasService } from '../services/estadisticas.service';
+import { cacheManager } from '../utils/cacheManager';
 import { useAuth } from './AuthContext';
 import type { NovedadDTOPeticion, NovedadDTORespuesta, Genero, GrupoPoblacional } from '../types/novedad.types';
 
@@ -354,8 +355,11 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
     novedadesService
       .cargarExcel(file, usuarioId)
       .then(() => {
+        cacheManager.clear();
+        estadisticasService.invalidarCache();
         setShowExcelModal(false);
         setShowSuccessToast(true);
+        window.dispatchEvent(new CustomEvent('novedadesRefresh'));
         setTimeout(() => setShowSuccessToast(false), 3500);
       })
       .catch((err: unknown) => {

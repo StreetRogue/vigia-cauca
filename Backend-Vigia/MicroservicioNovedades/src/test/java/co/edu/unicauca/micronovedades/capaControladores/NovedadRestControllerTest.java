@@ -167,19 +167,19 @@ class NovedadRestControllerTest {
 
     @Test
     void listarTodas_retornaLista() throws Exception {
-        when(novedadService.listarTodas()).thenReturn(List.of(respuestaEjemplo));
+        when(novedadService.listarTodas(false)).thenReturn(List.of(respuestaEjemplo));
 
         mockMvc.perform(get(BASE_URL))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].municipio").value("Popayán"));
 
-        verify(novedadService).listarTodas();
+        verify(novedadService).listarTodas(false);
     }
 
     @Test
     void listarTodas_listaVacia_retornaListaVacia() throws Exception {
-        when(novedadService.listarTodas()).thenReturn(List.of());
+        when(novedadService.listarTodas(false)).thenReturn(List.of());
 
         mockMvc.perform(get(BASE_URL))
                 .andExpect(status().isOk())

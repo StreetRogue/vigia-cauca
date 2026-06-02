@@ -37,4 +37,15 @@ public class AuditoriaRestController {
     ) {
         return ResponseEntity.ok(auditoriaService.obtenerHistorialPorUsuario(usuarioId));
     }
+
+    /**
+     * GET /api/v1/microNovedades/auditorias/reciente?limite=10
+     * Actividad reciente global (últimas N auditorías).
+     */
+    @GetMapping("/reciente")
+    public ResponseEntity<List<AuditoriaNovedadDTORespuesta>> actividadReciente(
+            @RequestParam(defaultValue = "20") int limite
+    ) {
+        return ResponseEntity.ok(auditoriaService.obtenerActividadReciente(limite));
+    }
 }

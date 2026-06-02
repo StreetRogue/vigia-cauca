@@ -1,0 +1,289 @@
+# =====================================================================
+# docker-compose.yml — Vigía Cauca (proyecto completo)
+# Backend (microservicios + infraestructura) + Frontend en un solo stack.
+#
+# Uso:
+#   docker compose up -d --build
+#
+# Variables de sustitución (${...}) -> archivo .env en esta misma carpeta.
+# =====================================================================
+services:
+
+  # ─────────────────────────────────────────
+  # INFRAESTRUCTURA
+  # ─────────────────────────────────────────
+
+  postgres-usuarios:
+    image: postgres:16-alpine
+    container_name: postgres-usuarios
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${USUARIOS_DB}
+      POSTGRES_USER: ${USUARIOS_DB_USER}
+      POSTGRES_PASSWORD: ${USUARIOS_DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_usuarios_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${USUARIOS_DB_USER} -d ${USUARIOS_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-ubicaciones:
+    image: postgres:16-alpine
+    container_name: postgres-ubicaciones
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${UBICACIONES_DB}
+      POSTGRES_USER: ${UBICACIONES_DB_USER}
+      POSTGRES_PASSWORD: ${UBICACIONES_DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_ubicaciones_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${UBICACIONES_DB_USER} -d ${UBICACIONES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-novedades:
+    image: postgres:16-alpine
+    container_name: postgres-novedades
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: novedades_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_novedades_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d novedades_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-reportes:
+    image: postgres:16-alpine
+    container_name: postgres-reportes
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: estadisticas_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_reportes_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d estadisticas_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.3
+    container_name: keycloak
+    restart: unless-stopped
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD}
+      KC_HEALTH_ENABLED: "true"
+      KC_HOSTNAME: localhost:8180
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_PROXY: reencrypt
+    ports:
+      - "8180:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ./Backend-Vigia/Keycloak/realms:/opt/keycloak/data/import
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "grep -q ':1F90' /proc/net/tcp6"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  keycloak-init:
+    image: alpine:3.19
+    container_name: keycloak-init
+    volumes:
+      - ./Backend-Vigia/Keycloak/init-admin-user.sh:/init-admin-user.sh:ro
+    command: sh -c "apk add --no-cache curl -q && sh /init-admin-user.sh"
+    networks:
+      - backend
+    depends_on:
+      - keycloak
+    restart: on-failure
+
+  # =========================================
+  # MICROSERVICIOS
+  # =========================================
+
+  micro-usuarios:
+    build:
+      context: ./Backend-Vigia/micro-usuarios
+      dockerfile: Dockerfile
+    container_name: micro-usuarios
+    restart: unless-stopped
+    env_file:
+      - ./Backend-Vigia/micro-usuarios/.env
+    ports:
+      - "${USUARIOS_PORT}:${USUARIOS_PORT}"
+    networks:
+      - backend
+    depends_on:
+      postgres-usuarios:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  micro-ubicaciones:
+    build:
+      context: ./Backend-Vigia/micro-ubicaciones
+      dockerfile: Dockerfile
+    container_name: micro-ubicaciones
+    restart: unless-stopped
+    env_file:
+      - ./Backend-Vigia/micro-ubicaciones/.env
+    ports:
+      - "${UBICACIONES_PORT}:${UBICACIONES_PORT}"
+    networks:
+      - backend
+    depends_on:
+      postgres-ubicaciones:
+        condition: service_healthy
+
+  api-gateway:
+    build:
+      context: ./Backend-Vigia/APIGateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    restart: unless-stopped
+    env_file:
+      - ./Backend-Vigia/APIGateway/.env
+    ports:
+      - "8080:8080"
+    networks:
+      - backend
+    depends_on:
+      keycloak:
+        condition: service_healthy
+
+  micro-novedades:
+    build:
+      context: ./Backend-Vigia/MicroservicioNovedades
+      dockerfile: Dockerfile
+    container_name: micro-novedades
+    restart: unless-stopped
+    env_file:
+      - ./Backend-Vigia/MicroservicioNovedades/.env
+    ports:
+      - "5003:5003"
+    volumes:
+      - evidencias_data:/app/evidencias
+    networks:
+      - backend
+    depends_on:
+      postgres-novedades:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  micro-reportes:
+    build:
+      context: ./Backend-Vigia/MicroservicioReportes
+      dockerfile: Dockerfile
+    container_name: micro-reportes
+    restart: unless-stopped
+    env_file:
+      - ./Backend-Vigia/MicroservicioReportes/.env
+    ports:
+      - "5004:5004"
+    volumes:
+      - reportes_data:/app/reportes-temp
+    networks:
+      - backend
+    depends_on:
+      postgres-reportes:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # =========================================
+  # FRONTEND
+  # =========================================
+
+  frontend:
+    build:
+      context: ./Frontend-Vigia
+      dockerfile: Dockerfile
+      args:
+        # Vacíos => el frontend usa rutas relativas y nginx hace de
+        # reverse proxy hacia el gateway y keycloak (mismo origen, sin CORS).
+        VITE_API_GATEWAY_URL: "${VITE_API_GATEWAY_URL:-}"
+        VITE_KEYCLOAK_URL: "${VITE_KEYCLOAK_URL:-}"
+        VITE_KEYCLOAK_REALM: "${VITE_KEYCLOAK_REALM:-security-realm-dev}"
+        VITE_KEYCLOAK_CLIENT_ID: "${VITE_KEYCLOAK_CLIENT_ID:-api-gateway}"
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    networks:
+      - backend
+    depends_on:
+      - api-gateway
+      - keycloak
+
+# =========================================
+# VOLÚMENES Y RED
+# =========================================
+
+volumes:
+  postgres_usuarios_data:
+  postgres_ubicaciones_data:
+  postgres_novedades_data:
+  postgres_reportes_data:
+  rabbitmq_data:
+  keycloak_data:
+  evidencias_data:
+  reportes_data:
+
+networks:
+  backend:
+    driver: bridge

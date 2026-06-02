@@ -86,10 +86,13 @@ public class NovedadRestController {
 
     /**
      * GET /api/v1/microNovedades/novedades
+     * @param includeOcultas Si true, incluye novedades marcadas como ocultas (solo para ADMIN)
      */
     @GetMapping
-    public ResponseEntity<List<NovedadDTORespuesta>> listarTodas() {
-        return ResponseEntity.ok(novedadService.listarTodas());
+    public ResponseEntity<List<NovedadDTORespuesta>> listarTodas(
+            @RequestParam(defaultValue = "false") boolean includeOcultas
+    ) {
+        return ResponseEntity.ok(novedadService.listarTodas(includeOcultas));
     }
 
     /**
@@ -155,6 +158,7 @@ public class NovedadRestController {
 
     /**
      * DELETE /api/v1/microNovedades/novedades/{id}?usuarioId={uuid}
+     * Soft-delete (marca como oculta)
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(
@@ -163,6 +167,18 @@ public class NovedadRestController {
     ) {
         novedadService.eliminarNovedad(id, usuarioId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * PATCH /api/v1/microNovedades/novedades/{id}/desocultar?usuarioId={uuid}
+     * Unhide a record (reverse soft-delete, admin only)
+     */
+    @PatchMapping("/{id}/desocultar")
+    public ResponseEntity<NovedadDTORespuesta> desocultar(
+            @PathVariable UUID id,
+            @RequestParam UUID usuarioId
+    ) {
+        return ResponseEntity.ok(novedadService.desocultarNovedad(id, usuarioId));
     }
 
     /**

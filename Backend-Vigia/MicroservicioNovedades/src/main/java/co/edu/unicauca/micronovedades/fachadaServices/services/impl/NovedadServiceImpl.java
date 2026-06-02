@@ -114,8 +114,11 @@ public class NovedadServiceImpl implements INovedadService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<NovedadDTORespuesta> listarTodas() {
-        return mapper.toDTOList(novedadRepository.findAll());
+    public List<NovedadDTORespuesta> listarTodas(boolean includeOcultas) {
+        List<NovedadEntity> entidades = includeOcultas
+                ? novedadRepository.findAll()
+                : novedadRepository.findAllVisible();
+        return mapper.toDTOList(entidades);
     }
 
     @Override
@@ -241,6 +244,22 @@ public class NovedadServiceImpl implements INovedadService {
         publicarEvento("NOVEDAD_ELIMINADA", existente);
 
         log.info("Novedad marcada como OCULTA con ID: {}", novedadId);
+    }
+
+    @Override
+    @Transactional
+    public NovedadDTORespuesta desocultarNovedad(UUID novedadId, UUID usuarioIdSolicitante) {
+        NovedadEntity existente = buscarNovedadOFallar(novedadId);
+
+        existente.setOculto(false);
+        existente.setUsuarioActualizacion(usuarioIdSolicitante.toString());
+        novedadRepository.save(existente);
+
+        registrarAuditoria(existente, usuarioIdSolicitante, AccionAuditoria.UPDATE, null, existente);
+        publicarEvento("NOVEDAD_DESOCULTADA", existente);
+
+        log.info("Novedad desocultada con ID: {}", novedadId);
+        return mapper.toDTO(existente);
     }
 
     // ==========================================
