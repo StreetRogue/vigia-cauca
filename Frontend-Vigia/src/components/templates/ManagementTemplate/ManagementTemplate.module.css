@@ -1,8 +1,8 @@
 .page {
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
+  display: flex;
   background: var(--color-surface-body);
+  margin-left: 220px;
 }
 
 .workspace {
@@ -10,38 +10,44 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  flex: 1;
 }
 
 .topbar {
-  height: 56px;
-  border-bottom: 1px solid var(--color-border-soft);
-  background: var(--color-surface-card);
+  height: 64px;
+  border-bottom: 1px solid var(--dash-border);
+  background: var(--dash-panel);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
+  gap: 16px;
 }
 
 .breadcrumb {
   margin: 0;
   font-size: 13px;
-  color: var(--color-text-primary);
+  color: var(--dash-text-0);
+  font-weight: 500;
 }
 
 .breadcrumb strong {
-  color: var(--color-primary-600);
+  color: var(--color-primary-400);
+  font-weight: 600;
 }
 
 .topbarUser {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .contentGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
-  min-height: calc(100vh - 56px);
+  flex: 1;
+  min-width: 0;
 }
 
 .mainPanelSlot {
@@ -66,6 +72,10 @@
 
 @media (max-width: 900px) {
   .page {
-    grid-template-columns: 1fr;
+    margin-left: 0;
+  }
+
+  .sidebar {
+    display: none;
   }
 }

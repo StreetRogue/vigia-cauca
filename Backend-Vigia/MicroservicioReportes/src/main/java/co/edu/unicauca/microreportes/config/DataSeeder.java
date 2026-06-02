@@ -36,30 +36,9 @@ public class DataSeeder {
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void sembrarDatos() {
-        boolean haySnapshots = snapshotRepository.count() > 0;
-        boolean hayVictimas  = victimaSnapshotRepository.count() > 0;
+        log.info("[DataSeeder] Seeding deshabilitado - usando solo datos importados desde Excel.");
+        return;
 
-        if (haySnapshots && hayVictimas) {
-            log.info("[DataSeeder] Datos ya existen, omitiendo siembra.");
-            return;
-        }
-
-        if (!haySnapshots) {
-            log.info("[DataSeeder] Sembrando snapshots, agregados y víctimas...");
-            List<NovedadSnapshotEntity> snapshots = construirSnapshots();
-            List<NovedadSnapshotEntity> guardados = snapshotRepository.saveAll(snapshots);
-            construirAgregados(guardados);
-            List<VictimaSnapshotEntity> victimas = construirVictimas(guardados);
-            victimaSnapshotRepository.saveAll(victimas);
-            log.info("[DataSeeder] Sembrados {} snapshots y {} víctimas.", guardados.size(), victimas.size());
-        } else {
-            // Snapshots ya existen pero víctimas están vacías → sembrar solo víctimas
-            log.info("[DataSeeder] Snapshots ya existen, sembrando solo víctimas...");
-            List<NovedadSnapshotEntity> existentes = snapshotRepository.findAll();
-            List<VictimaSnapshotEntity> victimas = construirVictimas(existentes);
-            victimaSnapshotRepository.saveAll(victimas);
-            log.info("[DataSeeder] Sembradas {} víctimas desde {} snapshots existentes.", victimas.size(), existentes.size());
-        }
     }
 
     // =========================================================

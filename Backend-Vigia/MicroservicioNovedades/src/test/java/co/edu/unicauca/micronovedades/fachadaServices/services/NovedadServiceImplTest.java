@@ -227,7 +227,7 @@ class NovedadServiceImplTest {
         when(novedadRepository.findAll()).thenReturn(List.of(entityEjemplo));
         when(mapper.toDTOList(any())).thenReturn(List.of(respuestaEjemplo));
 
-        List<NovedadDTORespuesta> resultado = novedadService.listarTodas();
+        List<NovedadDTORespuesta> resultado = novedadService.listarTodas(false);
 
         assertThat(resultado).hasSize(1);
         verify(novedadRepository).findAll();
@@ -238,7 +238,7 @@ class NovedadServiceImplTest {
         when(novedadRepository.findAll()).thenReturn(List.of());
         when(mapper.toDTOList(any())).thenReturn(List.of());
 
-        List<NovedadDTORespuesta> resultado = novedadService.listarTodas();
+        List<NovedadDTORespuesta> resultado = novedadService.listarTodas(false);
 
         assertThat(resultado).isEmpty();
     }

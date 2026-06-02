@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { BASE_URLS } from '../api/client';
 import { ENDPOINTS } from '../api/endpoints';
+
+const GATEWAY = import.meta.env.VITE_API_GATEWAY_URL ?? 'http://localhost:8080';
 
 interface UseSSEOptions {
   /** Llamado cada vez que el servidor envía un evento. */
@@ -28,7 +29,7 @@ export function useSSE({ onMessage, onError, enabled = true }: UseSSEOptions): v
     if (esRef.current) return; // Ya conectado
 
     const token = localStorage.getItem('kc-token');
-    const url   = `${BASE_URLS.reportes}${ENDPOINTS.reportes.sseStream}${
+    const url   = `${GATEWAY}${ENDPOINTS.reportes.sseStream}${
       token ? `?token=${encodeURIComponent(token)}` : ''
     }`;
 

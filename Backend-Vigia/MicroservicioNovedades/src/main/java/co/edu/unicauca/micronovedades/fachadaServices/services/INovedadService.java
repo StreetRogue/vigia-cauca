@@ -13,11 +13,16 @@ public interface INovedadService {
 
     NovedadDTORespuesta crearNovedad(NovedadDTOPeticion peticion);
 
+    /** Carga masiva optimizada: una transacción, un evento RabbitMQ. */
+    List<NovedadDTORespuesta> crearEnLote(List<NovedadDTOPeticion> peticiones);
+
     NovedadDTORespuesta obtenerPorId(UUID novedadId);
 
-    List<NovedadDTORespuesta> listarTodas();
+    List<NovedadDTORespuesta> listarTodas(boolean includeOcultas);
 
     Page<NovedadDTORespuesta> listarTodasPaginado(Pageable pageable);
+
+    Page<NovedadDTORespuesta> listarPaginadoPorRol(String rol, UUID usuarioId, Pageable pageable);
 
     List<NovedadDTORespuesta> listarPorUsuario(UUID usuarioId);
 
@@ -26,4 +31,6 @@ public interface INovedadService {
     NovedadDTORespuesta actualizarNovedad(UUID novedadId, NovedadDTOPeticion peticion);
 
     void eliminarNovedad(UUID novedadId, UUID usuarioIdSolicitante);
+
+    NovedadDTORespuesta desocultarNovedad(UUID novedadId, UUID usuarioIdSolicitante);
 }

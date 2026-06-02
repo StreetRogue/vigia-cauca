@@ -16,7 +16,9 @@ import unicauca.edu.co.micro_usuarios.DTOs.Response.UsuarioResponseDTO;
 import unicauca.edu.co.micro_usuarios.Entities.EstadoUsuario;
 import unicauca.edu.co.micro_usuarios.Entities.Rol;
 import unicauca.edu.co.micro_usuarios.Entities.Usuario;
+import unicauca.edu.co.micro_usuarios.Exceptions.CedulaAlreadyExistsException;
 import unicauca.edu.co.micro_usuarios.Exceptions.EmailAlreadyExistsException;
+import unicauca.edu.co.micro_usuarios.Exceptions.IamException;
 import unicauca.edu.co.micro_usuarios.Exceptions.InvalidOperationException;
 import unicauca.edu.co.micro_usuarios.Exceptions.UsernameAlreadyExistsException;
 import unicauca.edu.co.micro_usuarios.Exceptions.UsuarioNotFoundException;
@@ -43,12 +45,16 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     public UsuarioResponseDTO registrarUsuario(UsuarioCreateDTO dto, String adminIdIam) {
         // Validaciones
+        if (usuarioRepository.findByCedula(dto.getCedula()).isPresent()) {
+            throw new CedulaAlreadyExistsException("La cédula " + dto.getCedula() + " ya está registrada");
+        }
+
         if (usuarioRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new EmailAlreadyExistsException("El email ya está registrado");
+            throw new EmailAlreadyExistsException("El email " + dto.getEmail() + " ya está registrado");
         }
 
         if (usuarioRepository.findByUsername(dto.getUsername()).isPresent()) {
-            throw new UsernameAlreadyExistsException("El username ya existe");
+            throw new UsernameAlreadyExistsException("El username " + dto.getUsername() + " ya existe");
         }
 
         MunicipioResponseDTO municipio;
@@ -63,16 +69,39 @@ public class UsuarioServiceImpl implements UsuarioService {
         // Convertir DTO a entidad
         Usuario usuario = UsuarioMapper.toEntity(dto);
 
-        // Crear usuario en Auth0
-        String idIam = iamService.crearUsuario(
-                dto.getEmail(),
-                dto.getUsername(),
-                dto.getRol()
-        );
+        // Crear usuario en Keycloak con contraseña
+        String idKeycloak;
+        try {
+            idKeycloak = iamService.crearUsuario(
+                    dto.getEmail(),
+                    dto.getUsername(),
+                    dto.getRol(),
+                    dto.getPassword()
+            );
+        } catch (IamException e) {
+            // Si falla en Keycloak, intentar determinar qué campo causa el problema
+            String errorMsg = e.getMessage().toLowerCase();
 
-        usuario.setIdIam(idIam);
+            // Keycloak retorna error 409 si email o username ya existen
+            if (errorMsg.contains("email") || errorMsg.contains("duplicat")) {
+                throw new EmailAlreadyExistsException(
+                    "El email " + dto.getEmail() + " ya está registrado en el sistema de autenticación"
+                );
+            }
 
-        log.info("Usuario creado en Iam | idIam={}", idIam);
+            if (errorMsg.contains("username")) {
+                throw new UsernameAlreadyExistsException(
+                    "El usuario " + dto.getUsername() + " ya existe en el sistema de autenticación"
+                );
+            }
+
+            // Si no se puede determinar el campo específico, relanzar el error original
+            throw e;
+        }
+
+        usuario.setIdKeycloak(idKeycloak);
+
+        log.info("Usuario creado en Iam | idKeycloak={}", idKeycloak);
 
         // Auditoría
         usuario.setCreadoPor(adminIdIam);
@@ -93,7 +122,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
 
-        if (usuario.getIdIam().equals(adminIdIam)
+        if (usuario.getIdKeycloak().equals(adminIdIam)
                 && EstadoUsuario.INACTIVO.equals(dto.getEstado())) {
             throw new InvalidOperationException("No puedes inactivarte a ti mismo");
         }
@@ -124,17 +153,17 @@ public class UsuarioServiceImpl implements UsuarioService {
             usuario.setEstado(dto.getEstado());
 
             if (dto.getEstado().equals(EstadoUsuario.INACTIVO)) {
-                iamService.bloquearUsuario(usuario.getIdIam());
+                iamService.bloquearUsuario(usuario.getIdKeycloak());
             }
 
             if (dto.getEstado().equals(EstadoUsuario.ACTIVO)) {
-                iamService.desbloquearUsuario(usuario.getIdIam());
+                iamService.desbloquearUsuario(usuario.getIdKeycloak());
             }
         }
 
         // SOLO si hay datos reales de Auth0
         if (dto.getEmail() != null || dto.getUsername() != null) {
-            iamService.actualizarUsuario(usuario.getIdIam(), dto);
+            iamService.actualizarUsuario(usuario.getIdKeycloak(), dto);
         }
 
         // Auditoría
@@ -164,7 +193,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     public UsuarioResponseDTO getByIdIam(String adminIdIam) {
 
-        Usuario usuario = usuarioRepository.findByIdIam(adminIdIam)
+        Usuario usuario = usuarioRepository.findByIdKeycloak(adminIdIam)
                 .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
 
         MunicipioResponseDTO municipio = ubicacionesClient.getMunicipio(usuario.getIdMunicipio());
@@ -232,5 +261,75 @@ public class UsuarioServiceImpl implements UsuarioService {
                 usuariosPage.getTotalElements(),
                 usuariosPage.getTotalPages()
         );
+    }
+
+    @Override
+    public void cambiarPasswordPropio(String idIam, String newPassword) {
+        Usuario usuario = usuarioRepository.findByIdKeycloak(idIam)
+                .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
+
+        UsuarioUpdateDTO dto = new UsuarioUpdateDTO();
+        dto.setPassword(newPassword);
+        iamService.actualizarUsuario(usuario.getIdKeycloak(), dto);
+    }
+
+    @Override
+    public void eliminarUsuario(UUID id, String adminIdIam) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
+
+        if (usuario.getIdKeycloak() != null && usuario.getIdKeycloak().equals(adminIdIam)) {
+            throw new InvalidOperationException("No puedes eliminarte a ti mismo");
+        }
+
+        usuario.setEstado(EstadoUsuario.INACTIVO);
+        usuario.setEditadoPor(adminIdIam);
+
+        // Bloquear en IAM
+        if (usuario.getIdKeycloak() != null) {
+            iamService.bloquearUsuario(usuario.getIdKeycloak());
+        }
+
+        usuarioRepository.save(usuario);
+
+        // Publicar evento de actualización
+        MunicipioResponseDTO municipio = ubicacionesClient.getMunicipio(usuario.getIdMunicipio());
+        UsuarioResponseDTO dto = UsuarioMapper.toDTO(usuario, municipio);
+        usuarioEventPublisher.publicarActualizacion(dto);
+
+        log.info("Usuario eliminado (soft delete) | id={} | adminIdIam={}", id, adminIdIam);
+    }
+
+    @Override
+    public UsuarioResponseDTO actualizarPerfilPropio(String idIam, UsuarioUpdateDTO dto) {
+        Usuario usuario = usuarioRepository.findByIdKeycloak(idIam)
+                .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
+
+        if (dto.getNombre() != null) usuario.setNombre(dto.getNombre());
+        if (dto.getTelefono() != null) usuario.setTelefono(dto.getTelefono());
+        if (dto.getEmail() != null) usuario.setEmail(dto.getEmail());
+
+        usuario.setEditadoPor(idIam);
+        Usuario actualizado = usuarioRepository.save(usuario);
+
+        MunicipioResponseDTO municipio = ubicacionesClient.getMunicipio(actualizado.getIdMunicipio());
+        UsuarioResponseDTO response = UsuarioMapper.toDTO(actualizado, municipio);
+        usuarioEventPublisher.publicarActualizacion(response);
+        return response;
+    }
+
+    @Override
+    public boolean existsByCedula(String cedula) {
+        return usuarioRepository.findByCedula(cedula).isPresent();
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return usuarioRepository.findByEmail(email).isPresent();
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        return usuarioRepository.findByUsername(username).isPresent();
     }
 }

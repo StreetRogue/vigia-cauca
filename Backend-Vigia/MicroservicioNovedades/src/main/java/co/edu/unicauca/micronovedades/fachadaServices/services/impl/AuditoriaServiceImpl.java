@@ -6,6 +6,7 @@ import co.edu.unicauca.micronovedades.fachadaServices.DTO.respuesta.AuditoriaNov
 import co.edu.unicauca.micronovedades.fachadaServices.mapper.NovedadMapper;
 import co.edu.unicauca.micronovedades.fachadaServices.services.IAuditoriaService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,5 +34,14 @@ public class AuditoriaServiceImpl implements IAuditoriaService {
         List<AuditoriaNovedadEntity> historial = auditoriaRepository
                 .findByUsuarioIdOrderByFechaDesc(usuarioId);
         return mapper.toAuditoriaDTOList(historial);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AuditoriaNovedadDTORespuesta> obtenerActividadReciente(int limite) {
+        List<AuditoriaNovedadEntity> reciente = auditoriaRepository
+                .obtenerActividadReciente(PageRequest.of(0, limite))
+                .getContent();
+        return mapper.toAuditoriaDTOList(reciente);
     }
 }

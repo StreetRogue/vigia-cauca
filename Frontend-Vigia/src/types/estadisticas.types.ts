@@ -11,6 +11,7 @@ export interface FiltrosDashboard {
   nivelConfianza?:  NivelConfianza;
   genero?:          Genero;
   grupoPoblacional?: GrupoPoblacional;
+  usuarioId?:       string;   // para filtrar KPIs por operador
 }
 
 // ── KPIs ─────────────────────────────────────────────────────────────────────

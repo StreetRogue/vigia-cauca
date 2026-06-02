@@ -1,18 +1,6 @@
 import type { ResumenKPIDTO } from '../../../types/estadisticas.types';
 import styles from './BentoKpiRow.module.css';
 
-// ── Mock para desarrollo sin backend ─────────────────────────────────────────
-const MOCK: ResumenKPIDTO = {
-  anio: 2025,
-  municipio: 'Todos los municipios',
-  totalEventos: 847,
-  totalMuertos: 214,
-  totalHeridos: 389,
-  totalDesplazados: 2841,
-  totalConfinados: 456,
-  filtrosAplicados: {},
-};
-
 function fmt(n: number) {
   return n.toLocaleString('es-CO');
 }
@@ -96,7 +84,7 @@ interface BentoKpiRowProps {
 }
 
 export function BentoKpiRow({ resumen, loading }: BentoKpiRowProps) {
-  const d = resumen ?? MOCK;
+  const d = resumen ?? { totalEventos: 0, totalMuertos: 0, totalHeridos: 0, totalDesplazados: 0, totalConfinados: 0, filtrosAplicados: {} };
 
   return (
     <div className={`${styles.row} ${loading ? styles.loading : ''}`}>

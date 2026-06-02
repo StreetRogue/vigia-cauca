@@ -18,6 +18,7 @@ import unicauca.edu.co.micro_usuarios.Exceptions.IamException;
 import unicauca.edu.co.micro_usuarios.Util.KeycloakProvider;
 
 import java.util.*;
+import java.util.Collections;
 
 @Slf4j
 @Service
@@ -34,7 +35,7 @@ public class KeycloakService implements IamService {
     }
 
     @Override
-    public String crearUsuario(String email, String username, Rol rol) {
+    public String crearUsuario(String email, String username, Rol rol, String password) {
         try {
             UsersResource userResource = keycloakProvider.getUsersResource();
 
@@ -42,6 +43,8 @@ public class KeycloakService implements IamService {
             userRepresentation.setEmail(email);
             userRepresentation.setUsername(username);
             userRepresentation.setEnabled(true);
+            userRepresentation.setEmailVerified(true);
+            userRepresentation.setRequiredActions(Collections.emptyList());
 
             Response response = userResource.create(userRepresentation);
             int status = response.getStatus();
@@ -51,25 +54,47 @@ public class KeycloakService implements IamService {
                 String userId = path.substring(path.lastIndexOf("/") + 1);
 
                 CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
-                credentialRepresentation.setTemporary(true);
+                credentialRepresentation.setTemporary(false);
                 credentialRepresentation.setType(OAuth2Constants.PASSWORD);
-                credentialRepresentation.setValue(generarPasswordTemporal());
+                credentialRepresentation.setValue(password != null ? password : generarPasswordTemporal());
                 userResource.get(userId).resetPassword(credentialRepresentation);
 
                 asignarRol(userId, rol);
 
                 return userId;
             } else if (status == 409) {
-                log.error("El usuario ya existe en Keycloak");
-                throw new IamException("El usuario ya existe en Keycloak");
+                // Intenta extraer más detalles del conflicto
+                String responseBody = response.readEntity(String.class);
+                log.error("Conflicto creando usuario en Keycloak | username={} | response={}", username, responseBody);
+
+                String errorMsg = "El usuario ya existe en el sistema de autenticación";
+                if (responseBody.toLowerCase().contains("email")) {
+                    errorMsg = "Email ya existe en el sistema de autenticación";
+                } else if (responseBody.toLowerCase().contains("username")) {
+                    errorMsg = "Nombre de usuario ya existe en el sistema de autenticación";
+                }
+
+                throw new IamException(errorMsg);
+            } else if (status == 400) {
+                String responseBody = response.readEntity(String.class);
+                log.error("Error de validación creando usuario en Keycloak: {} | response={}", username, responseBody);
+                throw new IamException("Los datos del usuario no son válidos: " + responseBody);
             } else {
-                log.error("Error creando el usuario en Keycloak");
-                throw new IamException("Error creando el usuario en Keycloak");
+                log.error("Error creando usuario en Keycloak | username={} | status={}", username, status);
+                throw new IamException("No se pudo registrar el usuario (error " + status + ")");
             }
 
+        } catch (IamException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("Error creando usuario en Keycloak | email={}", email, e);
-            throw new IamException("No se pudo crear el usuario en Keycloak");
+            log.error("Error inesperado creando usuario en Keycloak | email={} | error={}", email, e.getMessage(), e);
+            String errorMsg = e.getMessage();
+            if (errorMsg != null && errorMsg.contains("Connection refused")) {
+                throw new IamException("Servicio de autenticación no disponible. Intenta más tarde.");
+            } else if (errorMsg != null && errorMsg.contains("timeout")) {
+                throw new IamException("Tiempo de espera agotado con el servicio de autenticación.");
+            }
+            throw new IamException("Error del servicio de autenticación: " + (errorMsg != null ? errorMsg : "Desconocido"));
         }
     }
 
@@ -142,6 +167,12 @@ public class KeycloakService implements IamService {
     }
 
     private String generarPasswordTemporal() {
-        return "Temp1234*";
+        String caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
+        StringBuilder password = new StringBuilder();
+        Random random = new Random();
+        for (int i = 0; i < 12; i++) {
+            password.append(caracteres.charAt(random.nextInt(caracteres.length())));
+        }
+        return password.toString();
     }
 }

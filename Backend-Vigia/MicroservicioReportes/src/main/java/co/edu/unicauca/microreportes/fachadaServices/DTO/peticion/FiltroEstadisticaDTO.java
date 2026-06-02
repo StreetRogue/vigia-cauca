@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -23,6 +24,9 @@ public class FiltroEstadisticaDTO {
     // Filtros demográficos de víctimas (alineados con VictimaEntity de MicroservicioNovedades)
     private Genero genero;
     private GrupoPoblacional grupoPoblacional;
+
+    /** Cuando se provee, restringe los KPIs a las novedades creadas por este usuario (para OPERADOR). */
+    private UUID usuarioCreadorId;
 
     /**
      * Construye un mapa con solo los filtros que fueron suministrados.

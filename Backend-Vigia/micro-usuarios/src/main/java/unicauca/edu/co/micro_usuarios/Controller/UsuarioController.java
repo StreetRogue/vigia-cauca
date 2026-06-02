@@ -25,7 +25,7 @@ public class UsuarioController {
 
     // Registrar Operador
     @PostMapping("/registrar")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<UsuarioResponseDTO> registrarUsuario(@Valid @RequestBody UsuarioCreateDTO dto, @AuthenticationPrincipal Jwt jwt) {
         String adminAuth0Id = jwt.getSubject();
         UsuarioResponseDTO response = usuarioService.registrarUsuario(dto, adminAuth0Id);
@@ -55,6 +55,62 @@ public class UsuarioController {
     public ResponseEntity<UsuarioResponseDTO> getByIdIam(@PathVariable String idAuth0) {
         UsuarioResponseDTO response = usuarioService.getByIdIam(idAuth0);
         return ResponseEntity.ok(response);
+    }
+
+    // Eliminar usuario (soft-delete: cambia estado a INACTIVO)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> eliminarUsuario(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+        String adminAuth0Id = jwt.getSubject();
+        usuarioService.eliminarUsuario(id, adminAuth0Id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Perfil propio — cualquier usuario autenticado puede ver su propio perfil
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioResponseDTO> getMe(@AuthenticationPrincipal Jwt jwt) {
+        UsuarioResponseDTO response = usuarioService.getByIdIam(jwt.getSubject());
+        return ResponseEntity.ok(response);
+    }
+
+    // Actualizar perfil propio — cualquier usuario autenticado
+    @PutMapping("/me")
+    public ResponseEntity<UsuarioResponseDTO> actualizarPerfilMe(
+            @RequestBody UsuarioUpdateDTO dto,
+            @AuthenticationPrincipal Jwt jwt) {
+        UsuarioResponseDTO response = usuarioService.actualizarPerfilPropio(jwt.getSubject(), dto);
+        return ResponseEntity.ok(response);
+    }
+
+    // Cambio de contraseña propio — cualquier usuario autenticado
+    @PatchMapping("/me/password")
+    public ResponseEntity<Void> cambiarPasswordMe(
+            @RequestBody @Valid UsuarioUpdateDTO dto,
+            @AuthenticationPrincipal Jwt jwt) {
+        usuarioService.cambiarPasswordPropio(jwt.getSubject(), dto.getPassword());
+        return ResponseEntity.noContent().build();
+    }
+
+    // Validaciones en tiempo real
+    @GetMapping("/validate/cedula/{cedula}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Boolean> validateCedula(@PathVariable String cedula) {
+        boolean exists = usuarioService.existsByCedula(cedula);
+        return ResponseEntity.ok(exists);
+    }
+
+    @GetMapping("/validate/email")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Boolean> validateEmail(@RequestParam String email) {
+        boolean exists = usuarioService.existsByEmail(email);
+        return ResponseEntity.ok(exists);
+    }
+
+    @GetMapping("/validate/username")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Boolean> validateUsername(@RequestParam String username) {
+        boolean exists = usuarioService.existsByUsername(username);
+        return ResponseEntity.ok(exists);
     }
 
     // Listar usuarios (Se puede aplicar filtros)

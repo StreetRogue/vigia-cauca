@@ -27,19 +27,6 @@ const PALETTE = [
   'var(--dash-text-2)',
 ];
 
-// ── Mock ──────────────────────────────────────────────────────────────────────
-const MOCK: DistribucionDTO[] = [
-  { etiqueta: 'ADULTO',         frecuenciaAbsoluta: 412, frecuenciaRelativa: 38.5, frecuenciaAcumulada: 38.5 },
-  { etiqueta: 'ADOLESCENTE',    frecuenciaAbsoluta: 198, frecuenciaRelativa: 18.5, frecuenciaAcumulada: 57.0 },
-  { etiqueta: 'NINO',           frecuenciaAbsoluta: 143, frecuenciaRelativa: 13.4, frecuenciaAcumulada: 70.4 },
-  { etiqueta: 'INDIGENA',       frecuenciaAbsoluta: 121, frecuenciaRelativa: 11.3, frecuenciaAcumulada: 81.7 },
-  { etiqueta: 'ADULTO_MAYOR',   frecuenciaAbsoluta:  87, frecuenciaRelativa:  8.1, frecuenciaAcumulada: 89.8 },
-  { etiqueta: 'CAMPESINO',      frecuenciaAbsoluta:  54, frecuenciaRelativa:  5.0, frecuenciaAcumulada: 94.8 },
-  { etiqueta: 'AFRODESCENDIENTE',frecuenciaAbsoluta: 31, frecuenciaRelativa:  2.9, frecuenciaAcumulada: 97.7 },
-  { etiqueta: 'DISCAPACIDAD',   frecuenciaAbsoluta:  14, frecuenciaRelativa:  1.3, frecuenciaAcumulada: 99.0 },
-  { etiqueta: 'OTRO',           frecuenciaAbsoluta:  11, frecuenciaRelativa:  1.0, frecuenciaAcumulada: 100  },
-];
-
 function fmt(n: number) { return n.toLocaleString('es-CO'); }
 
 interface GrupoPoblacionalPanelProps {
@@ -48,7 +35,7 @@ interface GrupoPoblacionalPanelProps {
 }
 
 export function GrupoPoblacionalPanel({ grupos, loading }: GrupoPoblacionalPanelProps) {
-  const data   = grupos?.length ? grupos : MOCK;
+  const data   = grupos ?? [];
   const sorted = [...data].sort((a, b) => b.frecuenciaAbsoluta - a.frecuenciaAbsoluta);
   const max    = Math.max(...sorted.map((g) => g.frecuenciaAbsoluta), 1);
 

@@ -1,25 +1,14 @@
 package co.edu.unicauca.microreportes.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * CORS es responsabilidad exclusiva del API Gateway (SecurityConfiguration).
+ * Este microservicio solo es accesible desde el gateway, por lo que no
+ * necesita su propia configuración CORS — hacerlo duplica el header
+ * Access-Control-Allow-Origin y el navegador rechaza la respuesta.
+ */
 @Configuration
 public class CorsConfig {
-
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/**")
-                        .allowedOrigins("*")
-                        .allowedMethods("GET", "POST", "OPTIONS")
-                        .allowedHeaders("*")
-                        .exposedHeaders("Content-Disposition")
-                        .maxAge(3600);
-            }
-        };
-    }
+    // Intencionalmenте vacío: el gateway gestiona CORS
 }

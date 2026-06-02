@@ -28,6 +28,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    // Cédula duplicada (400)
+    @ExceptionHandler(CedulaAlreadyExistsException.class)
+    public ResponseEntity<ApiError> handleCedulaExists(
+            CedulaAlreadyExistsException ex,
+            HttpServletRequest request) {
+
+        ApiError error = ApiError.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("CEDULA_ALREADY_EXISTS")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.badRequest().body(error);
+    }
+
     // Email duplicado (400)
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<ApiError> handleEmailExists(

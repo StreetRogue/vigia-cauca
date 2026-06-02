@@ -1,0 +1,216 @@
+.panel {
+  height: 100%;
+  background: var(--color-surface-card, #ffffff);
+  border-left: 1px solid var(--color-border-soft, #eeeeee);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px;
+  color: #bbbbbb;
+}
+
+.placeholderIcon {
+  font-size: 40px;
+  opacity: 0.4;
+}
+
+.placeholderText {
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-bottom: 1px solid #eeeeee;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-primary-500, #0066cc);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.headerInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.headerTitle {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--color-text-primary, #000);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.headerSubtitle {
+  font-size: 12px;
+  color: var(--color-text-muted, #888);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.editBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border-soft, #ddd);
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--color-text-secondary, #333);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.editBtn:hover {
+  background: var(--color-surface-hover, #f5f5f5);
+  border-color: var(--color-border-default, #ccc);
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.section {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.divider {
+  height: 1px;
+  background: var(--color-border-soft, #eeeeee);
+  margin: 0;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.infoLabel {
+  font-weight: 600;
+  color: var(--color-text-secondary, #666);
+  flex-shrink: 0;
+}
+
+.infoValue {
+  color: var(--color-text-primary, #000);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.adminBadge {
+  background: #e3f2fd;
+  color: #0066cc;
+}
+
+.operatorBadge {
+  background: #e8f5e9;
+  color: #127850;
+}
+
+.activeBadge {
+  background: #e8f5e9;
+  color: #127850;
+}
+
+.inactiveBadge {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.actionButtonsGroup {
+  padding: 16px 20px 20px;
+  margin-top: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.actionBtn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.actionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.actionBtnActivate {
+  background: #e8f5e9;
+  color: #127850;
+}
+
+.actionBtnActivate:hover:not(:disabled) {
+  background: #127850;
+  color: white;
+}
+
+.actionBtnDeactivate {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.actionBtnDeactivate:hover:not(:disabled) {
+  background: #f57c00;
+  color: white;
+}

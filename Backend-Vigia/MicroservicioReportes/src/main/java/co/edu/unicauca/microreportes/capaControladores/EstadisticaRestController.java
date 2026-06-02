@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Endpoints para el dashboard de estadísticas.
@@ -71,11 +72,14 @@ public class EstadisticaRestController {
             @RequestParam(required = false) String municipio,
             @RequestParam(required = false) CategoriaEvento categoria,
             @RequestParam(required = false) NivelConfianza nivelConfianza,
+            @RequestParam(required = false) UUID usuarioId,
             @RequestHeader(value = "X-User-Role", defaultValue = "VISITANTE") String rol
     ) {
         FiltroEstadisticaDTO filtro = FiltroEstadisticaDTO.builder()
                 .anio(anio).mes(mes).municipio(municipio)
-                .categoria(categoria).nivelConfianza(nivelConfianza).build();
+                .categoria(categoria).nivelConfianza(nivelConfianza)
+                .usuarioCreadorId(usuarioId)
+                .build();
         return ResponseEntity.ok(estadisticaService.obtenerResumenKPI(filtro, rol));
     }
 

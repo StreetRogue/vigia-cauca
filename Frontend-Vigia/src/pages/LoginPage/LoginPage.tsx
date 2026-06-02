@@ -1,10 +1,14 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { LoginPanel } from "../../components/organisms";
 import { LoginTemplate } from "../../components/templates";
 import type { CredentialsFieldErrors } from "../../components/shared";
+import { useAuth } from "../../context/AuthContext";
 
 export function LoginPage() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -12,9 +16,9 @@ export function LoginPage() {
     email: undefined,
     password: undefined,
   });
-  const [status, setStatus] = useState<"idle" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "error" | "submitting">("idle");
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const nextErrors: CredentialsFieldErrors = {
@@ -29,7 +33,18 @@ export function LoginPage() {
       return;
     }
 
-    setStatus("idle");
+    setStatus("submitting");
+    try {
+      await login(email, password);
+      setStatus("idle");
+      navigate("/dashboard");
+    } catch (err) {
+      setStatus("error");
+      setFieldErrors({
+        email: undefined,
+        password: err instanceof Error ? err.message : "Credenciales inválidas",
+      });
+    }
   };
 
   return (
@@ -39,7 +54,7 @@ export function LoginPage() {
           email={email}
           password={password}
           showPassword={showPassword}
-          status={status}
+          status={status === "submitting" ? "submitting" : status === "error" ? "error" : "idle"}
           fieldErrors={fieldErrors}
           onEmailChange={setEmail}
           onPasswordChange={setPassword}

@@ -1,6 +1,8 @@
 package co.edu.unicauca.micronovedades.fachadaServices.services.impl;
 
+import co.edu.unicauca.micronovedades.capaAccesoDatos.models.NovedadEntity;
 import co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.*;
+import co.edu.unicauca.micronovedades.capaAccesoDatos.repositories.NovedadRepository;
 import co.edu.unicauca.micronovedades.capaControladores.controladorExcepciones.BadRequestException;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion.AfectacionHumanaDTOPeticion;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion.NovedadDTOPeticion;
@@ -10,7 +12,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFDataValidation;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,6 +35,7 @@ import java.util.*;
 public class ExcelNovedadService {
 
     private final INovedadService novedadService;
+    private final NovedadRepository novedadRepository;
 
     /** Cabeceras esperadas en el Excel de carga masiva (en orden). */
     static final String[] HEADERS_PLANTILLA = {
@@ -93,7 +99,7 @@ public class ExcelNovedadService {
                     "ELN,FUERZA_PUBLICA",
                     "Puente vial afectado", "Patrullaje inmediato",
                     "Se registró enfrentamiento entre grupos armados y fuerza pública",
-                    "ALTA", "PUBLICA",
+                    "CONFIRMADO", "PUBLICA",
                     "2", "1", "1", "3", "2", "0", "0"
             };
             for (int i = 0; i < valores.length; i++) {
@@ -104,6 +110,13 @@ public class ExcelNovedadService {
 
             // Hoja 2: valores permitidos
             crearHojaReferencia(workbook);
+
+            // Agregar validación de datos (dropdowns) a partir de fila 4
+            try {
+                agregarValidacionDatos((XSSFWorkbook) workbook, (XSSFSheet) sheet);
+            } catch (Exception e) {
+                log.warn("Error agregando validaciones: " + e.getMessage());
+            }
 
             // Autoajustar columnas
             for (int i = 0; i < numCols; i++) {
@@ -129,6 +142,7 @@ public class ExcelNovedadService {
 
         List<NovedadDTORespuesta> creadas = new ArrayList<>();
         List<Map<String, Object>> errores = new ArrayList<>();
+        Set<String> firmasProcesadas = new HashSet<>();
 
         try (InputStream is = file.getInputStream();
              XSSFWorkbook workbook = new XSSFWorkbook(is)) {
@@ -149,8 +163,10 @@ public class ExcelNovedadService {
             Map<String, Integer> colIndex = mapearColumnas(headerRow);
             validarHeadersObligatorios(colIndex);
 
-            // Procesar filas de datos
+            // Paso 1: Parsear y validar todas las filas acumulando las válidas
             int totalFilas = 0;
+            List<NovedadDTOPeticion> loteValido = new ArrayList<>();
+
             for (int r = headerRowIndex + 1; r <= sheet.getLastRowNum(); r++) {
                 Row row = sheet.getRow(r);
                 if (row == null || esFilaVacia(row)) continue;
@@ -158,14 +174,39 @@ public class ExcelNovedadService {
 
                 try {
                     NovedadDTOPeticion peticion = parsearFila(row, colIndex, usuarioId);
-                    NovedadDTORespuesta respuesta = novedadService.crearNovedad(peticion);
-                    creadas.add(respuesta);
+                    String firma = construirFirmaDuplicada(peticion);
+                    if (firmasProcesadas.contains(firma) || existeDuplicadaEnBaseDatos(peticion)) {
+                        Map<String, Object> error = new LinkedHashMap<>();
+                        error.put("fila", r + 1);
+                        error.put("error", "Novedad duplicada: ya existe con los mismos FECHA, HORA, MUNICIPIO, LOCALIDAD, CATEGORIA y ACTORES");
+                        errores.add(error);
+                        log.warn("Fila {} omitida por duplicado: {}", r + 1, firma);
+                        continue;
+                    }
+                    loteValido.add(peticion);
+                    firmasProcesadas.add(firma);
                 } catch (Exception e) {
                     Map<String, Object> error = new LinkedHashMap<>();
                     error.put("fila", r + 1);
                     error.put("error", e.getMessage());
                     errores.add(error);
                     log.warn("Error en fila {}: {}", r + 1, e.getMessage());
+                }
+            }
+
+            // Paso 2: Insertar todas las válidas en UNA sola transacción + 1 evento RabbitMQ
+            if (!loteValido.isEmpty()) {
+                try {
+                    List<NovedadDTORespuesta> resultado_lote = novedadService.crearEnLote(loteValido);
+                    creadas.addAll(resultado_lote);
+                    log.info("[Excel] {} novedades insertadas en batch", resultado_lote.size());
+                } catch (Exception e) {
+                    log.error("[Excel] Error en batch insert: {}", e.getMessage());
+                    // Si falla el batch, registrar error general
+                    Map<String, Object> error = new LinkedHashMap<>();
+                    error.put("fila", "lote completo");
+                    error.put("error", "Error al insertar el lote: " + e.getMessage());
+                    errores.add(error);
                 }
             }
 
@@ -287,6 +328,94 @@ public class ExcelNovedadService {
         if (lista.isEmpty()) throw new BadRequestException("ACTORES no puede estar vacío");
         if (lista.size() > 10) throw new BadRequestException("Se permiten máximo 10 actores por fila");
         return lista;
+    }
+
+    private String construirFirmaDuplicada(NovedadDTORespuesta novedad) {
+        return construirFirmaDuplicada(
+                novedad.getFechaHecho(),
+                novedad.getHoraInicio(),
+                novedad.getHoraFin(),
+                novedad.getMunicipio(),
+                novedad.getLocalidadEspecifica(),
+                novedad.getCategoria(),
+                novedad.getActores()
+        );
+    }
+
+    private String construirFirmaDuplicada(NovedadDTOPeticion peticion) {
+        return construirFirmaDuplicada(
+                peticion.getFechaHecho(),
+                peticion.getHoraInicio(),
+                peticion.getHoraFin(),
+                peticion.getMunicipio(),
+                peticion.getLocalidadEspecifica(),
+                peticion.getCategoria(),
+                peticion.getActores()
+        );
+    }
+
+    private String construirFirmaDuplicada(LocalDate fechaHecho,
+                                           LocalTime horaInicio,
+                                           LocalTime horaFin,
+                                           String municipio,
+                                           String localidad,
+                                           CategoriaEvento categoria,
+                                           Collection<Actor> actores) {
+        List<String> actoresNormalizados = actores == null
+                ? Collections.emptyList()
+                : actores.stream()
+                .filter(Objects::nonNull)
+                .map(Enum::name)
+                .map(String::trim)
+                .map(String::toUpperCase)
+                .sorted()
+                .toList();
+
+        return String.join("|",
+                fechaHecho != null ? fechaHecho.toString() : "",
+                horaInicio != null ? horaInicio.toString() : "",
+                horaFin != null ? horaFin.toString() : "",
+                normalizarTexto(municipio),
+                normalizarTexto(localidad),
+                categoria != null ? categoria.name() : "",
+                String.join(",", actoresNormalizados)
+        );
+    }
+
+    private boolean existeDuplicadaEnBaseDatos(NovedadDTOPeticion peticion) {
+        List<NovedadEntity> candidatas = novedadRepository.buscarCandidatasDuplicadas(
+                peticion.getFechaHecho(),
+                peticion.getHoraInicio(),
+                peticion.getHoraFin(),
+                peticion.getMunicipio(),
+                peticion.getLocalidadEspecifica(),
+                peticion.getCategoria(),
+                peticion.getActores().size()
+        );
+
+        Set<String> actoresNuevos = normalizarActores(peticion.getActores());
+        for (NovedadEntity candidata : candidatas) {
+            if (actoresNuevos.equals(normalizarActores(candidata.getActores()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Set<String> normalizarActores(Collection<Actor> actores) {
+        if (actores == null || actores.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return actores.stream()
+                .filter(Objects::nonNull)
+                .map(Enum::name)
+                .map(String::trim)
+                .map(s -> s.toUpperCase(Locale.ROOT))
+                .collect(java.util.stream.Collectors.toCollection(TreeSet::new));
+    }
+
+    private String normalizarTexto(String valor) {
+        return valor == null ? "" : valor.trim().toUpperCase(Locale.ROOT);
     }
 
     // ==========================================
@@ -428,16 +557,18 @@ public class ExcelNovedadService {
         CellStyle style = wb.createCellStyle();
         Font font = wb.createFont();
         font.setBold(true);
-        font.setFontHeightInPoints((short) 13);
-        font.setColor(IndexedColors.DARK_BLUE.getIndex());
+        font.setFontHeightInPoints((short) 14);
+        font.setColor(IndexedColors.WHITE.getIndex());
         style.setFont(font);
         style.setAlignment(HorizontalAlignment.CENTER);
         style.setVerticalAlignment(VerticalAlignment.CENTER);
+        style.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
         Row row = sheet.createRow(0);
-        row.setHeightInPoints(24);
+        row.setHeightInPoints(28);
         Cell cell = row.createCell(0);
-        cell.setCellValue("Plantilla Carga Masiva de Novedades - Vigía Cauca");
+        cell.setCellValue("VIGÍA CAUCA — Carga Masiva de Novedades");
         cell.setCellStyle(style);
         sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, numCols - 1));
     }
@@ -466,12 +597,12 @@ public class ExcelNovedadService {
         Font font = wb.createFont();
         font.setBold(true);
         font.setColor(IndexedColors.WHITE.getIndex());
-        font.setFontHeightInPoints((short) 10);
+        font.setFontHeightInPoints((short) 11);
         style.setFont(font);
         style.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         style.setBorderBottom(BorderStyle.MEDIUM);
-        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderTop(BorderStyle.MEDIUM);
         style.setBorderLeft(BorderStyle.THIN);
         style.setBorderRight(BorderStyle.THIN);
         style.setAlignment(HorizontalAlignment.CENTER);
@@ -485,8 +616,9 @@ public class ExcelNovedadService {
         Font font = wb.createFont();
         font.setColor(IndexedColors.GREY_50_PERCENT.getIndex());
         font.setItalic(true);
+        font.setFontHeightInPoints((short) 9);
         style.setFont(font);
-        style.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex());
+        style.setFillForegroundColor(IndexedColors.LIGHT_CORNFLOWER_BLUE.getIndex());
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         style.setBorderBottom(BorderStyle.THIN);
         style.setBorderLeft(BorderStyle.THIN);
@@ -508,26 +640,137 @@ public class ExcelNovedadService {
         };
 
         CellStyle headerStyle = wb.createCellStyle();
-        Font hf = wb.createFont(); hf.setBold(true);
+        Font hf = wb.createFont();
+        hf.setBold(true);
+        hf.setColor(IndexedColors.WHITE.getIndex());
+        hf.setFontHeightInPoints((short) 11);
         headerStyle.setFont(hf);
-        headerStyle.setFillForegroundColor(IndexedColors.CORNFLOWER_BLUE.getIndex());
+        headerStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        headerStyle.setAlignment(HorizontalAlignment.CENTER);
+        headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
         Row titulo = ref.createRow(0);
+        titulo.setHeightInPoints(22);
         Cell t = titulo.createCell(0); t.setCellValue("CAMPO"); t.setCellStyle(headerStyle);
         Cell t2 = titulo.createCell(1); t2.setCellValue("VALORES PERMITIDOS"); t2.setCellStyle(headerStyle);
 
+        // Crear columnas ocultas (D, E, F, G) con los valores enum para usar en validaciones
+        crearColumnasEnumerados(wb, ref);
+
         for (int i = 0; i < datos.length; i++) {
             Row row = ref.createRow(i + 1);
-            row.createCell(0).setCellValue(datos[i][0]);
+            row.setHeightInPoints(35);
+            Cell fc = row.createCell(0);
+            fc.setCellValue(datos[i][0]);
+            CellStyle fs = wb.createCellStyle();
+            Font f = wb.createFont();
+            f.setBold(true);
+            fs.setFont(f);
+            fs.setAlignment(HorizontalAlignment.LEFT);
+            fs.setVerticalAlignment(VerticalAlignment.TOP);
+            fs.setBorderBottom(BorderStyle.THIN);
+            fs.setBorderLeft(BorderStyle.THIN);
+            fs.setBorderRight(BorderStyle.THIN);
+            fc.setCellStyle(fs);
+
             Cell vc = row.createCell(1);
             vc.setCellValue(datos[i][1]);
             CellStyle ws = wb.createCellStyle();
             ws.setWrapText(true);
+            ws.setAlignment(HorizontalAlignment.LEFT);
+            ws.setVerticalAlignment(VerticalAlignment.TOP);
+            ws.setBorderBottom(BorderStyle.THIN);
+            ws.setBorderLeft(BorderStyle.THIN);
+            ws.setBorderRight(BorderStyle.THIN);
             vc.setCellStyle(ws);
-            row.setHeightInPoints(30);
         }
-        ref.autoSizeColumn(0);
-        ref.setColumnWidth(1, 18000);
+        ref.setColumnWidth(0, 4000);
+        ref.setColumnWidth(1, 20000);
+    }
+
+    // ==========================================
+    // PRIVADOS — validación de datos Excel
+    // ==========================================
+
+    private void crearColumnasEnumerados(XSSFWorkbook wb, Sheet ref) {
+        try {
+            // Obtener valores enum
+            String[] categorias = Arrays.stream(CategoriaEvento.values()).map(Enum::name).toArray(String[]::new);
+            String[] actores = Arrays.stream(Actor.values()).map(Enum::name).toArray(String[]::new);
+            String[] nivelConfZa = Arrays.stream(NivelConfianza.values()).map(Enum::name).toArray(String[]::new);
+            String[] nivelVisi = Arrays.stream(NivelVisibilidad.values()).map(Enum::name).toArray(String[]::new);
+
+            // Crear valores en columnas D, E, F, G (ocultas)
+            crearColumnaValores(ref, 3, categorias, "CATEGORIA");      // Columna D
+            crearColumnaValores(ref, 4, actores, "ACTORES");           // Columna E
+            crearColumnaValores(ref, 5, nivelConfZa, "NIVEL_CONFIANZA"); // Columna F
+            crearColumnaValores(ref, 6, nivelVisi, "NIVEL_VISIBILIDAD"); // Columna G
+
+            // Ocultar columnas D-G
+            ref.setColumnHidden(3, true);
+            ref.setColumnHidden(4, true);
+            ref.setColumnHidden(5, true);
+            ref.setColumnHidden(6, true);
+
+            log.info("Columnas de enumerados creadas y ocultas");
+        } catch (Exception e) {
+            log.error("Error creando columnas enumerados: " + e.getMessage());
+        }
+    }
+
+    private void crearColumnaValores(Sheet sheet, int colIndex, String[] valores, String titulo) {
+        Row headerRow = sheet.getRow(0);
+        if (headerRow == null) headerRow = sheet.createRow(0);
+        Cell headerCell = headerRow.createCell(colIndex);
+        headerCell.setCellValue(titulo);
+
+        for (int i = 0; i < valores.length; i++) {
+            Row row = sheet.getRow(i + 1);
+            if (row == null) row = sheet.createRow(i + 1);
+            Cell cell = row.createCell(colIndex);
+            cell.setCellValue(valores[i]);
+        }
+    }
+
+    private void agregarValidacionDatos(XSSFWorkbook workbook, XSSFSheet sheet) {
+        try {
+            log.info("Iniciando agregación de validaciones Excel");
+
+            int firstRow = 3;
+            int lastRow = 999;
+
+            String[] categorias = Arrays.stream(CategoriaEvento.values()).map(Enum::name).toArray(String[]::new);
+            String[] actores = Arrays.stream(Actor.values()).map(Enum::name).toArray(String[]::new);
+            String[] nivelConfZa = Arrays.stream(NivelConfianza.values()).map(Enum::name).toArray(String[]::new);
+            String[] nivelVisi = Arrays.stream(NivelVisibilidad.values()).map(Enum::name).toArray(String[]::new);
+
+            crearValidacionLista(workbook, sheet, 5, firstRow, lastRow, categorias);
+            crearValidacionLista(workbook, sheet, 6, firstRow, lastRow, actores);
+            crearValidacionLista(workbook, sheet, 10, firstRow, lastRow, nivelConfZa);
+            crearValidacionLista(workbook, sheet, 11, firstRow, lastRow, nivelVisi);
+
+            log.info("Validaciones agregadas correctamente");
+
+        } catch (Exception e) {
+            log.error("Error en agregarValidacionDatos: " + e.getMessage(), e);
+        }
+    }
+
+    private void crearValidacionLista(XSSFWorkbook workbook, XSSFSheet sheet, int colIndex,
+                                     int firstRow, int lastRow, String[] valores) {
+        try {
+            CellRangeAddressList rangeList = new CellRangeAddressList(firstRow, lastRow, colIndex, colIndex);
+
+            // Usar el DataValidationHelper del sheet
+            DataValidationHelper helper = sheet.getDataValidationHelper();
+            DataValidationConstraint constraint = helper.createExplicitListConstraint(valores);
+            DataValidation validation = helper.createValidation(constraint, rangeList);
+
+            sheet.addValidationData(validation);
+            log.debug("Agregada validacion: col=" + colIndex + ", valores=" + valores.length);
+        } catch (Exception e) {
+            log.error("Error en validacion col " + colIndex + ": " + e.getMessage());
+        }
     }
 }

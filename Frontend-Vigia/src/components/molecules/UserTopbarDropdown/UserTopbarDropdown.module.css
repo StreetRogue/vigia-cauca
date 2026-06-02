@@ -1,0 +1,150 @@
+.userChipWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.userChip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border-soft);
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.userChip:hover {
+  background: var(--color-surface-body);
+  border-color: var(--color-border-medium);
+}
+
+.userChipOpen {
+  background: var(--color-surface-body);
+  border-color: var(--color-primary-500);
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 2px;
+  background: var(--color-primary-500);
+  color: var(--color-text-on-dark);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.userName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.userRole {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  display: block;
+  margin-top: 2px;
+}
+
+.chevron {
+  transition: transform 0.15s;
+  color: var(--color-text-muted);
+}
+
+.chevronUp {
+  transform: rotate(180deg);
+}
+
+/* ── Dropdown ─────────────────────────────────────────── */
+
+.userDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  width: 200px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border-medium);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  overflow: hidden;
+  animation: slideDown 0.15s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.userDropdownHeader {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.userDropdownName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+.userDropdownRole {
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.userDropdownDivider {
+  height: 1px;
+  background: var(--color-border-soft);
+}
+
+.userDropdownItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+  font-family: inherit;
+}
+
+.userDropdownItem:hover {
+  background: var(--color-surface-body);
+  color: var(--color-text-primary);
+}
+
+.userDropdownItemActive {
+  color: var(--color-text-primary);
+  background: var(--color-surface-body);
+}
+
+.userDropdownItemDanger {
+  color: #c0392b;
+}
+
+.userDropdownItemDanger:hover {
+  background: rgba(192, 57, 43, 0.1);
+  color: #c0392b;
+}

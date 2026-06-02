@@ -32,15 +32,6 @@ const CAT_COLOR: Record<CategoriaEvento, string> = {
   OTRO:                   'var(--dash-text-2)',
 };
 
-// ── Mock fallback ─────────────────────────────────────────────────────────────
-const MOCK: EstadisticaCategoriaDTO[] = [
-  { categoria: 'ATAQUE_CON_DRON',       totalEventos: 23,  totalMuertos: 5 },
-  { categoria: 'HOSTIGAMIENTO',         totalEventos: 187, totalMuertos: 12 },
-  { categoria: 'HOMICIDIO',             totalEventos: 98,  totalMuertos: 98 },
-  { categoria: 'ENFRENTAMIENTO',        totalEventos: 45,  totalMuertos: 22 },
-  { categoria: 'RECLUTAMIENTO_ILICITO', totalEventos: 32,  totalMuertos: 0 },
-  { categoria: 'OTRO',                  totalEventos: 89,  totalMuertos: 4 },
-];
 
 interface CategoriesPanelProps {
   categorias?: EstadisticaCategoriaDTO[];
@@ -48,7 +39,7 @@ interface CategoriesPanelProps {
 }
 
 export function CategoriesPanel({ categorias, loading }: CategoriesPanelProps) {
-  const data = categorias ?? MOCK;
+  const data = categorias ?? [];
   const sorted = [...data].sort((a, b) => b.totalEventos - a.totalEventos);
 
   return (

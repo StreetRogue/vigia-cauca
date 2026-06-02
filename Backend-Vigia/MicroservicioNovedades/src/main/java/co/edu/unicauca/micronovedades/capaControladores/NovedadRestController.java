@@ -86,20 +86,31 @@ public class NovedadRestController {
 
     /**
      * GET /api/v1/microNovedades/novedades
+     * @param includeOcultas Si true, incluye novedades marcadas como ocultas (solo para ADMIN)
      */
     @GetMapping
-    public ResponseEntity<List<NovedadDTORespuesta>> listarTodas() {
-        return ResponseEntity.ok(novedadService.listarTodas());
+    public ResponseEntity<List<NovedadDTORespuesta>> listarTodas(
+            @RequestParam(defaultValue = "false") boolean includeOcultas
+    ) {
+        return ResponseEntity.ok(novedadService.listarTodas(includeOcultas));
     }
 
     /**
-     * GET /api/v1/microNovedades/novedades/paginado?page=0&size=20&sort=fechaHecho,desc
+     * GET /api/v1/microNovedades/novedades/paginado?page=0&size=20&sort=fechaHecho,desc&rol=ADMIN&usuarioId=...
+     * Si rol=ADMIN: retorna todas las novedades
+     * Si rol=OPERADOR: retorna solo las novedades creadas por ese usuario
      */
     @GetMapping("/paginado")
     public ResponseEntity<Page<NovedadDTORespuesta>> listarPaginado(
+            @RequestParam(required = false) String rol,
+            @RequestParam(required = false) UUID usuarioId,
             @PageableDefault(size = 20, sort = "fechaHecho") Pageable pageable
     ) {
-        return ResponseEntity.ok(novedadService.listarTodasPaginado(pageable));
+        // Si no viene rol, devolver todas (compatibilidad backwards)
+        if (rol == null || rol.isBlank()) {
+            return ResponseEntity.ok(novedadService.listarTodasPaginado(pageable));
+        }
+        return ResponseEntity.ok(novedadService.listarPaginadoPorRol(rol, usuarioId, pageable));
     }
 
     /**
@@ -147,6 +158,7 @@ public class NovedadRestController {
 
     /**
      * DELETE /api/v1/microNovedades/novedades/{id}?usuarioId={uuid}
+     * Soft-delete (marca como oculta)
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(
@@ -155,6 +167,18 @@ public class NovedadRestController {
     ) {
         novedadService.eliminarNovedad(id, usuarioId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * PATCH /api/v1/microNovedades/novedades/{id}/desocultar?usuarioId={uuid}
+     * Unhide a record (reverse soft-delete, admin only)
+     */
+    @PatchMapping("/{id}/desocultar")
+    public ResponseEntity<NovedadDTORespuesta> desocultar(
+            @PathVariable UUID id,
+            @RequestParam UUID usuarioId
+    ) {
+        return ResponseEntity.ok(novedadService.desocultarNovedad(id, usuarioId));
     }
 
     /**

@@ -38,4 +38,7 @@ public class UsuarioCreateDTO {
 
     @NotNull(message = "El rol es obligatorio")
     private Rol rol;
+
+    @NotBlank(message = "La contraseña es obligatoria")
+    private String password;
 }

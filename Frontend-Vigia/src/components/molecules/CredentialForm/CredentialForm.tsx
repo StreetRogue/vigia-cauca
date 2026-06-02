@@ -25,7 +25,7 @@ export function CredentialForm({
         label={copy.emailLabel}
         value={email}
         placeholder={copy.emailPlaceholder}
-        type="email"
+        type="text"
         autoComplete="email"
         disabled={disabled}
         invalid={Boolean(fieldErrors?.email)}

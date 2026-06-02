@@ -1,105 +1,101 @@
-import { useState } from "react";
-import { Button } from "../atoms/Button/Button";
-import { CloseButton } from "../atoms/CloseButton";
-import { TextInput } from "../atoms/TextInput/TextInput";
-import { FormField } from "../molecules/FormField";
-import styles from "./CreateUserDrawer.module.css";
+import { useState } from 'react';
+import { Button }      from '../atoms/Button/Button';
+import { CloseButton } from '../atoms/CloseButton';
+import { TextInput }   from '../atoms/TextInput/TextInput';
+import { FormField }   from '../molecules/FormField';
+import styles          from './CreateUserDrawer.module.css';
+import type { MunicipioDTO, RolUsuario, UsuarioCreatePayload } from '../../types/usuarios.types';
 
 export interface CreateUserDrawerProps {
-  open: boolean;
-  onClose: () => void;
+  open:         boolean;
+  municipios:   MunicipioDTO[];
   existingEmails?: string[];
-  onSave?: (payload: {
-    cedula: string;
-    nombreCompleto: string;
-    emailInstitucional: string;
-    telefono: string;
-    nombreUsuario: string;
-    rol: string;
-    municipio: string;
-  }) => void;
+  onClose:      () => void;
+  onSave:       (payload: UsuarioCreatePayload) => Promise<void>;
 }
 
-const roleOptions = ["ADMIN", "OPERADOR"];
-const municipalityOptions = ["Popayan", "Santander Q.", "Patia", "Timbio", "Bolivar", "Rosas", "Silvia", "Cajibio"];
+const roleOptions: RolUsuario[] = ['ADMIN', 'OPERADOR'];
 
 type FormErrors = Partial<{
-  cedula: string;
-  nombreCompleto: string;
-  emailInstitucional: string;
-  telefono: string;
-  nombreUsuario: string;
-  rol: string;
-  municipio: string;
+  cedula:      string;
+  nombre:      string;
+  email:       string;
+  telefono:    string;
+  username:    string;
+  rol:         string;
+  municipio:   string;
 }>;
 
-export function CreateUserDrawer({ open, onClose, existingEmails = [], onSave }: CreateUserDrawerProps) {
-  const [cedula, setCedula] = useState("");
-  const [nombreCompleto, setNombreCompleto] = useState("");
-  const [emailInstitucional, setEmailInstitucional] = useState("");
-  const [telefono, setTelefono] = useState("");
-  const [nombreUsuario, setNombreUsuario] = useState("");
-  const [rol, setRol] = useState("");
-  const [municipio, setMunicipio] = useState("");
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [formError, setFormError] = useState("");
+export function CreateUserDrawer({ open, municipios, existingEmails = [], onClose, onSave }: CreateUserDrawerProps) {
+  const [cedula,    setCedula]    = useState('');
+  const [nombre,    setNombre]    = useState('');
+  const [email,     setEmail]     = useState('');
+  const [telefono,  setTelefono]  = useState('');
+  const [username,  setUsername]  = useState('');
+  const [rol,       setRol]       = useState('');
+  const [municipio, setMunicipio] = useState('');
+  const [errors,    setErrors]    = useState<FormErrors>({});
+  const [formError, setFormError] = useState('');
+  const [saving,    setSaving]    = useState(false);
 
-  if (!open) {
-    return null;
-  }
+  if (!open) return null;
 
   const validate = (): FormErrors => {
-    const nextErrors: FormErrors = {};
-
-    if (!cedula.trim()) nextErrors.cedula = "Campo obligatorio.";
-    if (!nombreCompleto.trim()) nextErrors.nombreCompleto = "Campo obligatorio.";
-    if (!emailInstitucional.trim()) {
-      nextErrors.emailInstitucional = "Campo obligatorio.";
+    const e: FormErrors = {};
+    if (!cedula.trim())   e.cedula  = 'Campo obligatorio.';
+    if (!nombre.trim())   e.nombre  = 'Campo obligatorio.';
+    if (!email.trim()) {
+      e.email = 'Campo obligatorio.';
     } else {
-      const normalizedEmail = emailInstitucional.trim().toLowerCase();
+      const normalizedEmail = email.trim().toLowerCase();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-        nextErrors.emailInstitucional = "Correo institucional invalido.";
-      } else if (existingEmails.map((email) => email.toLowerCase()).includes(normalizedEmail)) {
-        nextErrors.emailInstitucional = "Correo ya en uso.";
+        e.email = 'Correo institucional inválido.';
+      } else if (existingEmails.map((x) => x.toLowerCase()).includes(normalizedEmail)) {
+        e.email = 'Correo ya en uso.';
       }
     }
-    if (!telefono.trim()) nextErrors.telefono = "Campo obligatorio.";
-    if (!nombreUsuario.trim()) {
-      nextErrors.nombreUsuario = "Campo obligatorio.";
-    } else if (!/^\w+$/.test(nombreUsuario.trim())) {
-      nextErrors.nombreUsuario = "Solo letras, numeros y guion bajo.";
+    if (!telefono.trim())  e.telefono = 'Campo obligatorio.';
+    if (!username.trim()) {
+      e.username = 'Campo obligatorio.';
+    } else if (!/^\w+$/.test(username.trim())) {
+      e.username = 'Solo letras, números y guion bajo.';
     }
-    if (!rol.trim()) nextErrors.rol = "Debes seleccionar un rol.";
-    if (!municipio.trim()) nextErrors.municipio = "Debes seleccionar un municipio.";
-
-    return nextErrors;
+    if (!rol)       e.rol      = 'Debes seleccionar un rol.';
+    if (!municipio) e.municipio = 'Debes seleccionar un municipio.';
+    return e;
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     const nextErrors = validate();
     setErrors(nextErrors);
-
     if (Object.keys(nextErrors).length > 0) {
-      const hasRequiredMissing = Object.values(nextErrors).some((error) => error === "Campo obligatorio.");
-      setFormError(hasRequiredMissing ? "Campos obligatorios faltantes." : "Revisa los campos con error.");
+      const hasRequired = Object.values(nextErrors).some((err) => err === 'Campo obligatorio.');
+      setFormError(hasRequired ? 'Campos obligatorios faltantes.' : 'Revisa los campos con error.');
       return;
     }
-
-    setFormError("");
-
-    onSave?.({
-      cedula,
-      nombreCompleto,
-      emailInstitucional,
-      telefono,
-      nombreUsuario,
-      rol,
-      municipio,
-    });
-
-    onClose();
+    setFormError('');
+    setSaving(true);
+    try {
+      await onSave({
+        cedula:      cedula.trim(),
+        nombre:      nombre.trim(),
+        email:       email.trim(),
+        telefono:    telefono.trim(),
+        username:    username.trim(),
+        rol:         rol as RolUsuario,
+        idMunicipio: Number(municipio),
+      });
+      // Limpiar formulario
+      setCedula(''); setNombre(''); setEmail(''); setTelefono('');
+      setUsername(''); setRol(''); setMunicipio('');
+      onClose();
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setFormError(msg ?? 'Error al guardar. Intenta de nuevo.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -116,47 +112,47 @@ export function CreateUserDrawer({ open, onClose, existingEmails = [], onSave }:
         </header>
 
         <form className={styles.form} onSubmit={handleSubmit} noValidate>
-          {formError ? <p className={styles.formError}>{formError}</p> : null}
+          {formError && <p className={styles.formError}>{formError}</p>}
 
           <p className={styles.section}>Datos personales</p>
 
           <FormField label="Cédula" required error={errors.cedula}>
             <TextInput
               value={cedula}
-              onChange={(event) => setCedula(event.target.value)}
+              onChange={(ev) => setCedula(ev.target.value)}
               placeholder="Ej. 1094123456"
               invalid={Boolean(errors.cedula)}
               required
             />
           </FormField>
 
-          <FormField label="Nombre completo" required error={errors.nombreCompleto}>
+          <FormField label="Nombre completo" required error={errors.nombre}>
             <TextInput
-              value={nombreCompleto}
-              onChange={(event) => setNombreCompleto(event.target.value)}
+              value={nombre}
+              onChange={(ev) => setNombre(ev.target.value)}
               placeholder="Ej. Maria Garcia Ruiz"
-              invalid={Boolean(errors.nombreCompleto)}
+              invalid={Boolean(errors.nombre)}
               required
             />
           </FormField>
 
           <div className={styles.twoCols}>
-            <FormField label="Email institucional" required error={errors.emailInstitucional}>
+            <FormField label="Email institucional" required error={errors.email}>
               <TextInput
-                value={emailInstitucional}
-                onChange={(event) => setEmailInstitucional(event.target.value)}
+                value={email}
+                onChange={(ev) => setEmail(ev.target.value)}
                 placeholder="usuario@cauca.gov.co"
                 type="email"
-                invalid={Boolean(errors.emailInstitucional)}
+                invalid={Boolean(errors.email)}
                 required
               />
             </FormField>
 
-            <FormField label="Telefono" required error={errors.telefono}>
+            <FormField label="Teléfono" required error={errors.telefono}>
               <TextInput
                 value={telefono}
-                onChange={(event) => setTelefono(event.target.value)}
-                placeholder="Ej. 310 456 7890"
+                onChange={(ev) => setTelefono(ev.target.value)}
+                placeholder="Ej. 3104567890"
                 invalid={Boolean(errors.telefono)}
                 required
               />
@@ -166,14 +162,14 @@ export function CreateUserDrawer({ open, onClose, existingEmails = [], onSave }:
           <FormField
             label="Nombre de usuario"
             required
-            hint="Solo letras, numeros y guion bajo. Sin espacios."
-            error={errors.nombreUsuario}
+            hint="Solo letras, números y guion bajo. Sin espacios."
+            error={errors.username}
           >
             <TextInput
-              value={nombreUsuario}
-              onChange={(event) => setNombreUsuario(event.target.value)}
+              value={username}
+              onChange={(ev) => setUsername(ev.target.value)}
               placeholder="usuario123"
-              invalid={Boolean(errors.nombreUsuario)}
+              invalid={Boolean(errors.username)}
               required
             />
           </FormField>
@@ -183,46 +179,40 @@ export function CreateUserDrawer({ open, onClose, existingEmails = [], onSave }:
           <div className={styles.twoCols}>
             <FormField label="Rol" required error={errors.rol}>
               <select
-                className={[styles.select, errors.rol ? styles.selectInvalid : ""].filter(Boolean).join(" ")}
+                className={[styles.select, errors.rol ? styles.selectInvalid : ''].filter(Boolean).join(' ')}
                 value={rol}
-                onChange={(event) => setRol(event.target.value)}
-                aria-invalid={errors.rol ? "true" : undefined}
+                onChange={(ev) => setRol(ev.target.value)}
                 required
               >
                 <option value="">Seleccionar...</option>
-                {roleOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
+                {roleOptions.map((o) => <option key={o} value={o}>{o}</option>)}
               </select>
             </FormField>
 
             <FormField label="Municipio" required error={errors.municipio}>
               <select
-                className={[styles.select, errors.municipio ? styles.selectInvalid : ""].filter(Boolean).join(" ")}
+                className={[styles.select, errors.municipio ? styles.selectInvalid : ''].filter(Boolean).join(' ')}
                 value={municipio}
-                onChange={(event) => setMunicipio(event.target.value)}
-                aria-invalid={errors.municipio ? "true" : undefined}
+                onChange={(ev) => setMunicipio(ev.target.value)}
                 required
               >
                 <option value="">Seleccionar...</option>
-                {municipalityOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
+                {municipios.map((m) => (
+                  <option key={m.idMunicipio} value={String(m.idMunicipio)}>{m.nombre}</option>
                 ))}
               </select>
             </FormField>
           </div>
 
-          <p className={styles.audit}>Los cambios quedan registrados en el historial de auditoria.</p>
+          <p className={styles.audit}>Los cambios quedan registrados en el historial de auditoría.</p>
 
           <div className={styles.actions}>
-            <Button type="button" variant="ghost" onClick={onClose} className={styles.cancelBtn}>
+            <Button type="button" variant="ghost" onClick={onClose} className={styles.cancelBtn} disabled={saving}>
               Cancelar
             </Button>
-            <Button type="submit" className={styles.saveBtn}>Guardar</Button>
+            <Button type="submit" className={styles.saveBtn} disabled={saving}>
+              {saving ? 'Guardando...' : 'Guardar'}
+            </Button>
           </div>
         </form>
       </aside>

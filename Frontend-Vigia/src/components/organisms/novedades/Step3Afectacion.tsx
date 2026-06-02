@@ -92,13 +92,17 @@ export function Step3Afectacion() {
         <div className="form-group row-2">
           <div className="input-col">
             <label>AFECTACION A CIVILES <span className="label-code">NOV-F21</span></label>
-            <input type="text" placeholder="SI / NO" value={afectacionCiviles} onChange={e => setAfectacionCiviles(e.target.value)} />
+            <select value={afectacionCiviles} onChange={e => setAfectacionCiviles(e.target.value)}>
+              <option value="" disabled hidden>Seleccionar</option>
+              <option value="Sí">Sí</option>
+              <option value="No">No</option>
+            </select>
           </div>
           <div className="input-col">
             <label>RECLUTAMIENTO DE MENORES <span className="label-code">NOV-F22</span></label>
             <select value={reclutamiento} onChange={e => setReclutamiento(e.target.value)}>
               <option value="" disabled hidden>Seleccionar</option>
-              {RECLUTAMIENTO_FLAGS.map(r => <option key={r} value={r}>{r}</option>)}
+              {RECLUTAMIENTO_FLAGS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
             </select>
           </div>
         </div>
@@ -142,7 +146,7 @@ export function Step3Afectacion() {
                         onChange={e => setVictimas(prev => prev.map(x => x.id === v.id ? { ...x, genero: e.target.value } : x))}
                       >
                         <option value="">—</option>
-                        {GENEROS_VICTIMA.map(g => <option key={g} value={g}>{g}</option>)}
+                        {GENEROS_VICTIMA.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
                       </select>
                     </td>
                     <td>
@@ -161,7 +165,7 @@ export function Step3Afectacion() {
                         onChange={e => setVictimas(prev => prev.map(x => x.id === v.id ? { ...x, grupoPoblacional: e.target.value } : x))}
                       >
                         <option value="">—</option>
-                        {GRUPOS_POBLACIONALES.map(g => <option key={g} value={g}>{g}</option>)}
+                        {GRUPOS_POBLACIONALES.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
                       </select>
                     </td>
                     <td>

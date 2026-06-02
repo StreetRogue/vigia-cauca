@@ -13,4 +13,12 @@ public interface UsuarioService {
     UsuarioResponseDTO getUserById(UUID id);
     UsuarioResponseDTO getByIdIam(String adminIdIam);
     PageResponseDTO<UsuarioResponseDTO> listarUsuarios(String rol, String estado, Long idMunicipio, int page, int size);
+
+    void eliminarUsuario(UUID id, String adminIdIam);
+    void cambiarPasswordPropio(String idIam, String newPassword);
+    UsuarioResponseDTO actualizarPerfilPropio(String idIam, UsuarioUpdateDTO dto);
+
+    boolean existsByCedula(String cedula);
+    boolean existsByEmail(String email);
+    boolean existsByUsername(String username);
 }

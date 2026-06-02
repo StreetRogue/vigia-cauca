@@ -8,7 +8,7 @@ export function TextInput({ className, invalid, maxLength, ...props }: TextInput
         .filter(Boolean)
         .join(" ")}
       aria-invalid={invalid || undefined}
-      maxLength={maxLength ?? 15}
+      maxLength={maxLength ?? 255}
       {...props}
     />
   );

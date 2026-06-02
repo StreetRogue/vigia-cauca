@@ -53,9 +53,10 @@ export const novedadesService = {
   },
 
   /** Lista todas las novedades (sin paginado). */
-  async listar(): Promise<NovedadDTORespuesta[]> {
+  async listar(includeOcultas: boolean = false): Promise<NovedadDTORespuesta[]> {
     const { data } = await novedadesClient.get<NovedadDTORespuesta[]>(
       ENDPOINTS.novedades.base,
+      { params: { includeOcultas } },
     );
     return data;
   },
@@ -107,6 +108,16 @@ export const novedadesService = {
     await novedadesClient.delete(ENDPOINTS.novedades.porId(id), {
       params: { usuarioId },
     });
+  },
+
+  /** Unhide a soft-deleted novedad. */
+  async desocultar(id: string, usuarioId: string): Promise<NovedadDTORespuesta> {
+    const { data } = await novedadesClient.patch<NovedadDTORespuesta>(
+      `${ENDPOINTS.novedades.porId(id)}/desocultar`,
+      {},
+      { params: { usuarioId } },
+    );
+    return data;
   },
 
   // ── Excel ───────────────────────────────────────────────────────────────────

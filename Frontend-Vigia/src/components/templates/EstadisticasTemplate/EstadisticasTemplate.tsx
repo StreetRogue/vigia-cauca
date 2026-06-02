@@ -1,5 +1,7 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
+import { UserDropdownSection } from '../../organisms/UserDropdownSection/UserDropdownSection';
 import { useDashboard } from '../../../hooks/useDashboard';
 import { BentoKpiRow } from '../../organisms/BentoKpiRow/BentoKpiRow';
 import { HistoricoPanel } from '../../organisms/HistoricoPanel/HistoricoPanel';
@@ -24,11 +26,17 @@ const MESES  = [
 
 export function EstadisticasTemplate() {
   const navigate = useNavigate();
+  const { user, logout, isAuthenticated } = useAuth();
 
   const [anio, setAnio] = useState<number>(new Date().getFullYear());
   const [mes,  setMes ] = useState<number | undefined>(undefined);
 
-  const filtros: FiltrosDashboard = { anio, ...(mes ? { mes } : {}) };
+  const displayName = user?.name ?? user?.username ?? 'Visitante';
+  const displayRole = user?.rol ?? 'OBSERVADOR';
+  const isAdmin = user?.rol === 'ADMIN';
+
+  // Memorizar filtros para evitar re-fetches innecesarios
+  const filtros = useMemo<FiltrosDashboard>(() => ({ anio, ...(mes ? { mes } : {}) }), [anio, mes]);
   const { data, loading, error, refetch } = useDashboard(filtros);
 
   const handleAnio = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -85,7 +93,7 @@ export function EstadisticasTemplate() {
           </select>
         </div>
 
-        {/* Derecha: modo comparación */}
+        {/* Derecha: modo comparación + perfil usuario */}
         <div className={styles.navRight}>
           <button
             className={styles.compareBtn}
@@ -96,6 +104,13 @@ export function EstadisticasTemplate() {
             </svg>
             Comparar períodos
           </button>
+          {isAuthenticated ? (
+            <UserDropdownSection displayName={displayName} displayRol={displayRole} isAdmin={isAdmin} onLogout={logout} />
+          ) : (
+            <button className={styles.loginBtn} onClick={() => navigate('/login')}>
+              INICIAR SESIÓN
+            </button>
+          )}
         </div>
       </header>
 

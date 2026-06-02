@@ -31,6 +31,7 @@ export const ENDPOINTS = {
   reportes: {
     previsualizar:    '/api/v1/reportes/documentos/previsualizar',
     descargar:        '/api/v1/reportes/documentos/descargar',
+    descargarPdf:     '/api/v1/reportes/documentos/descargar-pdf',
     sseStream:        '/api/v1/reportes/sse/stream',
     sseStatus:        '/api/v1/reportes/sse/status',
   },
@@ -38,5 +39,15 @@ export const ENDPOINTS = {
   ubicaciones: {
     municipios:       '/api/v1/microUbicaciones/municipios',
     municipioPorId:   (id: string) => `/api/v1/microUbicaciones/municipios/${id}`,
+  },
+
+  usuarios: {
+    base:       '/api/v1/usuarios',
+    me:         '/api/v1/usuarios/me',
+    meUpdate:   '/api/v1/usuarios/me',
+    registrar:  '/api/v1/usuarios/registrar',
+    porId:      (id: string) => `/api/v1/usuarios/${id}`,
+    porAuth0Id: (id: string) => `/api/v1/usuarios/auth0/${id}`,
+    porEmail:   (email: string) => `/api/v1/usuarios/by-email/${encodeURIComponent(email)}`,
   },
 } as const;

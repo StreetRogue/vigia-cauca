@@ -23,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +59,46 @@ public class NovedadServiceImpl implements INovedadService {
         return mapper.toDTO(guardada);
     }
 
+    /**
+     * Carga masiva desde Excel: una sola transacción, auditoría en batch,
+     * y un único evento RabbitMQ al final. Mucho más eficiente que crear una a una.
+     */
+    @Override
+    @Transactional
+    public List<NovedadDTORespuesta> crearEnLote(List<NovedadDTOPeticion> peticiones) {
+        if (peticiones == null || peticiones.isEmpty()) return List.of();
+
+        // 1. Validar y mapear todas
+        List<NovedadEntity> entidades = new ArrayList<>();
+        for (NovedadDTOPeticion p : peticiones) {
+            validarReglasNegocio(p);
+            entidades.add(mapper.toEntity(p));
+        }
+
+        // 2. Guardar TODAS en una sola transacción
+        List<NovedadEntity> guardadas = novedadRepository.saveAll(entidades);
+
+        // 3. Registrar auditoría en batch (una sola operación de BD)
+        UUID usuarioId = peticiones.get(0).getUsuarioId();
+        List<AuditoriaNovedadEntity> auditorias = guardadas.stream()
+                .map(n -> AuditoriaNovedadEntity.builder()
+                        .novedad(n)
+                        .usuarioId(usuarioId)
+                        .accion(AccionAuditoria.CREATE)
+                        .datosNuevos(serializarParaAuditoria(n))
+                        .build())
+                .toList();
+        auditoriaRepository.saveAll(auditorias);
+
+        // 4. Publicar un evento NOVEDAD_CREADA por cada novedad guardada
+        for (NovedadEntity n : guardadas) {
+            publicarEvento("NOVEDAD_CREADA", n);
+        }
+
+        log.info("[crearEnLote] {} novedades creadas en una transacción", guardadas.size());
+        return mapper.toDTOList(guardadas);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public NovedadDTORespuesta obtenerPorId(UUID novedadId) {
@@ -66,8 +108,11 @@ public class NovedadServiceImpl implements INovedadService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<NovedadDTORespuesta> listarTodas() {
-        return mapper.toDTOList(novedadRepository.findAll());
+    public List<NovedadDTORespuesta> listarTodas(boolean includeOcultas) {
+        List<NovedadEntity> todos = includeOcultas
+                ? novedadRepository.findAllHidden()
+                : novedadRepository.findAll();
+        return mapper.toDTOList(todos);
     }
 
     @Override
@@ -78,8 +123,21 @@ public class NovedadServiceImpl implements INovedadService {
 
     @Override
     @Transactional(readOnly = true)
+    public Page<NovedadDTORespuesta> listarPaginadoPorRol(String rol, UUID usuarioId, Pageable pageable) {
+        if ("ADMIN".equalsIgnoreCase(rol)) {
+            return novedadRepository.findAll(pageable).map(mapper::toDTO);
+        } else {
+            return novedadRepository.findByUsuarioId(usuarioId, pageable).map(mapper::toDTO);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<NovedadDTORespuesta> listarPorUsuario(UUID usuarioId) {
-        return mapper.toDTOList(novedadRepository.findByUsuarioId(usuarioId));
+        List<NovedadEntity> novedades = novedadRepository.findByUsuarioId(usuarioId);
+        return mapper.toDTOList(novedades.stream()
+                .filter(n -> !Boolean.TRUE.equals(n.getOculto()))
+                .toList());
     }
 
     @Override
@@ -174,6 +232,7 @@ public class NovedadServiceImpl implements INovedadService {
         existente.setOculto(true);
         existente.setUsuarioActualizacion(usuarioIdSolicitante.toString());
         novedadRepository.save(existente);
+        novedadRepository.flush(); // Ensure database is updated immediately
 
         // Auditoría
         registrarAuditoria(existente, usuarioIdSolicitante, AccionAuditoria.DELETE, null, null);
@@ -182,7 +241,46 @@ public class NovedadServiceImpl implements INovedadService {
         // Agregamos el campo "oculto" al mensaje de RabbitMQ
         publicarEvento("NOVEDAD_ELIMINADA", existente);
 
-        log.info("Novedad marcada como OCULTA con ID: {}", novedadId);
+        log.info("[Soft-Delete] Novedad marcada como OCULTA - ID: {}, oculto=true confirmado en DB", novedadId);
+    }
+
+    @Override
+    @Transactional
+    public NovedadDTORespuesta desocultarNovedad(UUID novedadId, UUID usuarioIdSolicitante) {
+        log.info("[Unhide] Iniciando desocultar para ID: {}", novedadId);
+
+        NovedadEntity existente = buscarNovedadOFallar(novedadId);
+        log.info("[Unhide] Novedad encontrada, oculto actual: {}", existente.getOculto());
+
+        existente.setOculto(false);
+        existente.setUsuarioActualizacion(usuarioIdSolicitante.toString());
+
+        try {
+            NovedadEntity guardada = novedadRepository.save(existente);
+            novedadRepository.flush();
+            log.info("[Unhide] Novedad guardada en DB, oculto nuevo: {}", guardada.getOculto());
+
+            try {
+                registrarAuditoria(guardada, usuarioIdSolicitante, AccionAuditoria.UPDATE, null, guardada);
+                log.info("[Unhide] Auditoría registrada");
+            } catch (Exception e) {
+                log.warn("[Unhide] Advertencia al registrar auditoría: {}", e.getMessage());
+            }
+
+            try {
+                publicarEvento("NOVEDAD_ACTUALIZADA", guardada);
+                log.info("[Unhide] Evento publicado");
+            } catch (Exception e) {
+                log.warn("[Unhide] Advertencia al publicar evento: {}", e.getMessage());
+            }
+
+            NovedadDTORespuesta respuesta = mapper.toDTO(guardada);
+            log.info("[Unhide] Novedad desocultada exitosamente - ID: {}", novedadId);
+            return respuesta;
+        } catch (Exception e) {
+            log.error("[Unhide] ERROR al guardar novedad ID: {}: {}", novedadId, e.getMessage(), e);
+            throw new RuntimeException("Error al desocultar novedad: " + e.getMessage(), e);
+        }
     }
 
     // ==========================================
@@ -198,7 +296,8 @@ public class NovedadServiceImpl implements INovedadService {
         }
 
         if (peticion.getHoraFin() != null && peticion.getHoraInicio() != null
-                && peticion.getHoraFin().isBefore(peticion.getHoraInicio())) {
+                && peticion.getHoraFin().isBefore(peticion.getHoraInicio())
+                && !permiteCruceMedianoche(peticion.getHoraInicio(), peticion.getHoraFin())) {
             throw new BadRequestException("La hora de fin no puede ser anterior a la hora de inicio");
         }
 
@@ -225,6 +324,19 @@ public class NovedadServiceImpl implements INovedadService {
                 throw new BadRequestException("El conteo de confinados no puede ser negativo");
             }
         }
+    }
+
+    /**
+     * Permite que horaFin sea anterior a horaInicio cuando el evento cruza
+     * medianoche: inicio entre 22:00–23:59 y fin entre 00:00–02:59.
+     */
+    private boolean permiteCruceMedianoche(LocalTime horaInicio, LocalTime horaFin) {
+        int horaInicioValor = horaInicio.getHour();
+        int horaFinValor = horaFin.getHour();
+
+        return (horaInicioValor == 22 || horaInicioValor == 23)
+                && horaFinValor >= 0
+                && horaFinValor <= 2;
     }
 
     // ==========================================

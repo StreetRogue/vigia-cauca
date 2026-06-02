@@ -26,7 +26,7 @@ export function Step2Caracterizacion() {
             onBlur={() => setErrCategoria(required(categoria))}
           >
             <option value="" disabled hidden>Seleccionar categoría</option>
-            {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
+            {CATEGORIAS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
           {errCategoria && <span className="field-error">{errCategoria}</span>}
         </div>
@@ -40,8 +40,8 @@ export function Step2Caracterizacion() {
                 onChange={e => setActorSeleccionado(e.target.value)}
               >
                 <option value="" disabled hidden>Seleccionar actor</option>
-                {ACTORES.filter(a => !actores.includes(a)).map(a => (
-                  <option key={a} value={a}>{a}</option>
+                {ACTORES.filter(a => !actores.includes(a.value)).map(a => (
+                  <option key={a.value} value={a.value}>{a.label}</option>
                 ))}
               </select>
               <button
@@ -89,7 +89,7 @@ export function Step2Caracterizacion() {
               onBlur={() => setErrNivelConfianza(required(nivelConfianza))}
             >
               <option value="" disabled hidden>Seleccionar nivel</option>
-              {NIVELES_CONFIANZA.map(n => <option key={n} value={n}>{n}</option>)}
+              {NIVELES_CONFIANZA.map(n => <option key={n.value} value={n.value}>{n.label}</option>)}
             </select>
             {errNivelConfianza && <span className="field-error">{errNivelConfianza}</span>}
           </div>
@@ -101,7 +101,7 @@ export function Step2Caracterizacion() {
               onBlur={() => setErrNivelVisibilidad(required(nivelVisibilidad))}
             >
               <option value="" disabled hidden>Seleccionar nivel</option>
-              {NIVELES_VISIBILIDAD.map(n => <option key={n} value={n}>{n}</option>)}
+              {NIVELES_VISIBILIDAD.map(n => <option key={n.value} value={n.value}>{n.label}</option>)}
             </select>
             {errNivelVisibilidad && <span className="field-error">{errNivelVisibilidad}</span>}
           </div>

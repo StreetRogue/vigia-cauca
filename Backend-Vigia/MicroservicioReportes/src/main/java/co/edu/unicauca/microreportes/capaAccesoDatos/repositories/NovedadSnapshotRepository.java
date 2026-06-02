@@ -68,6 +68,20 @@ public interface NovedadSnapshotRepository extends JpaRepository<NovedadSnapshot
     );
 
     /**
+     * KPIs filtrados por usuario creador (para panel de OPERADOR).
+     * No filtra por visibilidad porque el operador solo ve sus propias novedades.
+     */
+    @Query("SELECT COUNT(n), " +
+            "COALESCE(SUM(n.muertosTotales),0), " +
+            "COALESCE(SUM(n.heridosTotales),0), " +
+            "COALESCE(SUM(n.desplazadosTotales),0), " +
+            "COALESCE(SUM(n.confinadosTotales),0) " +
+            "FROM NovedadSnapshotEntity n " +
+            "WHERE n.usuarioId = :usuarioId " +
+            "AND n.oculto = false")
+    List<Object[]> obtenerKPIsPorUsuario(@Param("usuarioId") UUID usuarioId);
+
+    /**
      * Mapa de calor: conteo e impacto por municipio.
      *
      * Todos los filtros son opcionales: null = sin restricción.

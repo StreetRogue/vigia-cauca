@@ -1,7 +1,10 @@
 package co.edu.unicauca.micronovedades.capaAccesoDatos.repositories;
 
 import co.edu.unicauca.micronovedades.capaAccesoDatos.models.AuditoriaNovedadEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,4 +18,8 @@ public interface AuditoriaNovedadRepository extends JpaRepository<AuditoriaNoved
 
     // Auditorías realizadas por un usuario específico
     List<AuditoriaNovedadEntity> findByUsuarioIdOrderByFechaDesc(UUID usuarioId);
+
+    // Actividad reciente global (últimas N auditorías)
+    @Query("SELECT a FROM AuditoriaNovedadEntity a ORDER BY a.fecha DESC")
+    Page<AuditoriaNovedadEntity> obtenerActividadReciente(Pageable pageable);
 }

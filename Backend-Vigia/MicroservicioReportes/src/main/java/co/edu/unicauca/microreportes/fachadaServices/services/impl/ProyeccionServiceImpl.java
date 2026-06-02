@@ -131,10 +131,11 @@ public class ProyeccionServiceImpl implements IProyeccionService {
         if (existenteOpt.isPresent()) {
             NovedadSnapshotEntity existente = existenteOpt.get();
 
-            // NO llamamos a actualizarAgregacion(existente, false) porque queremos que
-            // la estadística SIGA CONTANDO este evento.
+            // RESTAR del agregado cuando se marca como oculto
+            // Esto es eliminación lógica: el registro no desaparece pero no se cuenta en estadísticas
+            actualizarAgregacion(existente, false);
 
-            // Solo marcamos el snapshot como oculto para los reportes
+            // Marcar el snapshot como oculto
             existente.setOculto(true);
             snapshotRepository.save(existente);
 
@@ -144,7 +145,7 @@ public class ProyeccionServiceImpl implements IProyeccionService {
 
         registrarEventoProcesado(evento, TipoEvento.NOVEDAD_ELIMINADA, generarIdempotencyKey(evento));
         invalidarCaches();
-        log.info("Snapshot marcado como OCULTO: {}", novedadId);
+        log.info("Snapshot marcado como OCULTO (eliminación lógica): {}", novedadId);
     }
 
     // ==========================================
@@ -158,7 +159,7 @@ public class ProyeccionServiceImpl implements IProyeccionService {
      */
     private void actualizarAgregacion(NovedadSnapshotEntity snapshot, boolean incrementar) {
         EstadisticaAgregadaEntity agregada = agregadaRepository
-                .findByAnioAndMesAndMunicipioAndCategoriaAndNivelVisibilidad(
+                .findForUpdate(
                         snapshot.getAnio(), snapshot.getMes(),
                         snapshot.getMunicipio(), snapshot.getCategoria(),
                         snapshot.getNivelVisibilidad()

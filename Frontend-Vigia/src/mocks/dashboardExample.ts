@@ -1,0 +1,70 @@
+import type { DashboardCompletoDTO } from '../types/estadisticas.types';
+
+export const DASHBOARD_EXAMPLE: DashboardCompletoDTO = {
+  filtrosAplicados: {},
+  resumen: {
+    totalEventos: 347,
+    totalMuertos: 58,
+    totalHeridos: 124,
+    totalDesplazados: 1250,
+    totalConfinados: 305,
+    filtrosAplicados: {},
+  },
+  historicoMensual: [
+    { anio: 2026, mes: 1, nombreMes: 'Enero', totalEventos: 45, totalMuertos: 8, totalHeridos: 18, totalDesplazados: 200, frecuenciaRelativa: 13, frecuenciaAcumulada: 13 },
+    { anio: 2026, mes: 2, nombreMes: 'Febrero', totalEventos: 38, totalMuertos: 6, totalHeridos: 14, totalDesplazados: 180, frecuenciaRelativa: 11, frecuenciaAcumulada: 24 },
+    { anio: 2026, mes: 3, nombreMes: 'Marzo', totalEventos: 52, totalMuertos: 9, totalHeridos: 22, totalDesplazados: 280, frecuenciaRelativa: 15, frecuenciaAcumulada: 39 },
+    { anio: 2026, mes: 4, nombreMes: 'Abril', totalEventos: 41, totalMuertos: 7, totalHeridos: 19, totalDesplazados: 210, frecuenciaRelativa: 12, frecuenciaAcumulada: 51 },
+    { anio: 2026, mes: 5, nombreMes: 'Mayo', totalEventos: 48, totalMuertos: 8, totalHeridos: 20, totalDesplazados: 240, frecuenciaRelativa: 14, frecuenciaAcumulada: 65 },
+    { anio: 2026, mes: 6, nombreMes: 'Junio', totalEventos: 55, totalMuertos: 10, totalHeridos: 25, totalDesplazados: 300, frecuenciaRelativa: 16, frecuenciaAcumulada: 81 },
+    { anio: 2026, mes: 7, nombreMes: 'Julio', totalEventos: 68, totalMuertos: 14, totalHeridos: 31, totalDesplazados: 380, frecuenciaRelativa: 20, frecuenciaAcumulada: 100 },
+  ],
+  incidentesPorActor: [
+    { actor: 'AUTODEFENSAS', totalEventos: 89 },
+    { actor: 'GUERRILLA', totalEventos: 127 },
+    { actor: 'PARAMILITARES', totalEventos: 95 },
+    { actor: 'DELINCUENCIA_COMUN', totalEventos: 36 },
+  ],
+  mapaCalor: [
+    { municipio: 'POPAYÁN', totalEventos: 45, totalMuertos: 8, totalHeridos: 15, totalDesplazados: 120, frecuenciaRelativa: 13, frecuenciaAcumulada: 13 },
+    { municipio: 'TOTORÓ', totalEventos: 38, totalMuertos: 7, totalHeridos: 12, totalDesplazados: 95, frecuenciaRelativa: 11, frecuenciaAcumulada: 24 },
+    { municipio: 'SILVIA', totalEventos: 52, totalMuertos: 10, totalHeridos: 18, totalDesplazados: 140, frecuenciaRelativa: 15, frecuenciaAcumulada: 39 },
+    { municipio: 'SANTANDER DE QUILICHAO', totalEventos: 41, totalMuertos: 8, totalHeridos: 14, totalDesplazados: 110, frecuenciaRelativa: 12, frecuenciaAcumulada: 51 },
+    { municipio: 'BUENOS AIRES', totalEventos: 48, totalMuertos: 6, totalHeridos: 16, totalDesplazados: 130, frecuenciaRelativa: 14, frecuenciaAcumulada: 65 },
+    { municipio: 'JAMBALÓ', totalEventos: 35, totalMuertos: 5, totalHeridos: 11, totalDesplazados: 90, frecuenciaRelativa: 10, frecuenciaAcumulada: 75 },
+    { municipio: 'PÁEZ', totalEventos: 42, totalMuertos: 8, totalHeridos: 13, totalDesplazados: 105, frecuenciaRelativa: 12, frecuenciaAcumulada: 87 },
+    { municipio: 'BOLÍVAR', totalEventos: 30, totalMuertos: 4, totalHeridos: 9, totalDesplazados: 75, frecuenciaRelativa: 9, frecuenciaAcumulada: 96 },
+    { municipio: 'EL TAMBO', totalEventos: 16, totalMuertos: 2, totalHeridos: 5, totalDesplazados: 40, frecuenciaRelativa: 5, frecuenciaAcumulada: 101 },
+  ],
+  desgloseCategorias: [
+    { categoria: 'ENFRENTAMIENTO', totalEventos: 85, totalMuertos: 22 },
+    { categoria: 'HOSTIGAMIENTO', totalEventos: 76, totalMuertos: 8 },
+    { categoria: 'HOMICIDIO', totalEventos: 52, totalMuertos: 52 },
+    { categoria: 'SECUESTRO', totalEventos: 38, totalMuertos: 0 },
+    { categoria: 'RECLUTAMIENTO_ILICITO', totalEventos: 41, totalMuertos: 0 },
+    { categoria: 'RETEN_ILEGAL', totalEventos: 32, totalMuertos: 0 },
+    { categoria: 'ATENTADO_TERRORISTA', totalEventos: 18, totalMuertos: 14 },
+    { categoria: 'ACCION_DE_PROTESTA', totalEventos: 25, totalMuertos: 0 },
+    { categoria: 'OTRO', totalEventos: 12, totalMuertos: 2 },
+  ],
+  estadisticasVictimas: {
+    filtrosAplicados: {},
+    totalVictimas: 1679,
+    porGenero: [
+      { etiqueta: 'Hombres', frecuenciaAbsoluta: 1204, frecuenciaRelativa: 72, frecuenciaAcumulada: 72 },
+      { etiqueta: 'Mujeres', frecuenciaAbsoluta: 475, frecuenciaRelativa: 28, frecuenciaAcumulada: 100 },
+    ],
+    porRangoEdad: [
+      { etiqueta: '0-17 años', frecuenciaAbsoluta: 182, frecuenciaRelativa: 11, frecuenciaAcumulada: 11 },
+      { etiqueta: '18-35 años', frecuenciaAbsoluta: 672, frecuenciaRelativa: 40, frecuenciaAcumulada: 51 },
+      { etiqueta: '36-55 años', frecuenciaAbsoluta: 589, frecuenciaRelativa: 35, frecuenciaAcumulada: 86 },
+      { etiqueta: '56+ años', frecuenciaAbsoluta: 236, frecuenciaRelativa: 14, frecuenciaAcumulada: 100 },
+    ],
+    porGrupoPoblacional: [
+      { etiqueta: 'Indígena', frecuenciaAbsoluta: 542, frecuenciaRelativa: 32, frecuenciaAcumulada: 32 },
+      { etiqueta: 'Afrocolombiano', frecuenciaAbsoluta: 378, frecuenciaRelativa: 23, frecuenciaAcumulada: 55 },
+      { etiqueta: 'Campesino', frecuenciaAbsoluta: 654, frecuenciaRelativa: 39, frecuenciaAcumulada: 94 },
+      { etiqueta: 'Otro', frecuenciaAbsoluta: 105, frecuenciaRelativa: 6, frecuenciaAcumulada: 100 },
+    ],
+  },
+};
