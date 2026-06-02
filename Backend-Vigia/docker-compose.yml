@@ -25,46 +25,6 @@ services:
       timeout: 5s
       retries: 5
 
-  postgres-novedades:
-    image: postgres:16-alpine
-    container_name: postgres-novedades
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${NOVEDADES_DB}
-      POSTGRES_USER: ${NOVEDADES_DB_USER}
-      POSTGRES_PASSWORD: ${NOVEDADES_DB_PASSWORD}
-    ports:
-      - "5434:5432"
-    volumes:
-      - postgres_novedades_data:/var/lib/postgresql/data
-    networks:
-      - backend
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${NOVEDADES_DB_USER} -d ${NOVEDADES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  postgres-reportes:
-    image: postgres:16-alpine
-    container_name: postgres-reportes
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${REPORTES_DB}
-      POSTGRES_USER: ${REPORTES_DB_USER}
-      POSTGRES_PASSWORD: ${REPORTES_DB_PASSWORD}
-    ports:
-      - "5435:5432"
-    volumes:
-      - postgres_reportes_data:/var/lib/postgresql/data
-    networks:
-      - backend
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${REPORTES_DB_USER} -d ${REPORTES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   postgres-ubicaciones:
     image: postgres:16-alpine
     container_name: postgres-ubicaciones
@@ -81,6 +41,46 @@ services:
       - backend
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${UBICACIONES_DB_USER} -d ${UBICACIONES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-novedades:
+    image: postgres:16-alpine
+    container_name: postgres-novedades
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: novedades_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_novedades_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d novedades_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-reportes:
+    image: postgres:16-alpine
+    container_name: postgres-reportes
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: estadisticas_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_reportes_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d estadisticas_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -109,15 +109,14 @@ services:
     image: quay.io/keycloak/keycloak:24.0.3
     container_name: keycloak
     restart: unless-stopped
-    command: start-dev --import-realm --health-enabled=true
+    command: start-dev --import-realm
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_USER}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD}
-      # Forzar issuer consistente: tokens emitidos con localhost:8180
-      # para que coincida con lo que ven el frontend y los microservicios
-      KC_HOSTNAME_URL: http://localhost:8180
-      KC_HOSTNAME_STRICT: "false"
-      KC_HOSTNAME_STRICT_BACKCHANNEL: "false"
+      KC_HEALTH_ENABLED: "true"
+      KC_HOSTNAME: localhost:8180
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_PROXY: reencrypt
     ports:
       - "8180:8080"
     volumes:
@@ -126,11 +125,23 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready | grep -q UP || exit 1"]
-      interval: 20s
-      timeout: 10s
-      retries: 15
-      start_period: 120s
+      test: ["CMD-SHELL", "grep -q ':1F90' /proc/net/tcp6"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  keycloak-init:
+    image: alpine:3.19
+    container_name: keycloak-init
+    volumes:
+      - ./keycloak/init-admin-user.sh:/init-admin-user.sh:ro
+    command: sh -c "apk add --no-cache curl -q && sh /init-admin-user.sh"
+    networks:
+      - backend
+    depends_on:
+      - keycloak
+    restart: on-failure
 
   # =========================================
   # MICROSERVICIOS
@@ -153,8 +164,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-      keycloak:
-        condition: service_started
 
   micro-ubicaciones:
     build:
@@ -172,26 +181,6 @@ services:
       postgres-ubicaciones:
         condition: service_healthy
 
-  micro-novedades:
-    build:
-      context: ./MicroservicioNovedades
-      dockerfile: Dockerfile
-    container_name: micro-novedades
-    restart: unless-stopped
-    env_file:
-      - ./MicroservicioNovedades/.env
-    ports:
-      - "5003:5003"
-    volumes:
-      - novedades_evidencias:/app/evidencias
-    networks:
-      - backend
-    depends_on:
-      postgres-novedades:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-
   api-gateway:
     build:
       context: ./APIGateway
@@ -206,13 +195,27 @@ services:
       - backend
     depends_on:
       keycloak:
-        condition: service_started
-      micro-usuarios:
-        condition: service_started
-      micro-ubicaciones:
-        condition: service_started
-      micro-novedades:
-        condition: service_started
+        condition: service_healthy
+
+  micro-novedades:
+    build:
+      context: ./MicroservicioNovedades
+      dockerfile: Dockerfile
+    container_name: micro-novedades
+    restart: unless-stopped
+    env_file:
+      - ./MicroservicioNovedades/.env
+    ports:
+      - "5003:5003"
+    volumes:
+      - evidencias_data:/app/evidencias
+    networks:
+      - backend
+    depends_on:
+      postgres-novedades:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   micro-reportes:
     build:
@@ -225,7 +228,7 @@ services:
     ports:
       - "5004:5004"
     volumes:
-      - reportes_temp:/app/reportes-temp
+      - reportes_data:/app/reportes-temp
     networks:
       - backend
     depends_on:
@@ -233,8 +236,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-      micro-novedades:
-        condition: service_started
 
 # =========================================
 # VOLÚMENES Y RED
@@ -242,13 +243,13 @@ services:
 
 volumes:
   postgres_usuarios_data:
+  postgres_ubicaciones_data:
   postgres_novedades_data:
   postgres_reportes_data:
-  postgres_ubicaciones_data:
   rabbitmq_data:
   keycloak_data:
-  novedades_evidencias:
-  reportes_temp:
+  evidencias_data:
+  reportes_data:
 
 networks:
   backend:

@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { novedadesService } from '../../../services/novedades.service';
-import { estadisticasService } from '../../../services/estadisticas.service';
 import type { NovedadDTORespuesta } from '../../../types/novedad.types';
 import { useAuth } from '../../../context/AuthContext';
-import { cacheManager } from '../../../utils/cacheManager';
 import styles from './NovedadesListPanel.module.css';
 
 interface Props {
@@ -42,8 +40,6 @@ const PAGE_SIZE = 10;
 export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowClick, selectedId, userRole }: Props) {
   const isAdmin = userRole === 'ADMIN';
   const { user } = useAuth();
-  // Datos crudos del servidor (todos los registros)
-  const [allData, setAllData] = useState<NovedadDTORespuesta[]>([]);
   const [novedades, setNovedades] = useState<NovedadDTORespuesta[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -59,113 +55,91 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
   const [filterCategoria, setFilterCategoria] = useState('');
   const [filterConfianza, setFilterConfianza] = useState('');
   const [filterConMuertes, setFilterConMuertes] = useState(false);
-  const [showOcultas, setShowOcultas] = useState(false);
 
   // Listas para dropdowns
   const [municipios, setMunicipios] = useState<string[]>([]);
   const categoriasList = Object.keys(CATEGORY_LABELS);
   const confianzaList = Object.keys(CONFIDENCE_LABELS);
 
-  // Fetch del servidor: solo cuando cambia el rol/usuario o refreshKey
-  // Usa caché cuando está disponible y fresco
-  const fetchFromServer = useCallback(async (forceRefresh: boolean = false) => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      let data: NovedadDTORespuesta[];
-
-      // Si no fuerza refetch e isAdmin no muestra ocultas, intenta usar caché
-      if (!forceRefresh && !showOcultas && cacheManager.isFresh()) {
-        const cached = cacheManager.get();
-        if (cached) {
-          const uniqueMunicipios = Array.from(new Set(cached.map((n: NovedadDTORespuesta) => n.municipio))).sort();
-          setMunicipios(uniqueMunicipios);
-          setAllData(cached);
-          setLoading(false);
-          return;
-        }
+      const params: any = { page: 0, size: 100 }; // Cargar más para filtrar localmente
+      // Filtrar por rol: ADMIN ve todas, OPERADOR ve solo sus novedades
+      if (userRole && user?.sub) {
+        params.rol = userRole;
+        params.usuarioId = user.sub;
       }
+      const res = await novedadesService.listarPaginado(params);
+      let allData = res.content || [];
 
-      // Si no hay caché o está vencido, ir al servidor
-      if (userRole === 'OPERADOR' && user?.sub) {
-        data = await novedadesService.listarPorUsuario(user.sub);
-      } else {
-        data = await novedadesService.listar(isAdmin && showOcultas);
-      }
-
-      const uniqueMunicipios = Array.from(new Set(data.map(n => n.municipio))).sort();
+      // Extraer municipios únicos
+      const uniqueMunicipios = Array.from(new Set(allData.map(n => n.municipio))).sort();
       setMunicipios(uniqueMunicipios);
-      setAllData(data);
 
-      // Guardar en caché solo si no está mostrando ocultas
-      if (!showOcultas) {
-        cacheManager.set(data);
+      // Aplicar filtros localmente
+      let filtered = allData;
+
+      // Filtro por búsqueda (municipio o categoría)
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        filtered = filtered.filter(n =>
+          n.municipio.toLowerCase().includes(q) ||
+          CATEGORY_LABELS[n.categoria]?.toLowerCase().includes(q) ||
+          n.categoria.toLowerCase().includes(q)
+        );
       }
+
+      // Filtro por municipio
+      if (filterMunicipio) {
+        filtered = filtered.filter(n => n.municipio === filterMunicipio);
+      }
+
+      // Filtro por categoría
+      if (filterCategoria) {
+        filtered = filtered.filter(n => n.categoria === filterCategoria);
+      }
+
+      // Filtro por confianza
+      if (filterConfianza) {
+        filtered = filtered.filter(n => n.nivelConfianza === filterConfianza);
+      }
+
+      // Filtro por muertes
+      if (filterConMuertes) {
+        filtered = filtered.filter(n => (n.afectacionHumana?.muertosTotales ?? 0) > 0);
+      }
+
+      // Paginar los resultados filtrados
+      const totalElements = filtered.length;
+      const totalPages = Math.ceil(totalElements / PAGE_SIZE);
+      const paginatedData = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+      setNovedades(paginatedData);
+      setTotalPages(totalPages);
+      setTotalElements(totalElements);
     } catch {
       setError('Error al cargar las novedades. Verifique la conexión.');
     } finally {
       setLoading(false);
     }
-  }, [userRole, user?.sub, isAdmin, showOcultas]);
-
-  // Paginación y filtros: solo client-side, sin tocar el servidor
-  useEffect(() => {
-    let filtered = allData;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      filtered = filtered.filter(n =>
-        n.municipio.toLowerCase().includes(q) ||
-        CATEGORY_LABELS[n.categoria]?.toLowerCase().includes(q) ||
-        n.categoria.toLowerCase().includes(q)
-      );
-    }
-    if (filterMunicipio) filtered = filtered.filter(n => n.municipio === filterMunicipio);
-    if (filterCategoria) filtered = filtered.filter(n => n.categoria === filterCategoria);
-    if (filterConfianza) filtered = filtered.filter(n => n.nivelConfianza === filterConfianza);
-    if (filterConMuertes) filtered = filtered.filter(n => (n.afectacionHumana?.muertosTotales ?? 0) > 0);
-
-    const total = filtered.length;
-    setTotalElements(total);
-    setTotalPages(Math.ceil(total / PAGE_SIZE));
-    setNovedades(filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE));
-  }, [allData, page, search, filterMunicipio, filterCategoria, filterConfianza, filterConMuertes]);
+  }, [page, userRole, user?.sub, search, filterMunicipio, filterCategoria, filterConfianza, filterConMuertes]);
 
   useEffect(() => {
-    setPage(0);
+    setPage(0); // Reset a página 0 cuando cambian los filtros
   }, [search, filterMunicipio, filterCategoria, filterConfianza, filterConMuertes]);
 
-  useEffect(() => { fetchFromServer(); }, [fetchFromServer, refreshKey]);
-
-  // Reload when tab becomes visible (user returns from another tab)
-  // Solo recarga si el caché está vencido (más de 5 minutos)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && !cacheManager.isFresh()) {
-        fetchFromServer(true);
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [fetchFromServer]);
-
-  // Refresco explícito tras eventos que mutan el dataset (carga Excel, etc.)
-  useEffect(() => {
-    const handleRefresh = () => fetchFromServer(true);
-    window.addEventListener('novedadesRefresh', handleRefresh);
-    return () => window.removeEventListener('novedadesRefresh', handleRefresh);
-  }, [fetchFromServer]);
+  useEffect(() => { load(); }, [load, refreshKey]);
 
   async function handleDelete() {
-    if (!deleteTarget || !user?.sub) return;
+    if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await novedadesService.eliminar(deleteTarget.novedadId, user.sub);
+      const uid = user?.sub ?? 'ANONIMO';
+      await novedadesService.eliminar(deleteTarget.novedadId, uid);
       setDeleteTarget(null);
-      cacheManager.clear();
-      estadisticasService.invalidarCache();
-      await fetchFromServer(true);
-      // Notificar a otros componentes que se actualicen
-      window.dispatchEvent(new CustomEvent('novedadOcultada'));
+      load();
     } catch {
       setError('Error al eliminar la novedad.');
     } finally {
@@ -255,17 +229,6 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
           <span>Con muertes</span>
         </label>
 
-        {isAdmin && (
-          <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={showOcultas}
-              onChange={(e) => setShowOcultas(e.target.checked)}
-            />
-            <span>Mostrar ocultas</span>
-          </label>
-        )}
-
         {hasActiveFilters && (
           <button className={styles.resetBtn} onClick={resetFilters}>
             ✕ Limpiar
@@ -327,45 +290,21 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
                   className={styles.actionsCell}
                   onClick={e => e.stopPropagation()}
                 >
-                  {!showOcultas && (
-                    <>
-                      <button
-                        className={styles.editBtn}
-                        onClick={() => onEdit(nov)}
-                        title="Editar"
-                      >
-                        ✎
-                      </button>
-                      {/* Solo ADMIN puede ocultar novedades (HU-2.5) */}
-                      {isAdmin && (
-                        <button
-                          className={styles.deleteBtn}
-                          onClick={() => setDeleteTarget(nov)}
-                          title="Ocultar novedad"
-                        >
-                          −
-                        </button>
-                      )}
-                    </>
-                  )}
-                  {showOcultas && isAdmin && user?.sub && (
+                  <button
+                    className={styles.editBtn}
+                    onClick={() => onEdit(nov)}
+                    title="Editar"
+                  >
+                    ✎
+                  </button>
+                  {/* Solo ADMIN puede eliminar novedades (HU-2.5) */}
+                  {isAdmin && (
                     <button
-                      className={`${styles.deleteBtn} ${styles.deleteBtnGray}`}
-                      onClick={async () => {
-                        try {
-                          await novedadesService.desocultar(nov.novedadId, user.sub);
-                          cacheManager.clear();
-                          estadisticasService.invalidarCache();
-                          await fetchFromServer(true);
-                          // Notificar a otros componentes que se actualicen
-                          window.dispatchEvent(new CustomEvent('novedadDesoculta'));
-                        } catch {
-                          setError('Error al desocultar la novedad.');
-                        }
-                      }}
-                      title="Desocultar novedad"
+                      className={styles.deleteBtn}
+                      onClick={() => setDeleteTarget(nov)}
+                      title="Eliminar"
                     >
-                      −
+                      ✕
                     </button>
                   )}
                 </td>
@@ -398,12 +337,12 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
       {deleteTarget && (
         <div className={styles.confirmOverlay}>
           <div className={styles.confirmBox}>
-            <h3 className={styles.confirmTitle}>Confirmar ocultamiento</h3>
+            <h3 className={styles.confirmTitle}>Confirmar eliminación</h3>
             <p className={styles.confirmText}>
-              ¿Ocultar la novedad del{' '}
+              ¿Eliminar la novedad del{' '}
               <strong>{formatDate(deleteTarget.fechaHecho)}</strong> en{' '}
               <strong>{deleteTarget.municipio}</strong>?{' '}
-              La novedad se ocultará de las listas pero quedará registrada en auditorías. Puedes verla en el historial completo.
+              Esta acción no se puede deshacer.
             </p>
             <div className={styles.confirmActions}>
               <button
@@ -418,7 +357,7 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
                 onClick={handleDelete}
                 disabled={deleting}
               >
-                {deleting ? 'Ocultando...' : 'Ocultar'}
+                {deleting ? 'Eliminando...' : 'Eliminar'}
               </button>
             </div>
           </div>

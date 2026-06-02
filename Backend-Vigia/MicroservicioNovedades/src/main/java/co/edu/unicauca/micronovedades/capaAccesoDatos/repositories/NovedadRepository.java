@@ -25,50 +25,25 @@ public interface NovedadRepository extends JpaRepository<NovedadEntity, UUID> {
     Optional<NovedadEntity> findById(UUID id);
 
     @EntityGraph(attributePaths = {"victimas", "afectacionHumana", "evidencias"})
-    @Query("SELECT n FROM NovedadEntity n WHERE n.usuarioId = :usuarioId AND n.oculto = false")
-    List<NovedadEntity> findByUsuarioId(@Param("usuarioId") UUID usuarioId);
+    List<NovedadEntity> findByUsuarioId(UUID usuarioId);
 
     @EntityGraph(attributePaths = {"victimas", "afectacionHumana", "evidencias"})
-    @Query("SELECT n FROM NovedadEntity n WHERE n.usuarioId = :usuarioId AND n.oculto = false")
-    Page<NovedadEntity> findByUsuarioId(@Param("usuarioId") UUID usuarioId, Pageable pageable);
+    Page<NovedadEntity> findByUsuarioId(UUID usuarioId, Pageable pageable);
 
-    // Filtrar por municipio (excluyendo ocultos)
-    @Query("SELECT n FROM NovedadEntity n WHERE n.municipio = :municipio AND n.oculto = false")
-    List<NovedadEntity> findByMunicipio(@Param("municipio") String municipio);
+    // Filtrar por municipio
+    List<NovedadEntity> findByMunicipio(String municipio);
 
-    // Filtrar por categoría (excluyendo ocultos)
-    @Query("SELECT n FROM NovedadEntity n WHERE n.categoria = :categoria AND n.oculto = false")
-    List<NovedadEntity> findByCategoria(@Param("categoria") CategoriaEvento categoria);
+    // Filtrar por categoría
+    List<NovedadEntity> findByCategoria(CategoriaEvento categoria);
 
-    // Filtrar por nivel de visibilidad (excluyendo ocultos)
-    @Query("SELECT n FROM NovedadEntity n WHERE n.nivelVisibilidad = :nivelVisibilidad AND n.oculto = false")
-    List<NovedadEntity> findByNivelVisibilidad(@Param("nivelVisibilidad") NivelVisibilidad nivelVisibilidad);
-
-    // Override del findAll para excluir ocultos por defecto
-    @Override
-    @Query("SELECT n FROM NovedadEntity n WHERE n.oculto = false")
-    List<NovedadEntity> findAll();
-
-    // Override del findAll con paginación para excluir ocultos
-    @Override
-    @Query("SELECT n FROM NovedadEntity n WHERE n.oculto = false")
-    Page<NovedadEntity> findAll(Pageable pageable);
+    // Filtrar por nivel de visibilidad
+    List<NovedadEntity> findByNivelVisibilidad(NivelVisibilidad nivelVisibilidad);
 
     @Query("SELECT n FROM NovedadEntity n WHERE n.oculto = false")
     List<NovedadEntity> findAllVisible();
 
     @Query("SELECT n FROM NovedadEntity n WHERE n.usuarioId = :usuarioId AND n.oculto = false")
     List<NovedadEntity> findByUsuarioIdVisible(@Param("usuarioId") UUID usuarioId);
-
-    // Get ALL records including hidden ones (for admin view with showOcultas=true)
-    @Query("SELECT n FROM NovedadEntity n")
-    @EntityGraph(attributePaths = {"victimas", "afectacionHumana", "evidencias"})
-    List<NovedadEntity> findAllIncludingHidden();
-
-    // Get ONLY hidden records (for admin view with showOcultas=true)
-    @Query("SELECT n FROM NovedadEntity n WHERE n.oculto = true")
-    @EntityGraph(attributePaths = {"victimas", "afectacionHumana", "evidencias"})
-    List<NovedadEntity> findAllHidden();
 
     // Búsqueda de duplicados para carga masiva de Excel
     @Query("SELECT DISTINCT n FROM NovedadEntity n " +
@@ -90,10 +65,9 @@ public interface NovedadRepository extends JpaRepository<NovedadEntity, UUID> {
             @Param("cantidadActores") long cantidadActores
     );
 
-    // Búsqueda avanzada para reportes con filtros opcionales (excluyendo ocultos)
+    // Búsqueda avanzada para reportes con filtros opcionales
     @Query("SELECT n FROM NovedadEntity n " +
             "WHERE n.fechaHecho BETWEEN :fechaInicio AND :fechaFin " +
-            "AND n.oculto = false " +
             "AND (:municipio IS NULL OR n.municipio = :municipio) " +
             "AND (:categoria IS NULL OR n.categoria = :categoria) " +
             "AND (:nivelVisibilidad IS NULL OR n.nivelVisibilidad = :nivelVisibilidad)")
@@ -105,10 +79,9 @@ public interface NovedadRepository extends JpaRepository<NovedadEntity, UUID> {
             @Param("nivelVisibilidad") NivelVisibilidad nivelVisibilidad
     );
 
-    // Contar novedades por municipio (excluyendo ocultos)
+    // Contar novedades por municipio (útil para dashboards)
     @Query("SELECT n.municipio, COUNT(n) FROM NovedadEntity n " +
             "WHERE n.fechaHecho BETWEEN :fechaInicio AND :fechaFin " +
-            "AND n.oculto = false " +
             "GROUP BY n.municipio")
     List<Object[]> contarPorMunicipio(
             @Param("fechaInicio") LocalDate fechaInicio,

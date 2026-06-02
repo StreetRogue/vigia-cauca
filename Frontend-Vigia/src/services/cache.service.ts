@@ -77,7 +77,7 @@ export const cacheService = new CacheService();
 // TTLs predefinidos (en segundos)
 export const TTL = {
   MUNICIPIOS:   60 * 60 * 24,   // 24 horas
-  ESTADISTICAS: 30,             // 30 segundos (muy corto para mantener sync)
-  DASHBOARD:    30,             // 30 segundos (muy corto para mantener sync)
+  ESTADISTICAS: 60 * 3,         // 3 minutos
+  DASHBOARD:    60 * 3,         // 3 minutos
   USUARIOS:     60 * 5,         // 5 minutos
 } as const;

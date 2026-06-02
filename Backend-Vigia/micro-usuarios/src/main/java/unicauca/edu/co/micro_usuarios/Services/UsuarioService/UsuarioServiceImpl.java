@@ -301,24 +301,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public UsuarioResponseDTO actualizarPerfilPropio(String idIam, UsuarioUpdateDTO dto) {
-        Usuario usuario = usuarioRepository.findByIdKeycloak(idIam)
-                .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
-
-        if (dto.getNombre() != null) usuario.setNombre(dto.getNombre());
-        if (dto.getTelefono() != null) usuario.setTelefono(dto.getTelefono());
-        if (dto.getEmail() != null) usuario.setEmail(dto.getEmail());
-
-        usuario.setEditadoPor(idIam);
-        Usuario actualizado = usuarioRepository.save(usuario);
-
-        MunicipioResponseDTO municipio = ubicacionesClient.getMunicipio(actualizado.getIdMunicipio());
-        UsuarioResponseDTO response = UsuarioMapper.toDTO(actualizado, municipio);
-        usuarioEventPublisher.publicarActualizacion(response);
-        return response;
-    }
-
-    @Override
     public boolean existsByCedula(String cedula) {
         return usuarioRepository.findByCedula(cedula).isPresent();
     }

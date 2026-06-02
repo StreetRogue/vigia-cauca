@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -90,9 +89,16 @@ public class NovedadServiceImpl implements INovedadService {
                 .toList();
         auditoriaRepository.saveAll(auditorias);
 
-        // 4. Publicar un evento NOVEDAD_CREADA por cada novedad guardada
-        for (NovedadEntity n : guardadas) {
-            publicarEvento("NOVEDAD_CREADA", n);
+        // 4. Un solo evento RabbitMQ con resumen de la importación
+        try {
+            Map<String, Object> evento = new HashMap<>();
+            evento.put("tipo", "IMPORTACION_EXCEL");
+            evento.put("cantidad", guardadas.size());
+            evento.put("usuarioId", usuarioId.toString());
+            evento.put("timestamp", java.time.LocalDateTime.now().toString());
+            rabbitTemplate.convertAndSend(queueName, objectMapper.writeValueAsString(evento));
+        } catch (Exception e) {
+            log.warn("[crearEnLote] No se pudo publicar evento RabbitMQ: {}", e.getMessage());
         }
 
         log.info("[crearEnLote] {} novedades creadas en una transacción", guardadas.size());
@@ -108,11 +114,8 @@ public class NovedadServiceImpl implements INovedadService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<NovedadDTORespuesta> listarTodas(boolean includeOcultas) {
-        List<NovedadEntity> todos = includeOcultas
-                ? novedadRepository.findAllHidden()
-                : novedadRepository.findAll();
-        return mapper.toDTOList(todos);
+    public List<NovedadDTORespuesta> listarTodas() {
+        return mapper.toDTOList(novedadRepository.findAll());
     }
 
     @Override
@@ -134,10 +137,7 @@ public class NovedadServiceImpl implements INovedadService {
     @Override
     @Transactional(readOnly = true)
     public List<NovedadDTORespuesta> listarPorUsuario(UUID usuarioId) {
-        List<NovedadEntity> novedades = novedadRepository.findByUsuarioId(usuarioId);
-        return mapper.toDTOList(novedades.stream()
-                .filter(n -> !Boolean.TRUE.equals(n.getOculto()))
-                .toList());
+        return mapper.toDTOList(novedadRepository.findByUsuarioId(usuarioId));
     }
 
     @Override
@@ -232,7 +232,6 @@ public class NovedadServiceImpl implements INovedadService {
         existente.setOculto(true);
         existente.setUsuarioActualizacion(usuarioIdSolicitante.toString());
         novedadRepository.save(existente);
-        novedadRepository.flush(); // Ensure database is updated immediately
 
         // Auditoría
         registrarAuditoria(existente, usuarioIdSolicitante, AccionAuditoria.DELETE, null, null);
@@ -241,46 +240,7 @@ public class NovedadServiceImpl implements INovedadService {
         // Agregamos el campo "oculto" al mensaje de RabbitMQ
         publicarEvento("NOVEDAD_ELIMINADA", existente);
 
-        log.info("[Soft-Delete] Novedad marcada como OCULTA - ID: {}, oculto=true confirmado en DB", novedadId);
-    }
-
-    @Override
-    @Transactional
-    public NovedadDTORespuesta desocultarNovedad(UUID novedadId, UUID usuarioIdSolicitante) {
-        log.info("[Unhide] Iniciando desocultar para ID: {}", novedadId);
-
-        NovedadEntity existente = buscarNovedadOFallar(novedadId);
-        log.info("[Unhide] Novedad encontrada, oculto actual: {}", existente.getOculto());
-
-        existente.setOculto(false);
-        existente.setUsuarioActualizacion(usuarioIdSolicitante.toString());
-
-        try {
-            NovedadEntity guardada = novedadRepository.save(existente);
-            novedadRepository.flush();
-            log.info("[Unhide] Novedad guardada en DB, oculto nuevo: {}", guardada.getOculto());
-
-            try {
-                registrarAuditoria(guardada, usuarioIdSolicitante, AccionAuditoria.UPDATE, null, guardada);
-                log.info("[Unhide] Auditoría registrada");
-            } catch (Exception e) {
-                log.warn("[Unhide] Advertencia al registrar auditoría: {}", e.getMessage());
-            }
-
-            try {
-                publicarEvento("NOVEDAD_ACTUALIZADA", guardada);
-                log.info("[Unhide] Evento publicado");
-            } catch (Exception e) {
-                log.warn("[Unhide] Advertencia al publicar evento: {}", e.getMessage());
-            }
-
-            NovedadDTORespuesta respuesta = mapper.toDTO(guardada);
-            log.info("[Unhide] Novedad desocultada exitosamente - ID: {}", novedadId);
-            return respuesta;
-        } catch (Exception e) {
-            log.error("[Unhide] ERROR al guardar novedad ID: {}: {}", novedadId, e.getMessage(), e);
-            throw new RuntimeException("Error al desocultar novedad: " + e.getMessage(), e);
-        }
+        log.info("Novedad marcada como OCULTA con ID: {}", novedadId);
     }
 
     // ==========================================
@@ -296,8 +256,7 @@ public class NovedadServiceImpl implements INovedadService {
         }
 
         if (peticion.getHoraFin() != null && peticion.getHoraInicio() != null
-                && peticion.getHoraFin().isBefore(peticion.getHoraInicio())
-                && !permiteCruceMedianoche(peticion.getHoraInicio(), peticion.getHoraFin())) {
+                && peticion.getHoraFin().isBefore(peticion.getHoraInicio())) {
             throw new BadRequestException("La hora de fin no puede ser anterior a la hora de inicio");
         }
 
@@ -324,19 +283,6 @@ public class NovedadServiceImpl implements INovedadService {
                 throw new BadRequestException("El conteo de confinados no puede ser negativo");
             }
         }
-    }
-
-    /**
-     * Permite que horaFin sea anterior a horaInicio cuando el evento cruza
-     * medianoche: inicio entre 22:00–23:59 y fin entre 00:00–02:59.
-     */
-    private boolean permiteCruceMedianoche(LocalTime horaInicio, LocalTime horaFin) {
-        int horaInicioValor = horaInicio.getHour();
-        int horaFinValor = horaFin.getHour();
-
-        return (horaInicioValor == 22 || horaInicioValor == 23)
-                && horaFinValor >= 0
-                && horaFinValor <= 2;
     }
 
     // ==========================================
