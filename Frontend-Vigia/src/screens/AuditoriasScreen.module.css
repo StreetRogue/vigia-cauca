@@ -1,3 +1,37 @@
+/* ══════════════════════════════════════════════════════════════════
+   🎨 PALETA DEL MÓDULO DE AUDITORÍAS
+   Cambia estos valores para personalizar SOLO este módulo.
+   No afecta ningún otro módulo de la app.
+   ══════════════════════════════════════════════════════════════════ */
+.auditoriasScope {
+  /* ── Fondos ── */
+  --dash-bg:        #091629;    /* fondo general de la pantalla      */
+  --dash-panel:     #0d1f3c;    /* fondo de los paneles (lista/detalle) */
+  --dash-panel2:    #112444;    /* hover de filas y fondos secundarios  */
+
+  /* ── Bordes ── */
+  --dash-border:    rgba(34, 82, 173, 0.25);   /* borde estándar   */
+  --dash-border-hi: rgba(75, 119, 194, 0.55);  /* borde destacado  */
+
+  /* ── Textos ── */
+  --dash-text-0:    #ffffff;    /* texto principal                   */
+  --dash-text-1:    #becef0;    /* etiquetas y texto secundario      */
+  --dash-text-2:    #878d99;    /* texto muy tenue                   */
+
+  /* ── Acento / highlight ── */
+  --dash-accent:    #c8971f;    /* dorado — filas seleccionadas      */
+
+  /* ── Colores semánticos (badges de acción) ── */
+  --aud-create:     #4ade80;    /* verde  — CREATE                   */
+  --aud-update:     #facc15;    /* amarillo — UPDATE                 */
+  --aud-delete:     #f87171;    /* rojo  — DELETE                    */
+  --aud-import:     #a78bfa;    /* violeta — EXCEL_IMPORT            */
+
+  display: contents; /* no rompe el layout del template */
+}
+
+/* ─────────────────────────────────────────────────────────────────── */
+
 .sidebarUser {
   display: flex;
   align-items: center;

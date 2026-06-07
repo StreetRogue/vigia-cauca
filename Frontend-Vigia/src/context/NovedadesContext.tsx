@@ -116,7 +116,7 @@ export interface NovedadesContextType {
   // Handlers and Actions
   handleContinuar: () => void;
   resetForm: () => void;
-  handleExcelFile: (file: File) => void;
+  handleExcelFile: (file: File) => Promise<void>;
 }
 
 const NovedadesContext = createContext<NovedadesContextType | undefined>(undefined);
@@ -339,33 +339,40 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  function handleExcelFile(file: File) {
+  async function handleExcelFile(file: File): Promise<void> {
     setExcelError('');
     const valid = ['.xls', '.xlsx'];
     const hasValidExt = valid.some(ext => file.name.toLowerCase().endsWith(ext));
     if (!hasValidExt) {
-      setExcelError('Formato de archivo inválido. Solo se aceptan archivos .xls o .xlsx');
-      return;
+      const msg = 'Formato de archivo inválido. Solo se aceptan archivos .xls o .xlsx';
+      setExcelError(msg);
+      throw new Error(msg);
     }
     if (file.size > EXCEL_MAX_BYTES) {
-      setExcelError('El archivo excede el tamaño máximo permitido (10 MB)');
-      return;
+      const msg = 'El archivo excede el tamaño máximo permitido (10 MB)';
+      setExcelError(msg);
+      throw new Error(msg);
     }
     const usuarioId = user?.sub ?? '';
-    novedadesService
-      .cargarExcel(file, usuarioId)
-      .then(() => {
-        cacheManager.clear();
-        estadisticasService.invalidarCache();
-        setShowExcelModal(false);
-        setShowSuccessToast(true);
-        window.dispatchEvent(new CustomEvent('novedadesRefresh'));
-        setTimeout(() => setShowSuccessToast(false), 3500);
-      })
-      .catch((err: unknown) => {
-        const msg = err instanceof Error ? err.message : 'Error al procesar el archivo';
-        setExcelError(msg);
-      });
+    const resultado = await novedadesService.cargarExcel(file, usuarioId);
+
+    if (resultado.novedadesCreadas === 0 && resultado.errores > 0) {
+      const primerError = resultado.erroresDetalle[0];
+      const msg = primerError
+        ? `Fila ${primerError.fila}: ${primerError.error}` +
+          (resultado.erroresDetalle.length > 1
+            ? ` (y ${resultado.erroresDetalle.length - 1} error(es) más)`
+            : '')
+        : `${resultado.errores} error(es) encontrados. No se creó ninguna novedad.`;
+      throw new Error(msg);
+    }
+
+    cacheManager.clear();
+    estadisticasService.invalidarCache();
+    setShowExcelModal(false);
+    setShowSuccessToast(true);
+    window.dispatchEvent(new CustomEvent('novedadesRefresh'));
+    setTimeout(() => setShowSuccessToast(false), 3500);
   }
 
   const value: NovedadesContextType = {

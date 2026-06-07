@@ -35,7 +35,7 @@ jwt:
       api-client: ${KEYCLOAK_CLIENT_ID}
 
 ubicaciones:
-  url: http://micro-ubicaciones:8082
+  url: http://micro-ubicaciones:8083
 
 logging:
   level:

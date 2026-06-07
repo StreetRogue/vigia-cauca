@@ -11,6 +11,14 @@ import type {
   AuditoriaDTORespuesta,
 } from '../types/novedad.types';
 
+export interface ExcelCargaResultado {
+  totalFilasProcesadas: number;
+  novedadesCreadas: number;
+  errores: number;
+  detalle: NovedadDTORespuesta[];
+  erroresDetalle: { fila: number | string; error: string }[];
+}
+
 export const novedadesService = {
   // ── CRUD principal ──────────────────────────────────────────────────────────
 
@@ -132,17 +140,16 @@ export const novedadesService = {
   },
 
   /** Carga novedades masivamente desde un archivo Excel. */
-  async cargarExcel(archivo: File, usuarioId: string): Promise<NovedadDTORespuesta[]> {
+  async cargarExcel(archivo: File, usuarioId: string): Promise<ExcelCargaResultado> {
     const formData = new FormData();
     formData.append('archivo', archivo);
 
-    const { data } = await novedadesClient.post<NovedadDTORespuesta[]>(
+    // Sin Content-Type manual: axios detecta FormData y deja que el browser
+    // establezca multipart/form-data con el boundary correcto.
+    const { data } = await novedadesClient.post<ExcelCargaResultado>(
       ENDPOINTS.novedades.cargaExcel,
       formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        params: { usuarioId },
-      },
+      { params: { usuarioId } },
     );
     return data;
   },

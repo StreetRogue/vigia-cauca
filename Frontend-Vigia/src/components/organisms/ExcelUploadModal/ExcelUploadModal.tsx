@@ -7,13 +7,14 @@ import './ExcelUploadModal.css';
 interface ExcelUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpload: (file: File) => void;
+  onUpload: (file: File) => Promise<void>;
 }
 
 export function ExcelUploadModal({ isOpen, onClose, onUpload }: ExcelUploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [downloading, setDownloading] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   if (!isOpen) return null;
 
@@ -22,16 +23,26 @@ export function ExcelUploadModal({ isOpen, onClose, onUpload }: ExcelUploadModal
     setError(err);
   }
 
-  function handleUpload() {
+  async function handleUpload() {
     if (!file) {
       setError('Debe seleccionar un archivo .xlsx o .xls antes de continuar.');
       return;
     }
-    onUpload(file);
-    handleClose();
+    setUploading(true);
+    setError('');
+    try {
+      await onUpload(file);
+      // El contexto cierra el modal vía setShowExcelModal(false) al tener éxito
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error al procesar el archivo';
+      setError(msg);
+    } finally {
+      setUploading(false);
+    }
   }
 
   function handleClose() {
+    if (uploading) return;
     setFile(null);
     setError('');
     onClose();
@@ -58,7 +69,7 @@ export function ExcelUploadModal({ isOpen, onClose, onUpload }: ExcelUploadModal
   }
 
   return (
-    <div className="modal-overlay" onClick={handleClose}>
+    <div className="modal-overlay" onClick={uploading ? undefined : handleClose}>
       <div className="modal-card" onClick={e => e.stopPropagation()}>
 
         {/* ── Header ── */}
@@ -66,7 +77,7 @@ export function ExcelUploadModal({ isOpen, onClose, onUpload }: ExcelUploadModal
           <span className="modal-title">CARGAR NOVEDAD DESDE EXCEL</span>
           <div className="modal-header-right">
             <span className="modal-code">HE-02 · HU-EX</span>
-            <CloseButton onClick={handleClose} />
+            <CloseButton onClick={handleClose} disabled={uploading} />
           </div>
         </div>
 
@@ -96,16 +107,16 @@ export function ExcelUploadModal({ isOpen, onClose, onUpload }: ExcelUploadModal
 
         {/* ── Footer ── */}
         <div className="modal-footer">
-          <button className="btn-secondary" onClick={handleClose} type="button">
+          <button className="btn-secondary" onClick={handleClose} type="button" disabled={uploading}>
             CANCELAR
           </button>
           <button
             className="btn-primary"
             onClick={handleUpload}
-            disabled={!file}
+            disabled={!file || uploading}
             type="button"
           >
-            CARGAR ARCHIVO
+            {uploading ? 'CARGANDO...' : 'CARGAR ARCHIVO'}
           </button>
         </div>
 

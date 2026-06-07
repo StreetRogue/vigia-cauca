@@ -38,32 +38,13 @@ export async function login(emailOrUsername: string, password: string): Promise<
   return res.json() as Promise<TokenResponse>;
 }
 
-/**
- * Renovar el access_token.
- * El refresh también pasa por el Gateway si existe ese endpoint,
- * si no, llama directo a Keycloak (el refresh_token no requiere client_secret en public clients).
- * Por ahora reutilizamos el login endpoint del Gateway que devuelve el mismo shape.
- */
+/** Renovar el access_token a través del Gateway (que añade el client_secret de Keycloak). */
 export async function refreshToken(currentRefreshToken: string): Promise<TokenResponse> {
-  // El Gateway no expone refresh todavía → llamamos directo a Keycloak
-  // (el refresh_token no requiere client_secret si el cliente es public,
-  //  o el Gateway puede ser extendido en el futuro con /api/auth/refresh)
-  const KC_URL   = import.meta.env.VITE_KEYCLOAK_URL   ?? 'http://localhost:8180';
-  const KC_REALM = import.meta.env.VITE_KEYCLOAK_REALM ?? 'security-realm-dev';
-  const CLIENT_ID = import.meta.env.VITE_KEYCLOAK_CLIENT_ID ?? 'api-gateway';
-
-  const res = await fetch(
-    `${KC_URL}/realms/${KC_REALM}/protocol/openid-connect/token`,
-    {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body:    new URLSearchParams({
-        grant_type:    'refresh_token',
-        client_id:     CLIENT_ID,
-        refresh_token: currentRefreshToken,
-      }).toString(),
-    },
-  );
+  const res = await fetch(`${GATEWAY}/api/auth/refresh`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ refreshToken: currentRefreshToken }),
+  });
 
   if (!res.ok) throw new Error('Sesión expirada');
   return res.json() as Promise<TokenResponse>;

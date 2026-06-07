@@ -1,10 +1,40 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { auditoriaService } from '../../../services/auditoria.service';
 import type { AuditoriaDTORespuesta } from '../../../types/novedad.types';
 import styles from './AuditoriasListPanel.module.css';
 
 type Modo = 'reciente' | 'novedad' | 'usuario';
 type FiltroAccion = 'TODAS' | 'CREATE' | 'UPDATE' | 'DELETE' | 'EXCEL_IMPORT';
+
+function CopyableId({ id }: { id: string | null }) {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  if (!id) return <span>—</span>;
+
+  const short = id.substring(0, 8).toUpperCase();
+
+  function handleCopy() {
+    navigator.clipboard.writeText(id).then(() => {
+      setCopied(true);
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => setCopied(false), 1500);
+    });
+  }
+
+  return (
+    <span className={styles.copyableId}>
+      {short}
+      <button
+        className={[styles.copyBtn, copied ? styles.copyBtnDone : ''].filter(Boolean).join(' ')}
+        onClick={e => { e.stopPropagation(); handleCopy(); }}
+        title={id}
+      >
+        {copied ? '✓ Copiado' : '⎘ Copiar'}
+      </button>
+    </span>
+  );
+}
 
 const ACCION_LABELS: Record<string, string> = {
   CREATE:       'Creación',
@@ -27,6 +57,8 @@ export function AuditoriasListPanel({ onSelect, selectedId }: Props) {
   const [modo, setModo]                   = useState<Modo>('reciente');
   const [busquedaId, setBusquedaId]       = useState('');
   const [filtroAccion, setFiltroAccion]   = useState<FiltroAccion>('TODAS');
+
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -54,9 +86,17 @@ export function AuditoriasListPanel({ onSelect, selectedId }: Props) {
   }, [modo, load]);
 
   function handleBuscar() {
-    if ((modo === 'novedad' || modo === 'usuario') && busquedaId.trim()) {
-      load();
+    if (modo !== 'novedad' && modo !== 'usuario') return;
+    const id = busquedaId.trim();
+    if (!id) {
+      setError('Ingrese un ID para buscar.');
+      return;
     }
+    if (!UUID_REGEX.test(id)) {
+      setError('El ID debe ser un UUID completo. Ejemplo: 34384a2c-1234-5678-abcd-ef0123456789');
+      return;
+    }
+    load();
   }
 
   function handleModoChange(nuevoModo: Modo) {
@@ -76,9 +116,27 @@ export function AuditoriasListPanel({ onSelect, selectedId }: Props) {
     return { fecha, hora };
   }
 
-  function shortId(id: string | null) {
-    if (!id) return '—';
-    return id.substring(0, 8).toUpperCase();
+  function relTime(iso: string): string {
+    const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
+    if (mins < 1)  return 'ahora';
+    if (mins < 60) return `${mins}m`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24)  return `${hrs}h`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7)  return `${days}d`;
+    return `${Math.floor(days / 7)}sem`;
+  }
+
+function getResumen(r: AuditoriaDTORespuesta): string {
+    const raw = r.datosNuevos ?? r.datosAnteriores;
+    if (!raw) return '';
+    try {
+      const d = JSON.parse(raw) as Record<string, unknown>;
+      const municipio = d.municipio ? String(d.municipio) : '';
+      const categoria = d.categoria ? String(d.categoria) : '';
+      if (municipio && categoria) return `${municipio} · ${categoria}`;
+      return municipio || categoria;
+    } catch { return ''; }
   }
 
   return (
@@ -125,7 +183,7 @@ export function AuditoriasListPanel({ onSelect, selectedId }: Props) {
             <div className={styles.searchRow}>
               <input
                 className={styles.searchInput}
-                placeholder={`UUID del ${modo === 'novedad' ? 'novedad' : 'usuario'}...`}
+                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                 value={busquedaId}
                 onChange={e => setBusquedaId(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleBuscar()}
@@ -161,8 +219,8 @@ export function AuditoriasListPanel({ onSelect, selectedId }: Props) {
           <thead>
             <tr>
               <th className={styles.numTh}>#</th>
-              <th>Fecha</th>
-              <th>Hora</th>
+              <th>Fecha · Hora</th>
+              <th></th>
               <th>Acción</th>
               <th>Novedad</th>
               <th>Usuario</th>
@@ -179,6 +237,7 @@ export function AuditoriasListPanel({ onSelect, selectedId }: Props) {
               </td></tr>
             ) : filtrados.map((r, i) => {
               const { fecha, hora } = formatFecha(r.fecha);
+              const resumen = getResumen(r);
               return (
                 <tr
                   key={r.auditoriaId}
@@ -189,15 +248,19 @@ export function AuditoriasListPanel({ onSelect, selectedId }: Props) {
                   onClick={() => onSelect(r)}
                 >
                   <td className={styles.numCell}>{i + 1}</td>
-                  <td className={styles.dateCell}>{fecha}</td>
-                  <td className={styles.timeCell}>{hora}</td>
+                  <td className={styles.dateCell}>
+                    <span className={styles.dateMain}>{fecha}</span>
+                    <span className={styles.dateSub}>{hora}</span>
+                  </td>
+                  <td className={styles.relCell}>{relTime(r.fecha)}</td>
                   <td>
                     <span className={[styles.accionBadge, styles[`acc_${r.accion}`]].filter(Boolean).join(' ')}>
                       {ACCION_LABELS[r.accion] ?? r.accion}
                     </span>
+                    {resumen && <span className={styles.rowResumen}>{resumen}</span>}
                   </td>
-                  <td className={styles.idCell}>{shortId(r.novedadId)}</td>
-                  <td className={styles.idCell}>{shortId(r.usuarioId)}</td>
+                  <td className={styles.idCell}><CopyableId id={r.novedadId} /></td>
+                  <td className={styles.idCell}><CopyableId id={r.usuarioId} /></td>
                 </tr>
               );
             })}

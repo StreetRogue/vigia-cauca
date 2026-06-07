@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
   const gatewayUrl = env.VITE_API_GATEWAY_URL || 'http://localhost:8080';
   const novedadesUrl = env.VITE_API_NOVEDADES_URL || 'http://localhost:5003';
   const reportesUrl = env.VITE_API_REPORTES_URL || 'http://localhost:5004';
-  const ubicacionesUrl = env.VITE_API_UBICACIONES_URL || 'http://localhost:8082';
+  const ubicacionesUrl = env.VITE_API_UBICACIONES_URL || 'http://localhost:8083';
   const apiMode = env.VITE_API_MODE || 'direct';
 
   const proxy =

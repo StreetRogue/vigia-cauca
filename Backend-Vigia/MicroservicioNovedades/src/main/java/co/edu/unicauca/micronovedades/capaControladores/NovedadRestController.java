@@ -197,6 +197,17 @@ public class NovedadRestController {
     }
 
     /**
+     * POST /api/v1/microNovedades/novedades/resync
+     * Re-publica eventos NOVEDAD_CREADA para todas las novedades existentes.
+     * Útil para re-poblar el read model de micro-reportes.
+     */
+    @PostMapping("/resync")
+    public ResponseEntity<Map<String, Object>> resyncEventos() {
+        int count = novedadService.resyncEventos();
+        return ResponseEntity.ok(Map.of("eventosPublicados", count));
+    }
+
+    /**
      * POST /api/v1/microNovedades/novedades/carga-excel
      * Recibe un archivo Excel y crea múltiples novedades.
      * Parámetro requerido: usuarioId (UUID del usuario que realiza la carga)

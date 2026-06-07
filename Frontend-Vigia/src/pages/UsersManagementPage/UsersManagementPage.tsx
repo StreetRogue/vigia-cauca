@@ -11,18 +11,21 @@ import { usuariosService } from "../../services/usuarios.service";
 import { ubicacionesService } from "../../services/ubicaciones.service";
 import type { UsuarioResponseDTO } from "../../types/usuario.types";
 import type { MunicipioDTORespuesta } from "../../types/ubicaciones.types";
+import { getMenuItemsForRole, resolveAppRole } from '../../constants/menuConfig';
 import dashboardIcon    from "../../assets/Dashboard_Icon.svg";
 import novedadesIcon    from "../../assets/novedades_icon.svg";
 import usuariosIcon     from "../../assets/usuarios_icon.svg";
+import auditoriaIcon    from "../../assets/auditoria_icon.svg";
 import configuracionIcon from "../../assets/configuracion_icon.svg";
 import styles from "./UsersManagementPage.module.css";
 
-const menuItems =[
-  { label: "DASHBOARD",     icon: <img src={dashboardIcon}     alt="" />, to: "/dashboard"      },
-  { label: "NOVEDADES",     icon: <img src={novedadesIcon}     alt="" />, to: "/novedades"      },
-  { label: "USUARIOS",      icon: <img src={usuariosIcon}      alt="" />, to: "/usuarios"       },
-  { label: "CONFIGURACION", icon: <img src={configuracionIcon} alt="" />, to: "/configuracion" },
-];
+const ICON_MAP: Record<string, string> = {
+  DASHBOARD:     dashboardIcon,
+  NOVEDADES:     novedadesIcon,
+  USUARIOS:      usuariosIcon,
+  AUDITORIAS:    auditoriaIcon,
+  CONFIGURACION: configuracionIcon,
+};
 
 const PAGE_SIZE = 10;
 
@@ -237,7 +240,14 @@ export function UsersManagementPage() {
     <ManagementTemplate
       sidebarTitle="VIGIA CAUCA"
       sidebarSubtitle="GESTION INTEGRAL"
-      sidebarNav={<NavMenu items={menuItems} selectedItem={selected} onItemSelect={setSelected} />}
+      sidebarNav={<NavMenu
+        items={getMenuItemsForRole(resolveAppRole([user?.rol ?? ''])).map(item => ({
+          ...item,
+          icon: <img src={ICON_MAP[item.label]} alt="" style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)', opacity: 0.7 }} />,
+        }))}
+        selectedItem={selected}
+        onItemSelect={setSelected}
+      />}
       sidebarFooter={
         <div className={styles.sidebarUser}>
           <div className={styles.sidebarAvatar}>{initials}</div>

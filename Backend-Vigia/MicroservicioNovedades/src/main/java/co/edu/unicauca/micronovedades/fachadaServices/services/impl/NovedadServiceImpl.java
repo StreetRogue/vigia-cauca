@@ -89,17 +89,8 @@ public class NovedadServiceImpl implements INovedadService {
                 .toList();
         auditoriaRepository.saveAll(auditorias);
 
-        // 4. Un solo evento RabbitMQ con resumen de la importación
-        try {
-            Map<String, Object> evento = new HashMap<>();
-            evento.put("tipo", "IMPORTACION_EXCEL");
-            evento.put("cantidad", guardadas.size());
-            evento.put("usuarioId", usuarioId.toString());
-            evento.put("timestamp", java.time.LocalDateTime.now().toString());
-            rabbitTemplate.convertAndSend(queueName, objectMapper.writeValueAsString(evento));
-        } catch (Exception e) {
-            log.warn("[crearEnLote] No se pudo publicar evento RabbitMQ: {}", e.getMessage());
-        }
+        // 4. Publicar un evento NOVEDAD_CREADA por cada novedad para que el read model se actualice
+        guardadas.forEach(n -> publicarEvento("NOVEDAD_CREADA", n));
 
         log.info("[crearEnLote] {} novedades creadas en una transacción", guardadas.size());
         return mapper.toDTOList(guardadas);
@@ -274,10 +265,6 @@ public class NovedadServiceImpl implements INovedadService {
             throw new BadRequestException("Se permiten máximo 10 actores");
         }
 
-        if (peticion.getHoraFin() != null && peticion.getHoraInicio() != null
-                && peticion.getHoraFin().isBefore(peticion.getHoraInicio())) {
-            throw new BadRequestException("La hora de fin no puede ser anterior a la hora de inicio");
-        }
 
         if (peticion.getFechaHecho() != null) {
             // LocalDate.now() es HOY.
@@ -385,6 +372,15 @@ public class NovedadServiceImpl implements INovedadService {
                 .nivelVisibilidad(original.getNivelVisibilidad())
                 .usuarioActualizacion(original.getUsuarioActualizacion())
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public int resyncEventos() {
+        List<NovedadEntity> todas = novedadRepository.findAll();
+        todas.forEach(n -> publicarEvento("NOVEDAD_CREADA", n));
+        log.info("[resync] Re-publicados {} eventos NOVEDAD_CREADA al exchange", todas.size());
+        return todas.size();
     }
 
     // ==========================================
