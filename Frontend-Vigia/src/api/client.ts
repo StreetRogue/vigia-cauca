@@ -16,13 +16,17 @@ function createGatewayClient(): AxiosInstance {
     headers: { 'Content-Type': 'application/json' },
   });
 
-  // Request: adjunta Bearer token. El auto-refresh de AuthContext renueva el token
-  // antes de que expire; si de todas formas llega expirado, el 401 del servidor
-  // lo captura el interceptor de respuesta.
+  // Request: adjunta Bearer token y deja que el browser fije el Content-Type
+  // correcto cuando el body es FormData (multipart/form-data + boundary).
   instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     const token = getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    // Si el body es FormData, eliminar el Content-Type para que Axios/browser
+    // lo establezca automáticamente con el boundary correcto.
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
     }
     return config;
   });
