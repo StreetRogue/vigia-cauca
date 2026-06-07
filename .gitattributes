@@ -1,0 +1,14 @@
+# Forzar LF en scripts shell — evita el error "illegal option" en Linux/Docker
+*.sh    text eol=lf
+
+# Forzar LF en archivos de configuración que se ejecutan en Linux
+*.env   text eol=lf
+Dockerfile* text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.xml   text eol=lf
+*.json  text eol=lf
+
+# Archivos de Windows — CRLF está bien
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
