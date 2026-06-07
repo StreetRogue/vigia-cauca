@@ -67,7 +67,7 @@ spring:
             # dejando /municipios/... que es lo que espera el controlador.
             # =========================
             - id: ubicaciones
-              uri: http://micro-ubicaciones:8082
+              uri: http://micro-ubicaciones:8083
               predicates:
                 - Path=/api/*/microUbicaciones/**
               filters:

@@ -73,24 +73,15 @@ function clearTokens() {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
-  const [state, setState] = useState<AuthState>(() => {
-    // Restaurar sesión del localStorage al cargar la app
-    const accessToken  = localStorage.getItem(STORAGE_ACCESS);
-    const refreshToken = localStorage.getItem(STORAGE_REFRESH);
 
-    if (accessToken && refreshToken) {
-      const payload = parseJwt(accessToken);
-      if (payload && !isTokenExpiringSoon(payload, 0)) {
-        return {
-          user: buildUser(payload),
-          accessToken,
-          refreshToken,
-          isAuthenticated: true,
-          isLoading: false,
-        };
-      }
-    }
-    return { user: null, accessToken: null, refreshToken: null, isAuthenticated: false, isLoading: false };
+  // Empezar siempre en loading para que el useEffect decida el estado real.
+  // Esto evita el flash de "no autenticado" antes de que el refresh termine.
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    accessToken: null,
+    refreshToken: null,
+    isAuthenticated: false,
+    isLoading: true,
   });
 
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -104,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     refreshTimerRef.current = setTimeout(async () => {
       try {
-        const tokens  = await authService.refreshToken(refreshTkn);
+        const tokens     = await authService.refreshToken(refreshTkn);
         const newPayload = parseJwt(tokens.access_token);
         if (!newPayload) throw new Error('Token inválido');
 
@@ -118,24 +109,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }));
         scheduleRefresh(newPayload, tokens.refresh_token);
       } catch {
-        // Refresh falló → cerrar sesión y redirigir al login
+        // El refresh_token también expiró (inactividad >24 h) → login obligatorio
         clearTokens();
         setState({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false, isLoading: false });
         navigate('/login');
       }
     }, msUntilRefresh);
-  }, []);
+  }, [navigate]);
 
-  // Arrancar auto-refresh si ya había sesión guardada
+  // ── Restaurar sesión al montar ────────────────────────────────────────────
   useEffect(() => {
-    if (state.isAuthenticated && state.accessToken && state.refreshToken) {
-      const payload = parseJwt(state.accessToken);
-      if (payload) scheduleRefresh(payload, state.refreshToken);
+    const storedAccess  = localStorage.getItem(STORAGE_ACCESS);
+    const storedRefresh = localStorage.getItem(STORAGE_REFRESH);
+
+    if (!storedRefresh) {
+      // Sin tokens almacenados → no hay sesión
+      setState((s) => ({ ...s, isLoading: false }));
+      return;
     }
+
+    const payload = storedAccess ? parseJwt(storedAccess) : null;
+
+    if (payload && !isTokenExpiringSoon(payload, 60)) {
+      // Token válido y no está a punto de expirar → restaurar inmediatamente
+      setState({
+        user: buildUser(payload),
+        accessToken:  storedAccess!,
+        refreshToken: storedRefresh,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+      scheduleRefresh(payload, storedRefresh);
+      return;
+    }
+
+    // Token expirado o próximo a expirar → renovar ahora con el refresh token
+    // (cubre el caso de recargar la página después de 1 hora)
+    authService.refreshToken(storedRefresh)
+      .then((tokens) => {
+        const newPayload = parseJwt(tokens.access_token);
+        if (!newPayload) throw new Error('Token inválido');
+        const user = buildUser(newPayload);
+        saveTokens(tokens.access_token, tokens.refresh_token, user.rol);
+        setState({
+          user,
+          accessToken:  tokens.access_token,
+          refreshToken: tokens.refresh_token,
+          isAuthenticated: true,
+          isLoading: false,
+        });
+        scheduleRefresh(newPayload, tokens.refresh_token);
+      })
+      .catch(() => {
+        // Refresh token inválido/expirado → sesión terminada definitivamente
+        clearTokens();
+        setState({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false, isLoading: false });
+      });
+
     return () => {
       if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
     };
-  // Solo ejecutar al montar
+  // Sólo al montar
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -160,12 +194,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Logout ────────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-    if (state.refreshToken) {
-      await authService.logout(state.refreshToken);
+    const currentRefresh = localStorage.getItem(STORAGE_REFRESH);
+    if (currentRefresh) {
+      await authService.logout(currentRefresh).catch(() => {});
     }
     clearTokens();
     setState({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false, isLoading: false });
-  }, [state.refreshToken]);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ ...state, login, logout }}>

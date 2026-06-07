@@ -179,6 +179,21 @@ function UserSection({ displayName, displayRol, isAdmin, onLogout }: UserSection
               </button>
             )}
 
+            {isAdmin && (
+              <button
+                className={`${styles.userDropdownItem} ${pathname === '/auditorias' ? styles.userDropdownItemActive : ''}`}
+                onClick={() => go('/auditorias')}
+              >
+                <svg viewBox="0 0 14 14" width={12} height={12} fill="none">
+                  <path d="M2 2h10v10H2z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round" />
+                  <path d="M4 5h6M4 7h6M4 9h3" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+                  <circle cx="10.5" cy="9.5" r="2" fill="none" stroke="currentColor" strokeWidth="1" />
+                  <path d="M12 11l1 1" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+                </svg>
+                Auditorías
+              </button>
+            )}
+
             <button
               className={`${styles.userDropdownItem} ${pathname === '/configuracion' ? styles.userDropdownItemActive : ''}`}
               onClick={() => go('/configuracion')}
@@ -449,7 +464,8 @@ export function DashboardNavbar({ onFilterChange, currentFiltros }: DashboardNav
                     { path: '/dashboard',    label: 'Dashboard'     },
                     { path: '/estadisticas', label: 'Estadísticas'  },
                     { path: '/novedades',    label: 'Novedades'     },
-                    ...(isAdmin ? [{ path: '/usuarios', label: 'Usuarios' }] : []),
+                    ...(isAdmin ? [{ path: '/usuarios',   label: 'Usuarios'   }] : []),
+                    ...(isAdmin ? [{ path: '/auditorias', label: 'Auditorías' }] : []),
                     { path: '/configuracion', label: 'Configuración' },
                   ].map(({ path, label }) => (
                     <button key={path}

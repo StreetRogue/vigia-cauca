@@ -75,6 +75,7 @@ export function AuditoriasScreen() {
   );
 
   return (
+    <div className={styles.auditoriasScope}>
     <ManagementTemplate
       sidebarTitle="VIGIA CAUCA"
       sidebarSubtitle="GESTION INTEGRAL"
@@ -92,5 +93,6 @@ export function AuditoriasScreen() {
         <AuditoriasDetailPanel auditoria={selectedAuditoria} />
       }
     />
+    </div>
   );
 }

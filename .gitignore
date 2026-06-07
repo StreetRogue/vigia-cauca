@@ -70,6 +70,9 @@ web_modules/
 .env.*
 !.env.example
 
+# Archivo de contexto local para Claude Code (no se sube al repo)
+CLAUDE.md
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
@@ -137,3 +140,4 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+.claude/worktrees/

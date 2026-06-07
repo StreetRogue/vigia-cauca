@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 import unicauca.edu.co.APIGateway.DTOs.LoginRequest;
 import unicauca.edu.co.APIGateway.DTOs.LogoutRequest;
+import unicauca.edu.co.APIGateway.DTOs.RefreshRequest;
 
 import java.util.Map;
 
@@ -67,6 +68,33 @@ public class AuthService {
                 )
                 .bodyToMono(Map.class)
                 .doOnSuccess(t -> log.debug("[AuthService] Login OK for user: {}", request.getUsername()))
+                .onErrorMap(WebClientResponseException.class, ex ->
+                        new ResponseStatusException(ex.getStatusCode(), ex.getMessage())
+                );
+    }
+
+    @SuppressWarnings("rawtypes")
+    public Mono<Map> refresh(RefreshRequest request) {
+        if (request.getRefreshToken() == null || request.getRefreshToken().isBlank()) {
+            return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Refresh token requerido"));
+        }
+
+        return webClient.post()
+                .uri(tokenUrl)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(BodyInserters.fromFormData("grant_type", "refresh_token")
+                        .with("client_id",     clientId)
+                        .with("client_secret", clientSecret)
+                        .with("refresh_token", request.getRefreshToken()))
+                .retrieve()
+                .onStatus(status -> status.is4xxClientError(), response ->
+                        response.bodyToMono(String.class)
+                                .flatMap(body -> Mono.error(
+                                        new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sesión expirada")
+                                ))
+                )
+                .bodyToMono(Map.class)
+                .doOnSuccess(t -> log.debug("[AuthService] Token renovado"))
                 .onErrorMap(WebClientResponseException.class, ex ->
                         new ResponseStatusException(ex.getStatusCode(), ex.getMessage())
                 );

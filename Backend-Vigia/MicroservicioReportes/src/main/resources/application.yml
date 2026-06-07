@@ -43,9 +43,9 @@ spring:
     listener:
       simple:
         acknowledge-mode: manual
-        concurrency: 2
-        max-concurrency: 5
-        prefetch: 5
+        concurrency: 1
+        max-concurrency: 1
+        prefetch: 1
         retry:
           enabled: true
           initial-interval: 1000

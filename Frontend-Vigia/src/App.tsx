@@ -8,7 +8,9 @@ import { useAuth } from "./context/AuthContext";
 import type { JSX } from "react";
 
 function RequireRole({ roles, children }: { roles: string[]; children: JSX.Element }) {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  // Esperar a que AuthContext resuelva la sesión (refresh en curso) antes de redirigir
+  if (isLoading) return null;
   if (!isAuthenticated) return <Navigate replace to="/login" />;
   if (!roles.includes(user?.rol ?? "")) return <Navigate replace to="/dashboard" />;
   return children;

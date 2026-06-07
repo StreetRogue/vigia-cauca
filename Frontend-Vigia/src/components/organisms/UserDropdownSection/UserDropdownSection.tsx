@@ -125,6 +125,21 @@ export function UserDropdownSection({ displayName, displayRol, isAdmin, onLogout
 
             {isAdmin && (
               <button
+                className={`${styles.userDropdownItem} ${pathname === '/auditorias' ? styles.userDropdownItemActive : ''}`}
+                onClick={() => go('/auditorias')}
+              >
+                <svg viewBox="0 0 14 14" width={12} height={12} fill="none">
+                  <rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.1" />
+                  <path d="M4.5 4.5h5M4.5 7h5M4.5 9.5h3" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+                  <circle cx="10.5" cy="9.5" r="1.5" fill="currentColor" opacity="0.7" />
+                  <path d="M10.5 11v1.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+                </svg>
+                Auditorías
+              </button>
+            )}
+
+            {isAdmin && (
+              <button
                 className={`${styles.userDropdownItem} ${pathname === '/usuarios' ? styles.userDropdownItemActive : ''}`}
                 onClick={() => go('/usuarios')}
               >

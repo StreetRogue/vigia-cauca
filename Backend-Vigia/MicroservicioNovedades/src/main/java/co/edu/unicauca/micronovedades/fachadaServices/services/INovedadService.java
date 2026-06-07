@@ -33,4 +33,7 @@ public interface INovedadService {
     void eliminarNovedad(UUID novedadId, UUID usuarioIdSolicitante);
 
     NovedadDTORespuesta desocultarNovedad(UUID novedadId, UUID usuarioIdSolicitante);
+
+    /** Re-publica eventos NOVEDAD_CREADA para todas las novedades existentes (resync read model). */
+    int resyncEventos();
 }

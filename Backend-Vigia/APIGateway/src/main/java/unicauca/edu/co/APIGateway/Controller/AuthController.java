@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 import unicauca.edu.co.APIGateway.DTOs.LoginRequest;
 import unicauca.edu.co.APIGateway.DTOs.LogoutRequest;
+import unicauca.edu.co.APIGateway.DTOs.RefreshRequest;
 import unicauca.edu.co.APIGateway.Services.AuthService;
 
 import java.util.Map;
@@ -22,6 +23,11 @@ public class AuthController {
     @PostMapping("/login")
     public Mono<Map> login(@RequestBody LoginRequest request) {
         return usuarioService.login(request);
+    }
+
+    @PostMapping("/refresh")
+    public Mono<Map> refresh(@RequestBody RefreshRequest request) {
+        return usuarioService.refresh(request);
     }
 
     @PostMapping("/logout")

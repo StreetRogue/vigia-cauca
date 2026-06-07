@@ -230,10 +230,7 @@ function NovedadesContent() {
       <ExcelUploadModal
         isOpen={showExcelModal}
         onClose={() => setShowExcelModal(false)}
-        onUpload={file => {
-          handleExcelFile(file);
-          setShowExcelModal(false);
-        }}
+        onUpload={handleExcelFile}
       />
     </>
   );

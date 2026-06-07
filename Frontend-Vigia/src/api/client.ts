@@ -8,23 +8,6 @@ function getToken(): string | null {
   return localStorage.getItem('kc-token');
 }
 
-function decodeToken(token: string): any {
-  try {
-    const payload = token.split('.')[1];
-    return JSON.parse(atob(payload));
-  } catch {
-    return null;
-  }
-}
-
-function isTokenExpired(token: string, bufferSeconds = 60): boolean {
-  const decoded = decodeToken(token);
-  if (!decoded?.exp) return true;
-  // Considera el token expirado 60 segundos antes (buffer para refrescar antes de expirar)
-  const expiresAt = decoded.exp * 1000 - (bufferSeconds * 1000);
-  return expiresAt < Date.now();
-}
-
 // ── Cliente Axios único ───────────────────────────────────────────────────────
 function createGatewayClient(): AxiosInstance {
   const instance = axios.create({
@@ -33,17 +16,13 @@ function createGatewayClient(): AxiosInstance {
     headers: { 'Content-Type': 'application/json' },
   });
 
-  // Request: adjunta Bearer token en cada petición autenticada
+  // Request: adjunta Bearer token. El auto-refresh de AuthContext renueva el token
+  // antes de que expire; si de todas formas llega expirado, el 401 del servidor
+  // lo captura el interceptor de respuesta.
   instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     const token = getToken();
-    if (token && isTokenExpired(token)) {
-      localStorage.removeItem('kc-token');
-      localStorage.removeItem('kc-refresh');
-      localStorage.removeItem('kc-role');
-    }
-    const validToken = getToken();
-    if (validToken) {
-      config.headers.Authorization = `Bearer ${validToken}`;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   });
