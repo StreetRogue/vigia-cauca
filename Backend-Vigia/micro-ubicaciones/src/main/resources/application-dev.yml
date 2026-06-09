@@ -18,6 +18,18 @@ spring:
         locations:
             - classpath:db/migration
 
+    security:
+        oauth2:
+            resourceserver:
+                jwt:
+                    issuer-uri: ${KEYCLOAK_ISSUER_URI}
+
+jwt:
+    auth:
+        converter:
+            api-client: ${KEYCLOAK_CLIENT_ID}
+            principle-attribute: preferred_username
+
 logging:
     level:
         org.springframework: DEBUG

@@ -6,6 +6,7 @@ import unicauca.edu.co.micro_usuarios.Entities.Rol;
 public interface IamService {
     String crearUsuario(String email, String username, Rol rol, String password);
     void actualizarUsuario(String userId, UsuarioUpdateDTO dto);
+    void resetPassword(String userId, String newPassword);
     void bloquearUsuario(String userId);
     void desbloquearUsuario(String userId);
 }
