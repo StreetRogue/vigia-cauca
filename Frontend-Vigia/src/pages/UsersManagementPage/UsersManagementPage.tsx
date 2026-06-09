@@ -1,31 +1,16 @@
 import { useEffect, useState, useCallback } from "react";
-import { NavMenu } from "../../components/molecules/NavMenu";
 import { Button } from "../../components/atoms/Button/Button";
 import { Pagination } from "../../components/molecules/Pagination/Pagination";
 import { UserDropdownSection } from "../../components/organisms/UserDropdownSection/UserDropdownSection";
 import { CreateUserDrawer } from "../../components/organisms/CreateUserDrawer/CreateUserDrawer";
 import { UserDetailPanel } from "../../components/organisms/usuarios/UserDetailPanel";
 import { ManagementTemplate } from "../../components/templates/ManagementTemplate/ManagementTemplate";
-import { useAuth } from "../../context/AuthContext";
+import { useSidebarNav } from "../../hooks/useSidebarNav";
 import { usuariosService } from "../../services/usuarios.service";
 import { ubicacionesService } from "../../services/ubicaciones.service";
 import type { UsuarioResponseDTO } from "../../types/usuario.types";
 import type { MunicipioDTORespuesta } from "../../types/ubicaciones.types";
-import { getMenuItemsForRole, resolveAppRole } from '../../constants/menuConfig';
-import dashboardIcon    from "../../assets/Dashboard_Icon.svg";
-import novedadesIcon    from "../../assets/novedades_icon.svg";
-import usuariosIcon     from "../../assets/usuarios_icon.svg";
-import auditoriaIcon    from "../../assets/auditoria_icon.svg";
-import configuracionIcon from "../../assets/configuracion_icon.svg";
 import styles from "./UsersManagementPage.module.css";
-
-const ICON_MAP: Record<string, string> = {
-  DASHBOARD:     dashboardIcon,
-  NOVEDADES:     novedadesIcon,
-  USUARIOS:      usuariosIcon,
-  AUDITORIAS:    auditoriaIcon,
-  CONFIGURACION: configuracionIcon,
-};
 
 const PAGE_SIZE = 10;
 
@@ -62,8 +47,7 @@ function formatAuditDate(isoDate: string): string {
 }
 
 export function UsersManagementPage() {
-  const { user, logout } = useAuth();
-  const [selected, setSelected] = useState("USUARIOS");
+  const { user, logout, displayName, displayRole, isAdmin, initials, sidebarNav } = useSidebarNav('USUARIOS');
 
   // ── Usuarios ─────────────────────────────────────────────────────────────
   const [usuarios,       setUsuarios]       = useState<UsuarioResponseDTO[]>([]);
@@ -87,10 +71,6 @@ export function UsersManagementPage() {
   const [selectedUsuarioId, setSelectedUsuarioId] = useState<string | null>(null);
 
   // ── Auth display ──────────────────────────────────────────────────────────
-  const displayName = user?.name || user?.username || "Admin";
-  const displayRole = user?.rol || "ADMIN";
-  const isAdmin = user?.rol === 'ADMIN';
-  const initials    = getInitials(displayName);
 
   // ── Load municipalities once ──────────────────────────────────────────────
   useEffect(() => {
@@ -240,14 +220,7 @@ export function UsersManagementPage() {
     <ManagementTemplate
       sidebarTitle="VIGIA CAUCA"
       sidebarSubtitle="GESTION INTEGRAL"
-      sidebarNav={<NavMenu
-        items={getMenuItemsForRole(resolveAppRole([user?.rol ?? ''])).map(item => ({
-          ...item,
-          icon: <img src={ICON_MAP[item.label]} alt="" style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)', opacity: 0.7 }} />,
-        }))}
-        selectedItem={selected}
-        onItemSelect={setSelected}
-      />}
+      sidebarNav={sidebarNav}
       sidebarFooter={
         <div className={styles.sidebarUser}>
           <div className={styles.sidebarAvatar}>{initials}</div>

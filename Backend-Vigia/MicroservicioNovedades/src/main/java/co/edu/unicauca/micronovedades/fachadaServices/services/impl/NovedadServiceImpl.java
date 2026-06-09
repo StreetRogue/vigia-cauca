@@ -83,7 +83,7 @@ public class NovedadServiceImpl implements INovedadService {
                 .map(n -> AuditoriaNovedadEntity.builder()
                         .novedad(n)
                         .usuarioId(usuarioId)
-                        .accion(AccionAuditoria.CREATE)
+                        .accion(AccionAuditoria.EXCEL_IMPORT)
                         .datosNuevos(serializarParaAuditoria(n))
                         .build())
                 .toList();
@@ -114,18 +114,45 @@ public class NovedadServiceImpl implements INovedadService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<NovedadDTORespuesta> listarTodasPaginado(Pageable pageable) {
-        return novedadRepository.findAll(pageable).map(mapper::toDTO);
+    public Page<NovedadDTORespuesta> listarTodasPaginado(boolean archivadas, Pageable pageable) {
+        // archivadas=false → solo visibles (oculto=false); archivadas=true → solo archivadas (oculto=true)
+        Page<NovedadEntity> page = archivadas
+                ? novedadRepository.findByOcultoTrue(pageable)
+                : novedadRepository.findByOcultoFalse(pageable);
+        return page.map(mapper::toDTO);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<NovedadDTORespuesta> listarPaginadoPorRol(String rol, UUID usuarioId, Pageable pageable) {
+    public Page<NovedadDTORespuesta> listarPaginadoPorRol(String rol, UUID usuarioId, boolean archivadas, Pageable pageable) {
+        Page<NovedadEntity> page;
         if ("ADMIN".equalsIgnoreCase(rol)) {
-            return novedadRepository.findAll(pageable).map(mapper::toDTO);
+            page = archivadas
+                    ? novedadRepository.findByOcultoTrue(pageable)
+                    : novedadRepository.findByOcultoFalse(pageable);
         } else {
-            return novedadRepository.findByUsuarioId(usuarioId, pageable).map(mapper::toDTO);
+            page = archivadas
+                    ? novedadRepository.findByUsuarioIdAndOcultoTrue(usuarioId, pageable)
+                    : novedadRepository.findByUsuarioIdAndOcultoFalse(usuarioId, pageable);
         }
+        return page.map(mapper::toDTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<NovedadDTORespuesta> buscarConFiltrosPaginado(
+            String rol, UUID usuarioId, boolean archivadas, String search, String municipio,
+            co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.CategoriaEvento categoria,
+            co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.NivelConfianza nivelConfianza,
+            boolean conMuertes, Pageable pageable) {
+
+        String rolFiltro = "ADMIN".equalsIgnoreCase(rol) ? "ADMIN" : "OPERADOR";
+
+        Page<NovedadEntity> page = novedadRepository.buscarConFiltrosPaginado(
+                rolFiltro, usuarioId, archivadas, search, municipio, categoria, nivelConfianza, conMuertes, pageable
+        );
+
+        return page.map(mapper::toDTO);
     }
 
     @Override
@@ -409,6 +436,20 @@ public class NovedadServiceImpl implements INovedadService {
                         .map(Enum::name).collect(java.util.stream.Collectors.toList()));
             }
             evento.put("timestamp", LocalDateTime.now().toString());
+
+            if (novedad.getVictimas() != null && !novedad.getVictimas().isEmpty()) {
+                List<Map<String, Object>> victimasList = new ArrayList<>();
+                for (var v : novedad.getVictimas()) {
+                    Map<String, Object> vMap = new HashMap<>();
+                    vMap.put("nombreVictima", v.getNombreVictima());
+                    vMap.put("generoVictima", v.getGeneroVictima() != null ? v.getGeneroVictima().name() : null);
+                    vMap.put("edadVictima", v.getEdadVictima());
+                    vMap.put("grupoPoblacional", v.getGrupoPoblacional() != null ? v.getGrupoPoblacional().name() : null);
+                    vMap.put("ocupacionVictima", v.getOcupacionVictima());
+                    victimasList.add(vMap);
+                }
+                evento.put("victimas", victimasList);
+            }
 
             if (novedad.getAfectacionHumana() != null) {
                 var ah = novedad.getAfectacionHumana();

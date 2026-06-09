@@ -32,18 +32,7 @@ export function UserDropdownSection({ displayName, displayRol, isAdmin, onLogout
 
   return (
     <>
-      {/* Notificaciones */}
-      <div className={styles.notifBtn}>
-        <svg viewBox="0 0 18 20" width={18} height={18} fill="none">
-          <path d="M9 1a7 7 0 0 1 7 7v3l2 3H0l2-3V8a7 7 0 0 1 7-7z"
-            stroke="var(--dash-text-2)" strokeWidth="1.3" />
-          <path d="M7 16c0 1.1.9 2 2 2s2-.9 2-2"
-            stroke="var(--dash-text-2)" strokeWidth="1.3" />
-        </svg>
-        <div className={styles.notifBadge} />
-      </div>
 
-      <div className={styles.dividerV} />
 
       {/* UserChip — abre dropdown */}
       <div className={styles.userChipWrapper} ref={chipRef}>

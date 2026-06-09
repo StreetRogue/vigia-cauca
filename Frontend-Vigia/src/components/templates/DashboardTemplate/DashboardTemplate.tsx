@@ -38,7 +38,7 @@ export function DashboardTemplate({ filtros }: DashboardTemplateProps) {
 
   const handleFilterChange = (f: FiltrosDashboard) => {
     setCurrentFiltros(f);
-    setSelectedMunicipio(null);
+    setSelectedMunicipio(f.municipio || null);
     refetch(f);
   };
 

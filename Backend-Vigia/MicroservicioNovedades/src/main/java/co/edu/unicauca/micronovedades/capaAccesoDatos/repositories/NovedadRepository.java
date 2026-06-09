@@ -2,6 +2,7 @@ package co.edu.unicauca.micronovedades.capaAccesoDatos.repositories;
 
 import co.edu.unicauca.micronovedades.capaAccesoDatos.models.NovedadEntity;
 import co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.CategoriaEvento;
+import co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.NivelConfianza;
 import co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.NivelVisibilidad;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,7 +11,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -29,6 +29,41 @@ public interface NovedadRepository extends JpaRepository<NovedadEntity, UUID> {
 
     @EntityGraph(attributePaths = {"victimas", "afectacionHumana", "evidencias"})
     Page<NovedadEntity> findByUsuarioId(UUID usuarioId, Pageable pageable);
+
+    // ── Versiones paginadas que EXCLUYEN las novedades ocultas (soft-delete) ──
+    @EntityGraph(attributePaths = {"victimas", "afectacionHumana", "evidencias"})
+    Page<NovedadEntity> findByOcultoFalse(Pageable pageable);
+
+    @EntityGraph(attributePaths = {"victimas", "afectacionHumana", "evidencias"})
+    Page<NovedadEntity> findByUsuarioIdAndOcultoFalse(UUID usuarioId, Pageable pageable);
+
+    // ── Versiones paginadas que SOLO traen las archivadas (oculto = true) ──
+    @EntityGraph(attributePaths = {"victimas", "afectacionHumana", "evidencias"})
+    Page<NovedadEntity> findByOcultoTrue(Pageable pageable);
+
+    @EntityGraph(attributePaths = {"victimas", "afectacionHumana", "evidencias"})
+    Page<NovedadEntity> findByUsuarioIdAndOcultoTrue(UUID usuarioId, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"victimas", "afectacionHumana", "evidencias"})
+    @Query("SELECT n FROM NovedadEntity n LEFT JOIN n.afectacionHumana ah " +
+            "WHERE (:rol = 'ADMIN' OR n.usuarioId = :usuarioId) " +
+            "AND n.oculto = :archivadas " +
+            "AND (:municipio IS NULL OR n.municipio = :municipio) " +
+            "AND (:categoria IS NULL OR n.categoria = :categoria) " +
+            "AND (:nivelConfianza IS NULL OR n.nivelConfianza = :nivelConfianza) " +
+            "AND (:conMuertes = false OR ah.muertosTotales > 0) " +
+            "AND (:search IS NULL OR LOWER(n.municipio) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR LOWER(CAST(n.categoria AS string)) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    Page<NovedadEntity> buscarConFiltrosPaginado(
+            @Param("rol") String rol,
+            @Param("usuarioId") UUID usuarioId,
+            @Param("archivadas") boolean archivadas,
+            @Param("search") String search,
+            @Param("municipio") String municipio,
+            @Param("categoria") CategoriaEvento categoria,
+            @Param("nivelConfianza") NivelConfianza nivelConfianza,
+            @Param("conMuertes") boolean conMuertes,
+            Pageable pageable
+    );
 
     // Filtrar por municipio
     List<NovedadEntity> findByMunicipio(String municipio);

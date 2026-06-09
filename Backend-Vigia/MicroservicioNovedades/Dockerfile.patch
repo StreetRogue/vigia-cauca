@@ -1,0 +1,6 @@
+# Imagen de parche: parte de la imagen ya construida y reemplaza el jar
+# por el fat-jar con las clases recompiladas (archivar/desarchivar + soft-delete).
+# Uso temporal por falta de red para 'mvn repackage'. El build normal sigue
+# siendo Dockerfile.
+FROM vigia-cauca-micro-novedades:latest
+COPY target/fat.jar /app/app.jar

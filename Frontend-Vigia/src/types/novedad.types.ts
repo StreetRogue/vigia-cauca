@@ -97,10 +97,11 @@ export interface VictimaDTORespuesta extends VictimaDTOPeticion {
 export interface EvidenciaDTORespuesta {
   idEvidencia:   string;
   novedadId:     string;
-  nombreArchivo: string;
-  tipoMime:      string;
+  nombreArchivo: string | null;
+  tipoMime:      string | null;
   tamanoBytes:   number;
-  urlArchivo:    string;
+  /** Null cuando la evidencia es un archivo en filesystem; contiene la URL cuando es URL externa */
+  urlArchivo:    string | null;
   fechaSubida:   string;
 }
 
@@ -151,6 +152,11 @@ export interface PaginadoParams {
   page: number;
   size: number;
   sort?: string;
+  search?: string;
+  municipio?: string;
+  categoria?: string;
+  nivelConfianza?: string;
+  conMuertes?: boolean;
 }
 
 export interface PageResponse<T> {

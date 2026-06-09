@@ -3,13 +3,23 @@ import { ENDPOINTS } from '../api/endpoints';
 import { cacheService, TTL } from './cache.service';
 import type { FiltrosDashboard, DashboardCompletoDTO, ResumenKPIDTO, SerieTemporalDTO, EstadisticaActorDTO, EstadisticaMunicipioDTO, EstadisticaCategoriaDTO } from '../types/estadisticas.types';
 
+// ── Helper: formatear municipio a Title Case ─────────────────────────────────────
+function formatMunicipio(municipio: string): string {
+  if (!municipio || municipio === 'Todos') return municipio;
+  const lowers = ['de', 'del', 'la', 'las', 'el', 'los', 'y'];
+  return municipio.toLowerCase().split(' ').map((word, index) => {
+    if (index !== 0 && lowers.includes(word)) return word;
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  }).join(' ');
+}
+
 // ── Helper: convierte filtros en query params (omite undefined/null) ───────────
 function toParams(filtros?: FiltrosDashboard): Record<string, string> {
   if (!filtros) return {};
   const params: Record<string, string> = {};
   if (filtros.anio != null)            params.anio            = String(filtros.anio);
   if (filtros.mes != null)             params.mes             = String(filtros.mes);
-  if (filtros.municipio)               params.municipio       = filtros.municipio;
+  if (filtros.municipio)               params.municipio       = formatMunicipio(filtros.municipio);
   if (filtros.categoria)               params.categoria       = filtros.categoria;
   if (filtros.actor)                   params.actor           = filtros.actor;
   if (filtros.nivelConfianza)          params.nivelConfianza  = filtros.nivelConfianza;

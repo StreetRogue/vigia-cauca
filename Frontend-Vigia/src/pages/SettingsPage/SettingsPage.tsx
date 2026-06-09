@@ -1,28 +1,11 @@
 import { useState, useEffect } from 'react';
-import { NavMenu }            from '../../components/molecules/NavMenu';
 import { Button }             from '../../components/atoms/Button/Button';
 import { UserDropdownSection } from '../../components/organisms/UserDropdownSection/UserDropdownSection';
 import { ManagementTemplate } from '../../components/templates/ManagementTemplate/ManagementTemplate';
-import { useAuth }            from '../../context/AuthContext';
+import { useSidebarNav }      from '../../hooks/useSidebarNav';
 import { usuariosService }    from '../../services/usuarios.service';
-import { getMenuItemsForRole, resolveAppRole } from '../../constants/menuConfig';
 import type { UsuarioResponseDTO } from '../../types/usuario.types';
-import dashboardIcon     from '../../assets/Dashboard_Icon.svg';
-import novedadesIcon     from '../../assets/novedades_icon.svg';
-import usuariosIcon      from '../../assets/usuarios_icon.svg';
-import configuracionIcon from '../../assets/configuracion_icon.svg';
 import styles            from './SettingsPage.module.css';
-
-const ICON_MAP: Record<string, string> = {
-  DASHBOARD:     dashboardIcon,
-  NOVEDADES:     novedadesIcon,
-  USUARIOS:      usuariosIcon,
-  CONFIGURACION: configuracionIcon,
-};
-
-function getInitials(name: string) {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('');
-}
 
 function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
   return (
@@ -65,13 +48,7 @@ function EditableInfoRow({ label, value, editable, isEditing, onChange }: Editab
 }
 
 export function SettingsPage() {
-  const { user, logout } = useAuth();
-  const isAdmin = user?.rol === 'ADMIN';
-
-  const menuItems = getMenuItemsForRole(resolveAppRole([user?.rol ?? ''])).map((item) => ({
-    ...item,
-    icon: <img src={ICON_MAP[item.label]} alt="" />,
-  }));
+  const { user, logout, displayName: hookDisplayName, displayRole, isAdmin, initials: hookInitials, sidebarNav } = useSidebarNav('CONFIGURACION');
 
   const [fullUser, setFullUser] = useState<UsuarioResponseDTO | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -92,8 +69,13 @@ export function SettingsPage() {
       .catch(() => {/* fail silently */});
   }, []);
 
-  const displayName = fullUser?.nombre ?? user?.name ?? user?.username ?? 'Usuario';
-  const initials = getInitials(displayName);
+  const displayName = fullUser?.nombre ?? hookDisplayName;
+  const initials = displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join('');
 
   const handleSave = async () => {
     if (!user?.sub) return;
@@ -132,7 +114,7 @@ export function SettingsPage() {
     <ManagementTemplate
       sidebarTitle="VIGIA CAUCA"
       sidebarSubtitle="GESTION INTEGRAL"
-      sidebarNav={<NavMenu items={menuItems} selectedItem="CONFIGURACION" />}
+      sidebarNav={sidebarNav}
       sidebarFooter={
         <div className={styles.sidebarUser}>
           <div className={styles.sidebarAvatar}>{initials}</div>

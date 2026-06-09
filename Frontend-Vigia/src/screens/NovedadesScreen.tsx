@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { NovedadesProvider, useNovedades } from '../context/NovedadesContext';
 import { novedadesService } from '../services/novedades.service';
+import { cacheService } from '../services/cache.service';
 import { ManagementTemplate } from '../components/templates/ManagementTemplate/ManagementTemplate';
-import { NavMenu } from '../components/molecules/NavMenu';
 import { UserDropdownSection } from '../components/organisms/UserDropdownSection/UserDropdownSection';
 import { ExcelUploadModal } from '../components/organisms/ExcelUploadModal/ExcelUploadModal';
 import { NovedadesListPanel } from '../components/organisms/novedades/NovedadesListPanel';
@@ -14,29 +14,13 @@ import { Step2Caracterizacion } from '../components/organisms/novedades/Step2Car
 import { Step3Afectacion } from '../components/organisms/novedades/Step3Afectacion';
 import { Step4Evidencias } from '../components/organisms/novedades/Step4Evidencias';
 import { Step5Success } from '../components/organisms/novedades/Step5Success';
-import { useAuth } from '../context/AuthContext';
-import { getMenuItemsForRole, resolveAppRole } from '../constants/menuConfig';
+import { useSidebarNav } from '../hooks/useSidebarNav';
 import type { NovedadDTORespuesta } from '../types/novedad.types';
-import dashboardIcon from '../assets/Dashboard_Icon.svg';
-import novedadesIcon from '../assets/novedades_icon.svg';
-import usuariosIcon from '../assets/usuarios_icon.svg';
-import configuracionIcon from '../assets/configuracion_icon.svg';
 import './novedades.css';
 import styles from './NovedadesScreen.module.css';
 
-const ICON_MAP: Record<string, string> = {
-  DASHBOARD:     dashboardIcon,
-  NOVEDADES:     novedadesIcon,
-  USUARIOS:      usuariosIcon,
-  CONFIGURACION: configuracionIcon,
-};
-
-function getInitials(name: string) {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
-}
-
 function NovedadesContent() {
-  const { user, logout } = useAuth();
+  const { user, logout, displayName, displayRole, isAdmin, initials, sidebarNav } = useSidebarNav('NOVEDADES');
   const {
     currentStep, setCurrentStep,
     showExcelModal, setShowExcelModal,
@@ -50,16 +34,6 @@ function NovedadesContent() {
   const [selectedNovedad, setSelectedNovedad] = useState<NovedadDTORespuesta | null>(null);
   const [selectedNovedadId, setSelectedNovedadId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-
-  const role    = resolveAppRole([user?.rol ?? '']);
-  const items   = getMenuItemsForRole(role).map(item => ({
-    ...item,
-    icon: <img src={ICON_MAP[item.label]} alt="" />,
-  }));
-  const initials = getInitials(user?.name ?? user?.username ?? 'U');
-  const displayName = user?.name ?? user?.username ?? 'Usuario';
-  const displayRole = user?.rol ?? 'OPERADOR';
-  const isAdmin = user?.rol === 'ADMIN';
 
   function handleNew() {
     resetForm();
@@ -78,6 +52,7 @@ function NovedadesContent() {
 
   function handleFormDone() {
     resetForm();
+    cacheService.invalidate('novedades-paginado');
     setRefreshKey(k => k + 1);
     setSelectedNovedad(null);
     setSelectedNovedadId(null);
@@ -93,8 +68,6 @@ function NovedadesContent() {
       setSelectedNovedadId(nov.novedadId);
     }
   }
-
-  const sidebarNav = <NavMenu items={items} selectedItem="NOVEDADES" />;
 
   const sidebarFooter = (
     <div className={styles.sidebarUser}>
@@ -204,6 +177,7 @@ function NovedadesContent() {
         breadcrumb={breadcrumb}
         topbarUser={topbarUser}
         mainPanel={
+
           <NovedadesListPanel
             refreshKey={refreshKey}
             onNew={handleNew}
@@ -212,6 +186,7 @@ function NovedadesContent() {
             onRowClick={handleRowClick}
             selectedId={selectedNovedadId}
             userRole={user?.rol}
+            onChanged={() => setRefreshKey(k => k + 1)}
           />
         }
         rightPanel={
@@ -221,7 +196,11 @@ function NovedadesContent() {
               onEdit={handleEdit}
             />
           ) : (
-            <NovedadesSummaryPanel />
+            <NovedadesSummaryPanel
+              refreshKey={refreshKey}
+              userRole={user?.rol}
+              userId={user?.sub}
+            />
           )
         }
         overlay={formOverlay}
@@ -229,7 +208,11 @@ function NovedadesContent() {
 
       <ExcelUploadModal
         isOpen={showExcelModal}
-        onClose={() => setShowExcelModal(false)}
+        onClose={() => {
+          setShowExcelModal(false);
+          cacheService.invalidate('novedades-paginado');
+          setRefreshKey(k => k + 1); // refresca tabla y resumen tras la carga
+        }}
         onUpload={handleExcelFile}
       />
     </>

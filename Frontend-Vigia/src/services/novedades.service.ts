@@ -9,7 +9,19 @@ import type {
   VictimaDTOPeticion,
   VictimaDTORespuesta,
   AuditoriaDTORespuesta,
+  EvidenciaDTORespuesta,
 } from '../types/novedad.types';
+
+// ── Helper: formatear municipio a Title Case ─────────────────────────────────────
+function formatMunicipio(municipio: string): string {
+  if (!municipio || municipio === 'Todos') return municipio;
+  const lowers = ['de', 'del', 'la', 'las', 'el', 'los', 'y'];
+  return municipio.toLowerCase().split(' ').map((word, index) => {
+    if (index !== 0 && lowers.includes(word)) return word;
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  }).join(' ');
+}
+
 
 export interface ExcelCargaResultado {
   totalFilasProcesadas: number;
@@ -70,10 +82,14 @@ export const novedadesService = {
   },
 
   /** Lista novedades con paginado. */
-  async listarPaginado(params: PaginadoParams): Promise<PageResponse<NovedadDTORespuesta>> {
+  async listarPaginado(params: PaginadoParams & Record<string, unknown>): Promise<PageResponse<NovedadDTORespuesta>> {
+    const queryParams = { ...params };
+    if (typeof queryParams.municipio === 'string' && queryParams.municipio) {
+      queryParams.municipio = formatMunicipio(queryParams.municipio);
+    }
     const { data } = await novedadesClient.get<PageResponse<NovedadDTORespuesta>>(
       ENDPOINTS.novedades.paginado,
-      { params },
+      { params: queryParams },
     );
     return data;
   },
@@ -83,7 +99,7 @@ export const novedadesService = {
     const params: Record<string, string> = {};
     if (filtros.fechaInicio)      params.fechaInicio      = filtros.fechaInicio;
     if (filtros.fechaFin)         params.fechaFin         = filtros.fechaFin;
-    if (filtros.municipio)        params.municipio        = filtros.municipio;
+    if (filtros.municipio)        params.municipio        = formatMunicipio(filtros.municipio);
     if (filtros.categoria)        params.categoria        = filtros.categoria;
     if (filtros.nivelVisibilidad) params.nivelVisibilidad = filtros.nivelVisibilidad;
 
@@ -173,6 +189,23 @@ export const novedadesService = {
 
   async eliminarVictima(novedadId: string, victimaId: string): Promise<void> {
     await novedadesClient.delete(ENDPOINTS.novedades.victimaPorId(novedadId, victimaId));
+  },
+
+  // ── Evidencias ──────────────────────────────────────────────────────────────
+
+  /**
+   * Sube un archivo de evidencia a una novedad ya existente.
+   * Usa el endpoint POST /{novedadId}/evidencias con multipart/form-data.
+   */
+  async subirEvidencia(novedadId: string, archivo: File): Promise<EvidenciaDTORespuesta> {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+    const { data } = await novedadesClient.post<EvidenciaDTORespuesta>(
+      ENDPOINTS.novedades.evidencias(novedadId),
+      formData,
+      // No ponemos Content-Type — el interceptor lo quita para FormData y el browser lo fija con boundary
+    );
+    return data;
   },
 
   // ── Auditoría ───────────────────────────────────────────────────────────────

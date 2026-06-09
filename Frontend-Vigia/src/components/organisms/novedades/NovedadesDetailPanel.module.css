@@ -41,12 +41,53 @@
   flex-shrink: 0;
 }
 
+.headerIdRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 4px;
+}
+
 .headerId {
   font-size: 10px;
   font-weight: 700;
   color: #aaaaaa;
   letter-spacing: 1px;
-  margin: 0 0 4px;
+}
+
+/* Botón copiar ID — aparece al pasar el mouse (igual que en Auditorías) */
+.copyBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #6b7280;
+  font-size: 10px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.headerIdRow:hover .copyBtn {
+  opacity: 1;
+}
+
+.copyBtn:hover {
+  background: #f3f4f6;
+  color: #111827;
+  border-color: #9ca3af;
+}
+
+.copyBtnDone {
+  opacity: 1 !important;
+  background: rgba(34, 197, 94, 0.1) !important;
+  color: #15803d !important;
+  border-color: rgba(34, 197, 94, 0.3) !important;
 }
 
 .headerTitle {
@@ -251,3 +292,105 @@
   color: #888888;
   text-align: right;
 }
+
+/* ── Evidencias ──────────────────────────────────────────────────────────── */
+.evidenciasGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Image thumbnail */
+.evidenciaImageWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-decoration: none;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  transition: box-shadow 0.15s;
+}
+
+.evidenciaImageWrap:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.evidenciaImage {
+  width: 100%;
+  max-height: 160px;
+  object-fit: cover;
+  display: block;
+}
+
+.evidenciaName {
+  font-size: 10px;
+  color: #6b7280;
+  padding: 4px 8px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* File / link row */
+.evidenciaLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #1d4ed8;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.evidenciaLink:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.evidenciaLinkIcon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.evidenciaLinkName {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Skeleton mientras carga */
+.evidenciaSkeleton {
+  height: 36px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+  border-radius: 6px;
+  font-size: 10px;
+  color: #aaaaaa;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Error al cargar */
+.evidenciaError {
+  font-size: 11px;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+
