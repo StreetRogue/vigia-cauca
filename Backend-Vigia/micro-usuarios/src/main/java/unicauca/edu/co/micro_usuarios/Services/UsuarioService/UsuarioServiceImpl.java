@@ -265,12 +265,11 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public void cambiarPasswordPropio(String idIam, String newPassword) {
-        Usuario usuario = usuarioRepository.findByIdKeycloak(idIam)
+        usuarioRepository.findByIdKeycloak(idIam)
                 .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
 
-        UsuarioUpdateDTO dto = new UsuarioUpdateDTO();
-        dto.setPassword(newPassword);
-        iamService.actualizarUsuario(usuario.getIdKeycloak(), dto);
+        iamService.resetPassword(idIam, newPassword);
+        log.info("Contraseña actualizada | idIam={}", idIam);
     }
 
     @Override

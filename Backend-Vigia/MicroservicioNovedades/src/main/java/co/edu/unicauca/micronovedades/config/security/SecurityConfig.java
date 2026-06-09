@@ -1,40 +1,29 @@
-package unicauca.edu.co.micro_usuarios.Config.Security;
+package co.edu.unicauca.micronovedades.config.security;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.jwt.*;
-import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    @Autowired
-    private KeycloakJwtConverter keycloakJwtConverter;
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
-    private String jwkSetUri;
+    private final KeycloakJwtConverter keycloakJwtConverter;
 
     @Bean
-    public JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
-    }
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, UsuarioActivoFilter usuarioActivoFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/usuarios/me", "/usuarios/me/**").authenticated()
-                        .requestMatchers("/usuarios/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/v1/microNovedades/public/**").permitAll()
+                        .requestMatchers("/api/v1/microNovedades/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/v1/microNovedades/**").hasAnyAuthority("ADMIN", "OPERADOR")
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
@@ -44,9 +33,9 @@ public class SecurityConfig {
                 )
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .addFilterAfter(usuarioActivoFilter, BearerTokenAuthenticationFilter.class);
+                );
 
         return http.build();
     }
 }
+

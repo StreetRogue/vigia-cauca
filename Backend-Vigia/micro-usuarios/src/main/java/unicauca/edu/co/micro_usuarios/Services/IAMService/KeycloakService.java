@@ -130,6 +130,24 @@ public class KeycloakService implements IamService {
     }
 
     @Override
+    public void resetPassword(String userId, String newPassword) {
+        try {
+            CredentialRepresentation credential = new CredentialRepresentation();
+            credential.setTemporary(false);
+            credential.setType(OAuth2Constants.PASSWORD);
+            credential.setValue(newPassword);
+
+            keycloakProvider.getUsersResource()
+                    .get(userId)
+                    .resetPassword(credential);
+
+        } catch (Exception e) {
+            log.error("Error reseteando contraseña en Keycloak | userId={}", userId, e);
+            throw new IamException("No se pudo actualizar la contraseña");
+        }
+    }
+
+    @Override
     public void bloquearUsuario(String userId) {
         UserRepresentation userRepresentation = new UserRepresentation();
         userRepresentation.setEnabled(false);

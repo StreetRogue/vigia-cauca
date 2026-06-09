@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import unicauca.edu.co.micro_usuarios.DTOs.Request.CambiarPasswordDTO;
 import unicauca.edu.co.micro_usuarios.DTOs.Request.UsuarioCreateDTO;
 import unicauca.edu.co.micro_usuarios.DTOs.Request.UsuarioUpdateDTO;
 import unicauca.edu.co.micro_usuarios.DTOs.Response.PageResponseDTO;
@@ -73,10 +74,10 @@ public class UsuarioController {
         return ResponseEntity.ok(response);
     }
 
-    // Cambio de contraseña propio — cualquier usuario autenticado
+    // Cambio de contraseña propio — cualquier usuario autenticado (admin u operador)
     @PatchMapping("/me/password")
     public ResponseEntity<Void> cambiarPasswordMe(
-            @RequestBody @Valid UsuarioUpdateDTO dto,
+            @RequestBody @Valid CambiarPasswordDTO dto,
             @AuthenticationPrincipal Jwt jwt) {
         usuarioService.cambiarPasswordPropio(jwt.getSubject(), dto.getPassword());
         return ResponseEntity.noContent().build();
