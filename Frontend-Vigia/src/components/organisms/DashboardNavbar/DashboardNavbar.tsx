@@ -32,6 +32,9 @@ const DEFAULT_FILTER_VALUES: Record<FilterLabel, string> = {
   'CATEGORÍA': 'Todos', 'CONFIANZA': 'Todos',
 };
 
+const normalizeText = (text: string) => 
+  text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
 // ── Ícono escudo ───────────────────────────────────────────────────────────────
 
 function ShieldIcon() {
@@ -74,18 +77,7 @@ function UserSection({ displayName, displayRol, isAdmin, onLogout }: UserSection
 
   return (
     <>
-      {/* Notificaciones */}
-      <div className={styles.notifBtn}>
-        <svg viewBox="0 0 18 20" width={18} height={18} fill="none">
-          <path d="M9 1a7 7 0 0 1 7 7v3l2 3H0l2-3V8a7 7 0 0 1 7-7z"
-            stroke="var(--dash-text-2)" strokeWidth="1.3" />
-          <path d="M7 16c0 1.1.9 2 2 2s2-.9 2-2"
-            stroke="var(--dash-text-2)" strokeWidth="1.3" />
-        </svg>
-        <div className={styles.notifBadge} />
-      </div>
 
-      <div className={styles.dividerV} />
 
       {/* UserChip — abre dropdown */}
       <div className={styles.userChipWrapper} ref={chipRef}>
@@ -235,6 +227,7 @@ interface DashboardNavbarProps {
 export function DashboardNavbar({ onFilterChange, currentFiltros }: DashboardNavbarProps = {}) {
   const [menuOpen, setMenuOpen]             = useState(false);
   const [openFilter, setOpenFilter]         = useState<FilterLabel | null>(null);
+  const [searchTerm, setSearchTerm]         = useState('');
   const [filterValues, setFilterValues]     = useState<Record<FilterLabel, string>>(DEFAULT_FILTER_VALUES);
   const [municipioNames, setMunicipioNames] = useState<string[]>([]);
 
@@ -297,10 +290,14 @@ export function DashboardNavbar({ onFilterChange, currentFiltros }: DashboardNav
 
   // Cerrar filtro dropdown al clic fuera
   useEffect(() => {
-    if (!openFilter) return;
+    if (!openFilter) {
+      setSearchTerm('');
+      return;
+    }
     const handler = (e: MouseEvent) => {
       if (filtersRef.current && !filtersRef.current.contains(e.target as Node)) {
         setOpenFilter(null);
+        setSearchTerm('');
       }
     };
     document.addEventListener('mousedown', handler);
@@ -321,6 +318,7 @@ export function DashboardNavbar({ onFilterChange, currentFiltros }: DashboardNav
     const newValues = { ...filterValues, [label]: value };
     setFilterValues(newValues);
     setOpenFilter(null);
+    setSearchTerm('');
 
     const filtros: FiltrosDashboard = {};
     if (newValues['AÑO'] !== 'Todos')       filtros.anio          = Number(newValues['AÑO']);
@@ -388,17 +386,31 @@ export function DashboardNavbar({ onFilterChange, currentFiltros }: DashboardNav
               <div key={label} className={styles.filterWrapper}>
                 <div
                   className={`${styles.filterChip} ${isActive ? styles.filterChipActive : ''} ${isOpen ? styles.filterChipOpen : ''}`}
-                  onClick={() => setOpenFilter(isOpen ? null : label)}
+                  onClick={() => { setOpenFilter(isOpen ? null : label); setSearchTerm(''); }}
                   role="button" tabIndex={0}
-                  onKeyDown={(e) => e.key === 'Enter' && setOpenFilter(isOpen ? null : label)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { setOpenFilter(isOpen ? null : label); setSearchTerm(''); } }}
                 >
-                  <CapLabel size={7} color={isActive ? 'var(--dash-accent)' : 'var(--dash-text-3)'}>{label}</CapLabel>
+                  <CapLabel size={7} color={isActive ? 'var(--dash-accent)' : 'var(--dash-text-2)'}>{label}</CapLabel>
                   <div className={`${styles.filterVal} ${isActive ? styles.filterValActive : ''}`}>{value}</div>
                 </div>
 
                 {isOpen && (
                   <div className={styles.filterDropdown}>
-                    {filterOptions[label].map((opt) => (
+                    {(label === 'MUNICIPIO' || label === 'MES') && (
+                      <input
+                        type="text"
+                        placeholder="Buscar..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className={styles.searchInput}
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                        autoFocus
+                      />
+                    )}
+                    {filterOptions[label]
+                      .filter(opt => (label === 'MUNICIPIO' || label === 'MES') ? normalizeText(opt).includes(normalizeText(searchTerm)) : true)
+                      .map((opt) => (
                       <button key={opt}
                         className={`${styles.filterOption} ${value === opt ? styles.filterOptionSelected : ''}`}
                         onClick={() => handleFilterSelect(label, opt)}>
@@ -500,16 +512,32 @@ export function DashboardNavbar({ onFilterChange, currentFiltros }: DashboardNav
                   <div key={label}>
                     <div
                       className={`${styles.drawerFilterRow} ${isActive ? styles.drawerFilterActive : ''}`}
-                      onClick={() => setOpenFilter(isOpen ? null : label)}
+                      onClick={() => { setOpenFilter(isOpen ? null : label); setSearchTerm(''); }}
                       role="button" tabIndex={0}
-                      onKeyDown={(e) => e.key === 'Enter' && setOpenFilter(isOpen ? null : label)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { setOpenFilter(isOpen ? null : label); setSearchTerm(''); } }}
                     >
                       <CapLabel color={isActive ? 'var(--dash-accent)' : 'var(--dash-text-3)'}>{label}</CapLabel>
                       <div className={`${styles.filterVal} ${isActive ? styles.filterValActive : ''}`}>{value}</div>
                     </div>
                     {isOpen && (
                       <div className={styles.drawerFilterOptions}>
-                        {filterOptions[label].map((opt) => (
+                        {(label === 'MUNICIPIO' || label === 'MES') && (
+                          <div style={{ padding: '4px' }}>
+                            <input
+                              type="text"
+                              placeholder="Buscar..."
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              className={styles.searchInput}
+                              onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => e.stopPropagation()}
+                              autoFocus
+                            />
+                          </div>
+                        )}
+                        {filterOptions[label]
+                          .filter(opt => (label === 'MUNICIPIO' || label === 'MES') ? normalizeText(opt).includes(normalizeText(searchTerm)) : true)
+                          .map((opt) => (
                           <button key={opt}
                             className={`${styles.filterOption} ${value === opt ? styles.filterOptionSelected : ''}`}
                             onClick={() => handleFilterSelect(label, opt)}>

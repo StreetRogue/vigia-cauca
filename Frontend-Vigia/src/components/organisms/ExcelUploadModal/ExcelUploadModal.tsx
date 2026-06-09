@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { CloseButton } from '../../atoms/CloseButton';
 import { ExcelDropzone } from '../../molecules/ExcelDropzone';
 import { novedadesService } from '../../../services/novedades.service';
+import type { ExcelCargaResultado } from '../../../services/novedades.service';
 import './ExcelUploadModal.css';
 
 interface ExcelUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpload: (file: File) => Promise<void>;
+  onUpload: (file: File) => Promise<ExcelCargaResultado>;
 }
 
 export function ExcelUploadModal({ isOpen, onClose, onUpload }: ExcelUploadModalProps) {
@@ -15,6 +16,7 @@ export function ExcelUploadModal({ isOpen, onClose, onUpload }: ExcelUploadModal
   const [error, setError] = useState('');
   const [downloading, setDownloading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [result, setResult] = useState<ExcelCargaResultado | null>(null);
 
   if (!isOpen) return null;
 
@@ -31,8 +33,14 @@ export function ExcelUploadModal({ isOpen, onClose, onUpload }: ExcelUploadModal
     setUploading(true);
     setError('');
     try {
-      await onUpload(file);
-      // El contexto cierra el modal vía setShowExcelModal(false) al tener éxito
+      const res = await onUpload(file);
+      if (res.errores > 0) {
+        // Hubo filas omitidas: mostramos el resumen y dejamos el modal abierto
+        setResult(res);
+      } else {
+        // Todo cargado sin omisiones: cerrar directamente
+        handleClose();
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error al procesar el archivo';
       setError(msg);
@@ -45,6 +53,7 @@ export function ExcelUploadModal({ isOpen, onClose, onUpload }: ExcelUploadModal
     if (uploading) return;
     setFile(null);
     setError('');
+    setResult(null);
     onClose();
   }
 
@@ -83,41 +92,77 @@ export function ExcelUploadModal({ isOpen, onClose, onUpload }: ExcelUploadModal
 
         {/* ── Body ── */}
         <div className="modal-body">
-          <ExcelDropzone onFileChange={handleFileChange} />
+          {result ? (
+            /* ── Resumen del resultado de la carga ── */
+            <div className="modal-result">
+              <p className="modal-result-summary">
+                <strong>{result.novedadesCreadas}</strong> novedad(es) cargada(s)
+                {result.errores > 0 && (
+                  <> · <strong>{result.errores}</strong> omitida(s)</>
+                )}
+                {' '}de {result.totalFilasProcesadas} fila(s).
+              </p>
 
-          {error && <p className="field-error" style={{ marginTop: '8px' }}>{error}</p>}
+              {result.erroresDetalle.length > 0 && (
+                <>
+                  <p className="modal-result-subtitle">Filas omitidas:</p>
+                  <ul className="modal-result-list">
+                    {result.erroresDetalle.map((e, i) => (
+                      <li key={i}>
+                        <strong>Fila {e.fila}:</strong> {e.error}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+          ) : (
+            <>
+              <ExcelDropzone onFileChange={handleFileChange} />
 
-          <div className="modal-file-info">
-            Formatos: .xlsx, .xls &nbsp;·&nbsp; Máximo 5 MB
-          </div>
+              {error && <p className="field-error" style={{ marginTop: '8px' }}>{error}</p>}
 
-          <button
-            type="button"
-            className="modal-download-link"
-            onClick={handleDescargarPlantilla}
-            disabled={downloading}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-            {downloading ? 'Descargando...' : 'Descargar plantilla oficial'}
-          </button>
+              <div className="modal-file-info">
+                Formatos: .xlsx, .xls &nbsp;·&nbsp; Máximo 5 MB
+              </div>
+
+              <button
+                type="button"
+                className="modal-download-link"
+                onClick={handleDescargarPlantilla}
+                disabled={downloading}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                {downloading ? 'Descargando...' : 'Descargar plantilla oficial'}
+              </button>
+            </>
+          )}
         </div>
 
         {/* ── Footer ── */}
         <div className="modal-footer">
-          <button className="btn-secondary" onClick={handleClose} type="button" disabled={uploading}>
-            CANCELAR
-          </button>
-          <button
-            className="btn-primary"
-            onClick={handleUpload}
-            disabled={!file || uploading}
-            type="button"
-          >
-            {uploading ? 'CARGANDO...' : 'CARGAR ARCHIVO'}
-          </button>
+          {result ? (
+            <button className="btn-primary" onClick={handleClose} type="button">
+              ENTENDIDO
+            </button>
+          ) : (
+            <>
+              <button className="btn-secondary" onClick={handleClose} type="button" disabled={uploading}>
+                CANCELAR
+              </button>
+              <button
+                className="btn-primary"
+                onClick={handleUpload}
+                disabled={!file || uploading}
+                type="button"
+              >
+                {uploading ? 'CARGANDO...' : 'CARGAR ARCHIVO'}
+              </button>
+            </>
+          )}
         </div>
 
       </div>

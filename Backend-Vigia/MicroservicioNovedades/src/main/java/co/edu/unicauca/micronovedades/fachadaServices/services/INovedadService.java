@@ -20,9 +20,11 @@ public interface INovedadService {
 
     List<NovedadDTORespuesta> listarTodas(boolean includeOcultas);
 
-    Page<NovedadDTORespuesta> listarTodasPaginado(Pageable pageable);
+    Page<NovedadDTORespuesta> listarTodasPaginado(boolean archivadas, Pageable pageable);
 
-    Page<NovedadDTORespuesta> listarPaginadoPorRol(String rol, UUID usuarioId, Pageable pageable);
+    Page<NovedadDTORespuesta> listarPaginadoPorRol(String rol, UUID usuarioId, boolean archivadas, Pageable pageable);
+
+    Page<NovedadDTORespuesta> buscarConFiltrosPaginado(String rol, UUID usuarioId, boolean archivadas, String search, String municipio, co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.CategoriaEvento categoria, co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.NivelConfianza nivelConfianza, boolean conMuertes, Pageable pageable);
 
     List<NovedadDTORespuesta> listarPorUsuario(UUID usuarioId);
 

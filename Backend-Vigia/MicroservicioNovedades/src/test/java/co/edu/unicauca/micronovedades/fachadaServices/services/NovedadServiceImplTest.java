@@ -249,10 +249,11 @@ class NovedadServiceImplTest {
     void listarTodasPaginado_retornaPagina() {
         PageRequest pageable = PageRequest.of(0, 10);
         Page<NovedadEntity> paginaEntity = new PageImpl<>(List.of(entityEjemplo), pageable, 1);
-        when(novedadRepository.findAll(pageable)).thenReturn(paginaEntity);
+        // Ahora el listado paginado excluye las ocultas (soft-delete)
+        when(novedadRepository.findByOcultoFalse(pageable)).thenReturn(paginaEntity);
         when(mapper.toDTO(entityEjemplo)).thenReturn(respuestaEjemplo);
 
-        Page<NovedadDTORespuesta> resultado = novedadService.listarTodasPaginado(pageable);
+        Page<NovedadDTORespuesta> resultado = novedadService.listarTodasPaginado(false, pageable);
 
         assertThat(resultado.getContent()).hasSize(1);
         assertThat(resultado.getTotalElements()).isEqualTo(1);

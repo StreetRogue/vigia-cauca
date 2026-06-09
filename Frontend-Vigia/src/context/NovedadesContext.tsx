@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { novedadesService } from '../services/novedades.service';
+import type { ExcelCargaResultado } from '../services/novedades.service';
 import { estadisticasService } from '../services/estadisticas.service';
 import { cacheManager } from '../utils/cacheManager';
 import { useAuth } from './AuthContext';
@@ -47,6 +48,10 @@ export interface Victima {
 export interface Evidencia {
   nombre: string;
   tipo: string;
+  /** File real del sistema operativo (solo disponible antes de guardar en backend) */
+  file?: File;
+  /** URL externa, cuando no es un archivo físico */
+  url?: string;
 }
 
 // ── Context Provider Value Type ───────────────────────────────────────────────
@@ -112,11 +117,12 @@ export interface NovedadesContextType {
   // Step 4
   urlEvidencia: string; setUrlEvidencia: React.Dispatch<React.SetStateAction<string>>;
   evidencias: Evidencia[]; setEvidencias: React.Dispatch<React.SetStateAction<Evidencia[]>>;
+  archivosEvidencia: File[]; setArchivosEvidencia: React.Dispatch<React.SetStateAction<File[]>>;
 
   // Handlers and Actions
   handleContinuar: () => void;
   resetForm: () => void;
-  handleExcelFile: (file: File) => Promise<void>;
+  handleExcelFile: (file: File) => Promise<ExcelCargaResultado>;
 }
 
 const NovedadesContext = createContext<NovedadesContextType | undefined>(undefined);
@@ -185,6 +191,7 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
   // Step 4
   const [urlEvidencia, setUrlEvidencia] = useState('');
   const [evidencias, setEvidencias] = useState<Evidencia[]>([]);
+  const [archivosEvidencia, setArchivosEvidencia] = useState<File[]>([]);
 
   function validateStep1(): boolean {
     const e1 = validateDate(fecha);
@@ -226,7 +233,7 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
     setHeridosCiviles(''); setHeridosFuerza(''); setHeridosGrupos('');
     setDesplazados(''); setConfinados(''); setAfectacionCiviles(''); setReclutamiento('');
     setVictimas([]);
-    setEvidencias([]); setUrlEvidencia('');
+    setEvidencias([]); setUrlEvidencia(''); setArchivosEvidencia([]);
   }
 
   function initFromNovedad(nov: NovedadDTORespuesta) {
@@ -263,7 +270,12 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
       grupoPoblacional: v.grupoPoblacional,
       ocupacion: v.ocupacionVictima ?? '',
     })));
-    setEvidencias((nov.evidencias ?? []).map(e => ({ nombre: e.nombreArchivo, tipo: e.tipoMime })));
+    setEvidencias((nov.evidencias ?? []).map(e => ({ 
+      nombre: e.nombreArchivo || e.urlArchivo || 'Enlace externo', 
+      tipo: e.tipoMime ?? '',
+      url: e.urlArchivo ?? undefined 
+    })));
+    setArchivosEvidencia([]); // Al editar, los archivos existentes ya están en el backend
     setCurrentStep(1);
     setEditingNovedadId(nov.novedadId);
     setErrFecha(''); setErrHoraInicio(''); setErrHoraFin(''); setErrMunicipio(''); setErrLocalidad('');
@@ -319,15 +331,35 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
         grupoPoblacional: v.grupoPoblacional as GrupoPoblacional,
         ocupacionVictima: v.ocupacion       || undefined,
       })),
-      urlsEvidencias: evidencias.map((e) => e.nombre),
+      // Solo incluir URLs externas reales (http/https); los archivos van por multipart
+      urlsEvidencias: evidencias
+        .filter(e => !e.file && e.url && e.url.startsWith('http'))
+        .map(e => e.url as string),
     };
 
     try {
+      let savedNovedadId: string;
       if (editingNovedadId) {
+        // Actualizar la novedad existente
         await novedadesService.actualizar(editingNovedadId, payload);
+        savedNovedadId = editingNovedadId;
       } else {
-        const created = await novedadesService.crear(payload);
+        // Crear la novedad: si hay archivos reales, usar multipart; si no, JSON puro
+        let created: NovedadDTORespuesta;
+        if (archivosEvidencia.length > 0) {
+          created = await novedadesService.crearConImagenes(payload, archivosEvidencia);
+        } else {
+          created = await novedadesService.crear(payload);
+        }
         setCreatedNovedad(created);
+        savedNovedadId = created.novedadId;
+      }
+
+      // Si estamos editando Y hay archivos nuevos, subirlos por separado
+      if (editingNovedadId && archivosEvidencia.length > 0) {
+        for (const archivo of archivosEvidencia) {
+          await novedadesService.subirEvidencia(savedNovedadId, archivo);
+        }
       }
       // Invalidar caché del dashboard para que refleje la nueva novedad
       estadisticasService.invalidarCache();
@@ -339,7 +371,7 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function handleExcelFile(file: File): Promise<void> {
+  async function handleExcelFile(file: File): Promise<ExcelCargaResultado> {
     setExcelError('');
     const valid = ['.xls', '.xlsx'];
     const hasValidExt = valid.some(ext => file.name.toLowerCase().endsWith(ext));
@@ -356,23 +388,23 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
     const usuarioId = user?.sub ?? '';
     const resultado = await novedadesService.cargarExcel(file, usuarioId);
 
-    if (resultado.novedadesCreadas === 0 && resultado.errores > 0) {
+    // Nada se creó → error duro: se relanza para que el modal lo muestre como fallo
+    if (resultado.novedadesCreadas === 0) {
       const primerError = resultado.erroresDetalle[0];
       const msg = primerError
         ? `Fila ${primerError.fila}: ${primerError.error}` +
           (resultado.erroresDetalle.length > 1
-            ? ` (y ${resultado.erroresDetalle.length - 1} error(es) más)`
+            ? ` (y ${resultado.erroresDetalle.length - 1} más)`
             : '')
         : `${resultado.errores} error(es) encontrados. No se creó ninguna novedad.`;
       throw new Error(msg);
     }
 
+    // Al menos una creada: invalidar cachés. El modal mostrará el resumen
+    // (creadas + omitidas) y, al cerrarse, la lista y el resumen se refrescan.
     cacheManager.clear();
     estadisticasService.invalidarCache();
-    setShowExcelModal(false);
-    setShowSuccessToast(true);
-    window.dispatchEvent(new CustomEvent('novedadesRefresh'));
-    setTimeout(() => setShowSuccessToast(false), 3500);
+    return resultado;
   }
 
   const value: NovedadesContextType = {
@@ -389,7 +421,7 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
     heridosCiviles, setHeridosCiviles, heridosFuerza, setHeridosFuerza, heridosGrupos, setHeridosGrupos,
     desplazados, setDesplazados, confinados, setConfinados, afectacionCiviles, setAfectacionCiviles, reclutamiento, setReclutamiento,
     victimas, setVictimas, muertosTotal, heridosTotal,
-    urlEvidencia, setUrlEvidencia, evidencias, setEvidencias,
+    urlEvidencia, setUrlEvidencia, evidencias, setEvidencias, archivosEvidencia, setArchivosEvidencia,
     handleContinuar, resetForm, handleExcelFile,
   };
 

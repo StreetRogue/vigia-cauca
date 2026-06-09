@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { auditoriaService } from '../../../services/auditoria.service';
+import { usuariosService } from '../../../api/usuariosService';
 import type { AuditoriaDTORespuesta } from '../../../types/novedad.types';
 import styles from './AuditoriasListPanel.module.css';
 
@@ -12,10 +13,11 @@ function CopyableId({ id }: { id: string | null }) {
 
   if (!id) return <span>—</span>;
 
-  const short = id.substring(0, 8).toUpperCase();
+  const short = id.length > 12 ? id.substring(0, 8).toUpperCase() : id;
 
   function handleCopy() {
-    navigator.clipboard.writeText(id).then(() => {
+    if (!id) return;
+    navigator.clipboard.writeText(id as string).then(() => {
       setCopied(true);
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => setCopied(false), 1500);
@@ -52,11 +54,16 @@ export function AuditoriasListPanel({ onSelect, selectedId }: Props) {
   const [registros, setRegistros]   = useState<AuditoriaDTORespuesta[]>([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState('');
+  const [usersMap, setUsersMap]     = useState<Record<string, string>>({});
 
   // Filtros
   const [modo, setModo]                   = useState<Modo>('reciente');
   const [busquedaId, setBusquedaId]       = useState('');
   const [filtroAccion, setFiltroAccion]   = useState<FiltroAccion>('TODAS');
+
+  // Paginación
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(0);
 
   const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -79,6 +86,20 @@ export function AuditoriasListPanel({ onSelect, selectedId }: Props) {
       setLoading(false);
     }
   }, [modo, busquedaId]);
+
+  // Cargar mapa de usuarios (idUsuario -> cedula)
+  useEffect(() => {
+    usuariosService.list({ size: 1000 })
+      .then(res => {
+        const map: Record<string, string> = {};
+        res.content.forEach(u => {
+          if (u.idUsuario) map[u.idUsuario.toLowerCase()] = u.cedula;
+          if (u.idIam) map[u.idIam.toLowerCase()] = u.cedula;
+        });
+        setUsersMap(map);
+      })
+      .catch(err => console.warn('No se pudo cargar el mapa de usuarios', err));
+  }, []);
 
   // Carga inicial y cuando cambia el modo a "reciente"
   useEffect(() => {
@@ -108,6 +129,15 @@ export function AuditoriasListPanel({ onSelect, selectedId }: Props) {
   const filtrados = registros.filter(r =>
     filtroAccion === 'TODAS' ? true : r.accion === filtroAccion
   );
+
+  // Reset de página cuando cambian los datos o el filtro de acción
+  useEffect(() => {
+    setPage(0);
+  }, [registros, filtroAccion]);
+
+  const totalPages = Math.max(1, Math.ceil(filtrados.length / PAGE_SIZE));
+  const pageSafe = Math.min(page, totalPages - 1);
+  const paginados = filtrados.slice(pageSafe * PAGE_SIZE, (pageSafe + 1) * PAGE_SIZE);
 
   function formatFecha(iso: string) {
     const d = new Date(iso);
@@ -235,7 +265,7 @@ function getResumen(r: AuditoriaDTORespuesta): string {
                   ? 'No hay registros de auditoría'
                   : 'Ingrese un ID y presione Buscar'}
               </td></tr>
-            ) : filtrados.map((r, i) => {
+            ) : paginados.map((r, i) => {
               const { fecha, hora } = formatFecha(r.fecha);
               const resumen = getResumen(r);
               return (
@@ -247,7 +277,7 @@ function getResumen(r: AuditoriaDTORespuesta): string {
                   ].filter(Boolean).join(' ')}
                   onClick={() => onSelect(r)}
                 >
-                  <td className={styles.numCell}>{i + 1}</td>
+                  <td className={styles.numCell}>{pageSafe * PAGE_SIZE + i + 1}</td>
                   <td className={styles.dateCell}>
                     <span className={styles.dateMain}>{fecha}</span>
                     <span className={styles.dateSub}>{hora}</span>
@@ -260,13 +290,34 @@ function getResumen(r: AuditoriaDTORespuesta): string {
                     {resumen && <span className={styles.rowResumen}>{resumen}</span>}
                   </td>
                   <td className={styles.idCell}><CopyableId id={r.novedadId} /></td>
-                  <td className={styles.idCell}><CopyableId id={r.usuarioId} /></td>
+                  <td className={styles.idCell}><CopyableId id={usersMap[r.usuarioId?.toLowerCase()] ?? r.usuarioId} /></td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+
+      {/* ── Paginación ── */}
+      {!loading && filtrados.length > PAGE_SIZE && (
+        <div className={styles.pagination}>
+          <button
+            className={styles.pageBtn}
+            disabled={pageSafe === 0}
+            onClick={() => setPage(p => Math.max(0, p - 1))}
+          >
+            ‹ Anterior
+          </button>
+          <span className={styles.pageInfo}>Página {pageSafe + 1} de {totalPages}</span>
+          <button
+            className={styles.pageBtn}
+            disabled={pageSafe >= totalPages - 1}
+            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+          >
+            Siguiente ›
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,9 +1,18 @@
 import { useEffect, useState } from 'react';
-import { estadisticasService } from '../../../services/estadisticas.service';
 import { novedadesService } from '../../../services/novedades.service';
-import type { ResumenKPIDTO } from '../../../types/estadisticas.types';
+import { estadisticasService } from '../../../services/estadisticas.service';
 import type { NovedadDTORespuesta } from '../../../types/novedad.types';
+import type { ResumenKPIDTO } from '../../../types/estadisticas.types';
 import styles from './NovedadesSummaryPanel.module.css';
+
+interface Props {
+  /** Cambia cada vez que la lista de novedades se modifica (crear/editar/eliminar). */
+  refreshKey?: number;
+  /** Rol del usuario; OPERADOR solo cuenta sus propias novedades, ADMIN todas. */
+  userRole?: string;
+  /** UUID del usuario autenticado (para el filtro por rol). */
+  userId?: string;
+}
 
 interface AuditActivity {
   id: string;
@@ -14,6 +23,7 @@ interface AuditActivity {
 
 function formatAuditDate(isoDate: string): string {
   const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return isoDate;
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const year = date.getFullYear();
@@ -36,41 +46,61 @@ const CATEGORY_LABELS: Record<string, string> = {
   OTRO:                  'Otro',
 };
 
-export function NovedadesSummaryPanel() {
+export function NovedadesSummaryPanel({ refreshKey = 0, userRole, userId }: Props) {
+  const [novedades, setNovedades] = useState<NovedadDTORespuesta[]>([]);
   const [resumen, setResumen]     = useState<ResumenKPIDTO | null>(null);
-  const [activities, setActivities] = useState<AuditActivity[]>([]);
-  const [loadingKpi, setLoadingKpi]       = useState(true);
-  const [loadingFeed, setLoadingFeed]     = useState(true);
+  const [loading, setLoading]     = useState(true);
 
   useEffect(() => {
-    // Carga 1: KPIs del endpoint optimizado de estadísticas (muy rápido)
-    estadisticasService.getResumen({ anio: new Date().getFullYear() })
-      .then(data => setResumen(data))
-      .catch(err => console.error('[SummaryPanel] Error KPIs:', err))
-      .finally(() => setLoadingKpi(false));
+    let cancelled = false;
+    setLoading(true);
 
-    // Carga 2: Solo 5 novedades recientes para el feed de auditoría
-    novedadesService.listarPaginado({ page: 0, size: 5 })
-      .then(res => {
-        const recientes: NovedadDTORespuesta[] = res.content || [];
-        const acts: AuditActivity[] = recientes.map(nov => ({
-          id: nov.novedadId,
-          text: `Novedad registrada: ${CATEGORY_LABELS[nov.categoria] ?? nov.categoria}`,
-          date: nov.fechaCreacion ? formatAuditDate(nov.fechaCreacion) : nov.fechaHecho,
-          dot: nov.nivelConfianza === 'CONFIRMADO' ? 'green'
-            : nov.nivelConfianza === 'PRELIMINAR'  ? 'orange'
-            : 'blue',
-        }));
-        setActivities(acts);
+    const params: any = { page: 0, size: 5, sort: 'fechaHecho,desc' };
+    const filtrosStats: any = {};
+
+    if (userRole && userId) {
+      params.rol = userRole;
+      params.usuarioId = userId;
+      if (userRole !== 'ADMIN') filtrosStats.usuarioId = userId;
+    }
+
+    Promise.all([
+      novedadesService.listarPaginado(params),
+      estadisticasService.getResumen(filtrosStats)
+    ])
+      .then(([resNovedades, resStats]) => {
+        if (!cancelled) {
+          setNovedades(resNovedades.content || []);
+          setResumen(resStats);
+        }
       })
-      .catch(err => console.error('[SummaryPanel] Error feed:', err))
-      .finally(() => setLoadingFeed(false));
-  }, []);
+      .catch(err => {
+        console.error('[SummaryPanel] Error cargando resumen:', err);
+        if (!cancelled) {
+          setNovedades([]);
+          setResumen(null);
+        }
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
 
-  const totalEventos    = resumen?.totalEventos    ?? 0;
-  const totalMuertos    = resumen?.totalMuertos    ?? 0;
-  const totalHeridos    = resumen?.totalHeridos    ?? 0;
+    return () => { cancelled = true; };
+  }, [refreshKey, userRole, userId]);
+
+  // ── KPIs derivados del backend ───────────────────────────────────────────────
+  const totalEventos     = resumen?.totalEventos ?? 0;
+  const totalMuertos     = resumen?.totalMuertos ?? 0;
+  const totalHeridos     = resumen?.totalHeridos ?? 0;
   const totalDesplazados = resumen?.totalDesplazados ?? 0;
+
+  // ── Feed: 5 novedades más recientes ──────────────────────────────────────────
+  const activities: AuditActivity[] = novedades.map(nov => ({
+      id: nov.novedadId,
+      text: `Novedad registrada: ${CATEGORY_LABELS[nov.categoria] ?? nov.categoria}`,
+      date: nov.fechaReporte ? formatAuditDate(nov.fechaReporte) : formatAuditDate(nov.fechaHecho),
+      dot: nov.nivelConfianza === 'CONFIRMADO' ? 'green'
+        : nov.nivelConfianza === 'PRELIMINAR'  ? 'orange'
+        : 'blue',
+  }));
 
   return (
     <div className={styles.panel}>
@@ -78,7 +108,7 @@ export function NovedadesSummaryPanel() {
 
       <div className={styles.metricsGrid}>
         <article className={[styles.metricBox, styles.metricBlue].join(' ')}>
-          <strong>{loadingKpi ? '—' : totalEventos}</strong>
+          <strong>{loading ? '—' : totalEventos}</strong>
           <div className={styles.metricTextGroup}>
             <span className={styles.metricTitle}>TOTAL NOVEDADES</span>
             <span className={styles.metricSubtitle}>registradas</span>
@@ -86,7 +116,7 @@ export function NovedadesSummaryPanel() {
         </article>
 
         <article className={[styles.metricBox, styles.metricRed].join(' ')}>
-          <strong>{loadingKpi ? '—' : totalMuertos}</strong>
+          <strong>{loading ? '—' : totalMuertos}</strong>
           <div className={styles.metricTextGroup}>
             <span className={styles.metricTitle}>TOTAL MUERTOS</span>
             <span className={styles.metricSubtitle}>afectación humana</span>
@@ -94,7 +124,7 @@ export function NovedadesSummaryPanel() {
         </article>
 
         <article className={[styles.metricBox, styles.metricOrange].join(' ')}>
-          <strong>{loadingKpi ? '—' : totalHeridos}</strong>
+          <strong>{loading ? '—' : totalHeridos}</strong>
           <div className={styles.metricTextGroup}>
             <span className={styles.metricTitle}>TOTAL HERIDOS</span>
             <span className={styles.metricSubtitle}>reportados</span>
@@ -102,7 +132,7 @@ export function NovedadesSummaryPanel() {
         </article>
 
         <article className={[styles.metricBox, styles.metricGreen].join(' ')}>
-          <strong>{loadingKpi ? '—' : totalDesplazados}</strong>
+          <strong>{loading ? '—' : totalDesplazados}</strong>
           <div className={styles.metricTextGroup}>
             <span className={styles.metricTitle}>DESPLAZADOS</span>
             <span className={styles.metricSubtitle}>reportados</span>
@@ -112,7 +142,7 @@ export function NovedadesSummaryPanel() {
 
       <section className={styles.block}>
         <h3 className={styles.blockTitle}>AFECTACIÓN HUMANA</h3>
-        {loadingKpi ? (
+        {loading ? (
           <p style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Cargando...</p>
         ) : (
           <>
@@ -153,7 +183,7 @@ export function NovedadesSummaryPanel() {
       <section className={styles.block}>
         <h3 className={styles.blockTitle}>ACTIVIDAD RECIENTE</h3>
         <ul className={styles.activityList}>
-          {loadingFeed ? (
+          {loading ? (
             <li style={{ padding: '14px 0', color: 'var(--color-text-muted)', fontSize: '12px' }}>
               Cargando actividad...
             </li>

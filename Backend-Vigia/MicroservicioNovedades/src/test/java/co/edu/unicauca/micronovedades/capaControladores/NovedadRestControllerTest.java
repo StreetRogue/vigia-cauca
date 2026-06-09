@@ -34,6 +34,7 @@ import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -189,7 +190,7 @@ class NovedadRestControllerTest {
     @Test
     void listarPaginado_retornaPagina() throws Exception {
         Page<NovedadDTORespuesta> page = new PageImpl<>(List.of(respuestaEjemplo));
-        when(novedadService.listarTodasPaginado(any(Pageable.class))).thenReturn(page);
+        when(novedadService.listarTodasPaginado(anyBoolean(), any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get(BASE_URL + "/paginado").param("page", "0").param("size", "20"))
                 .andExpect(status().isOk())

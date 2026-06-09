@@ -37,27 +37,20 @@ export function Step2Caracterizacion() {
             <div className="actor-input-row">
               <select
                 value={actorSeleccionado}
-                onChange={e => setActorSeleccionado(e.target.value)}
+                onChange={e => {
+                  const value = e.target.value;
+                  if (value && !actores.includes(value)) {
+                    setActores(prev => [...prev, value]);
+                    setErrActores('');
+                  }
+                  setActorSeleccionado('');
+                }}
               >
                 <option value="" disabled hidden>Seleccionar actor</option>
                 {ACTORES.filter(a => !actores.includes(a.value)).map(a => (
                   <option key={a.value} value={a.value}>{a.label}</option>
                 ))}
               </select>
-              <button
-                type="button"
-                className="btn-add-actor"
-                disabled={!actorSeleccionado}
-                onClick={() => {
-                  if (actorSeleccionado && !actores.includes(actorSeleccionado)) {
-                    setActores(prev => [...prev, actorSeleccionado]);
-                    setActorSeleccionado('');
-                    setErrActores('');
-                  }
-                }}
-              >
-                + AGREGAR
-              </button>
             </div>
             {actores.length > 0 && (
               <div className="actor-chips">

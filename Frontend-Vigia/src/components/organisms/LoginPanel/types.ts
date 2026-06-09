@@ -13,8 +13,6 @@ export interface LoginPanelCopy {
   passwordPlaceholder: string;
   forgotPassword: string;
   submitLabel: string;
-  infoTitle: string;
-  infoRows: readonly DisplayRow[];
   footer: string;
 }
 

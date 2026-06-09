@@ -23,16 +23,16 @@
 }
 
 .title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  color: #111827;
+  letter-spacing: 0.5px;
+  color: #122d5d;
   margin: 0;
 }
 
 .count {
   font-size: 11px;
-  color: #6b7280;
+  color: var(--color-text-muted, #888888);
   font-weight: 400;
 }
 
@@ -41,108 +41,132 @@
   display: flex;
   align-items: flex-end;
   gap: 16px;
-  padding: 12px 20px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 24px;
+  border-bottom: 1px solid #eeeeee;
   flex-shrink: 0;
   flex-wrap: wrap;
-  background: #fafafa;
+  background: var(--color-surface-body, #f5f7fa);
 }
 
 .filterGroup {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .filterLabel {
   font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: #6b7280;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #888888;
 }
 
 .modeButtons {
   display: flex;
-  gap: 4px;
+  gap: 6px;
 }
 
 .modeBtn {
-  padding: 5px 12px;
-  font-size: 11px;
-  font-weight: 500;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  background: #ffffff;
-  color: #374151;
+  height: 36px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #e0e4e8;
+  border-radius: 6px;
+  background: var(--color-surface-card, #ffffff);
+  color: #555555;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s ease;
   white-space: nowrap;
 }
 
 .modeBtn:hover {
-  background: #f3f4f6;
-  color: #111827;
+  border-color: #d0d4d8;
+  background: #fafbfc;
+  color: #122d5d;
 }
 
-.modeBtnActive {
-  background: var(--color-primary-500, #2252ad);
-  border-color: var(--color-primary-500, #2252ad);
-  color: #fff;
+.modeBtnActive,
+.modeBtnActive:hover {
+  background: #122d5d;
+  border-color: #122d5d;
+  color: #ffffff;
 }
 
 .searchRow {
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 
 .searchInput {
-  padding: 5px 10px;
-  font-size: 12px;
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  color: #111827;
-  width: 260px;
+  height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
+  background: var(--color-surface-card, #ffffff);
+  border: 1px solid #e0e4e8;
+  border-radius: 6px;
+  color: var(--color-text-primary, #333333);
+  width: 320px;
   outline: none;
   font-family: 'Courier New', monospace;
+  transition: all 0.2s ease;
 }
 
 .searchInput::placeholder {
-  color: #9ca3af;
+  color: var(--color-text-muted, #aaaaaa);
   font-family: inherit;
 }
 
+.searchInput:hover {
+  border-color: #d0d4d8;
+  background: #fafbfc;
+}
+
 .searchInput:focus {
-  border-color: var(--color-primary-400, #4b77c2);
-  box-shadow: 0 0 0 2px rgba(34,82,173,0.1);
+  border-color: var(--color-primary-500, #1461c2);
+  box-shadow: 0 0 0 3px rgba(20, 97, 194, 0.1);
 }
 
 .searchBtn {
-  padding: 5px 14px;
+  height: 36px;
+  padding: 0 18px;
   font-size: 11px;
-  font-weight: 600;
-  background: var(--color-primary-500, #2252ad);
-  color: #fff;
+  font-weight: 700;
+  background: #122d5d;
+  color: #ffffff;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.2s ease;
   white-space: nowrap;
 }
 
 .searchBtn:hover {
-  background: var(--color-primary-600, #1a3f86);
+  background: #0d1f3c;
 }
 
 .filterSelect {
-  padding: 5px 10px;
-  font-size: 12px;
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  color: #374151;
+  height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
+  background: var(--color-surface-card, #ffffff);
+  border: 1px solid #e0e4e8;
+  border-radius: 6px;
+  color: var(--color-text-primary, #333333);
   outline: none;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filterSelect:hover {
+  border-color: #d0d4d8;
+  background: #fafbfc;
+}
+
+.filterSelect:focus {
+  border-color: var(--color-primary-500, #1461c2);
+  box-shadow: 0 0 0 3px rgba(20, 97, 194, 0.1);
 }
 
 .filterSelect option {
@@ -179,45 +203,50 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  padding: 10px 12px;
+  height: 40px;
+  padding: 0 12px;
   text-align: left;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #6b7280;
-  background: #ffffff;
-  border-bottom: 2px solid #e5e7eb;
+  text-transform: uppercase;
+  color: var(--color-text-muted, #888888);
+  background: var(--color-surface-body, #f8f9fb);
+  border-bottom: 1px solid var(--color-border-soft, #eeeeee);
   white-space: nowrap;
 }
 
 .numTh { width: 40px; text-align: center; }
 
 .table tbody td {
-  padding: 9px 12px;
-  border-bottom: 1px solid #f3f4f6;
-  color: #111827;
+  padding: 12px;
+  border-bottom: 1px solid var(--color-border-soft, #f0f0f0);
+  color: var(--color-text-primary, #333333);
+  font-size: 13px;
   vertical-align: middle;
 }
 
 .numCell {
   text-align: center;
-  color: #9ca3af;
+  color: var(--color-text-muted, #999999);
   font-size: 11px;
+  font-weight: 400;
 }
 
 .dateCell {
-  font-size: 12px;
+  font-size: 13px;
   white-space: nowrap;
 }
 .dateMain {
   display: block;
-  font-size: 12px;
-  color: #111827;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary, #333333);
 }
 .dateSub {
   display: block;
   font-size: 10px;
-  color: #9ca3af;
+  color: var(--color-text-muted, #999999);
   margin-top: 1px;
 }
 .relCell {
@@ -341,4 +370,44 @@
   padding: 48px 24px !important;
   color: #9ca3af;
   font-size: 13px;
+}
+
+/* ── Paginación (mismo estilo que Novedades/Usuarios) ── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background: var(--color-surface-card, #ffffff);
+  border-top: 1px solid #eeeeee;
+  flex-shrink: 0;
+}
+
+.pageBtn {
+  padding: 6px 14px;
+  border: 1px solid #e0e0e0;
+  background: #ffffff;
+  color: #333333;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #122d5d;
+}
+
+.pageBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  font-size: 11px;
+  color: #888888;
+  font-weight: 600;
 }

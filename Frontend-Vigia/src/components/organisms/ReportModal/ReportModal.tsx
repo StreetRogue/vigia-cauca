@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CloseButton } from '../../atoms/CloseButton';
 import { reportesService } from '../../../services/reportes.service';
 import type { FiltrosDashboard } from '../../../types/estadisticas.types';
 import './ReportModal.css';
+import html2pdf from 'html2pdf.js';
+import { useDashboard } from '../../../hooks/useDashboard';
+import { PrintableReport } from '../PrintableReport/PrintableReport';
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -17,6 +20,8 @@ export function ReportModal({ isOpen, onClose, filtros }: ReportModalProps) {
   const [downloading, setDownloading] = useState(false);
   const [downloadingPDF, setDownloadingPDF] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const { data: dashboardData } = useDashboard(filtros || { anio: new Date().getFullYear() });
+  const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -110,14 +115,22 @@ export function ReportModal({ isOpen, onClose, filtros }: ReportModalProps) {
   }
 
   async function handleDownloadPDF() {
+    if (!printRef.current) return;
     setError('');
     setDownloadingPDF(true);
     try {
-      const blob = await reportesService.descargarPDF(filtros || {});
-      const municipio = filtros?.municipio && filtros.municipio !== 'Todos'
-        ? filtros.municipio
-        : 'cauca';
-      reportesService.triggerDownload(blob, `reporte_vigia_${municipio.toLowerCase()}`, 'pdf');
+      const element = printRef.current;
+      const opt = {
+        margin:       [15, 15, 15, 15], // top, left, bottom, right in mm
+        filename:     `reporte_vigia_${filtros?.municipio && filtros.municipio !== 'Todos' ? filtros.municipio.toLowerCase() : 'cauca'}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, windowWidth: 1024 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      await html2pdf().set(opt).from(element).save();
+
       onClose();
     } catch (err) {
       console.error('Error al generar PDF:', err);
@@ -273,6 +286,16 @@ export function ReportModal({ isOpen, onClose, filtros }: ReportModalProps) {
           </div>
         </div>
 
+      </div>
+
+      {/* Hidden printable report component */}
+      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
+        <PrintableReport
+          ref={printRef}
+          filtros={filtros || { anio: new Date().getFullYear() }}
+          dashboardData={dashboardData || {}}
+          tableData={data}
+        />
       </div>
     </div>
   );

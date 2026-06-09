@@ -1,6 +1,7 @@
 package co.edu.unicauca.micronovedades.capaControladores;
 
 import co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.CategoriaEvento;
+import co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.NivelConfianza;
 import co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.NivelVisibilidad;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion.FiltroNovedadDTO;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion.NovedadDTOPeticion;
@@ -104,13 +105,20 @@ public class NovedadRestController {
     public ResponseEntity<Page<NovedadDTORespuesta>> listarPaginado(
             @RequestParam(required = false) String rol,
             @RequestParam(required = false) UUID usuarioId,
+            @RequestParam(defaultValue = "false") boolean archivadas,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String municipio,
+            @RequestParam(required = false) CategoriaEvento categoria,
+            @RequestParam(required = false) NivelConfianza nivelConfianza,
+            @RequestParam(defaultValue = "false") boolean conMuertes,
             @PageableDefault(size = 20, sort = "fechaHecho") Pageable pageable
     ) {
-        // Si no viene rol, devolver todas (compatibilidad backwards)
         if (rol == null || rol.isBlank()) {
-            return ResponseEntity.ok(novedadService.listarTodasPaginado(pageable));
+            return ResponseEntity.ok(novedadService.listarTodasPaginado(archivadas, pageable));
         }
-        return ResponseEntity.ok(novedadService.listarPaginadoPorRol(rol, usuarioId, pageable));
+        return ResponseEntity.ok(novedadService.buscarConFiltrosPaginado(
+                rol, usuarioId, archivadas, search, municipio, categoria, nivelConfianza, conMuertes, pageable
+        ));
     }
 
     /**
