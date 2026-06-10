@@ -223,6 +223,7 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
   function resetForm() {
     setCurrentStep(1);
     setEditingNovedadId(null);
+    setCreatedNovedad(null);
     setFecha(''); setHoraInicio(''); setHoraFin(''); setMunicipio(''); setLocalidad('');
     setErrFecha(''); setErrHoraInicio(''); setErrHoraFin(''); setErrMunicipio(''); setErrLocalidad('');
     setCategoria(''); setActores([]); setActorSeleccionado(''); setNivelConfianza(''); setNivelVisibilidad('');
@@ -341,8 +342,9 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
       let savedNovedadId: string;
       if (editingNovedadId) {
         // Actualizar la novedad existente
-        await novedadesService.actualizar(editingNovedadId, payload);
+        const actualizada = await novedadesService.actualizar(editingNovedadId, payload);
         savedNovedadId = editingNovedadId;
+        setCreatedNovedad(actualizada); // para que "VER NOVEDAD" abra la novedad real
       } else {
         // Crear la novedad: si hay archivos reales, usar multipart; si no, JSON puro
         let created: NovedadDTORespuesta;
