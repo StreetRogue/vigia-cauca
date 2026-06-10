@@ -241,6 +241,12 @@ services:
     depends_on:
       keycloak:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "grep -q ':1F90' /proc/net/tcp6"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
 
   micro-novedades:
     build:
@@ -331,8 +337,10 @@ services:
     networks:
       - backend
     depends_on:
-      - api-gateway
-      - keycloak
+      api-gateway:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
 
 # ─────────────────────────────────────────
 # VOLÚMENES Y RED
