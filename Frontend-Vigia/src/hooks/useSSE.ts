@@ -36,6 +36,10 @@ export function useSSE({ onMessage, onError, enabled = true }: UseSSEOptions): v
     const es = new EventSource(url, { withCredentials: false });
 
     es.onmessage = onMessage;
+    // El backend emite eventos CON nombre (p.ej. "novedad-actualizada") vía
+    // SseEmitter.event().name(...). Esos NO disparan onmessage: hay que
+    // escucharlos explícitamente o el frontend nunca se entera de los cambios.
+    es.addEventListener('novedad-actualizada', onMessage as EventListener);
     es.onerror   = (e) => {
       onError?.(e);
       // Reconectar tras 5 s si la conexión se pierde

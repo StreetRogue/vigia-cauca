@@ -8,6 +8,7 @@ import { CategoriesPanel } from '../../organisms/CategoriesPanel/CategoriesPanel
 import { TemporalPanel } from '../../organisms/TemporalPanel/TemporalPanel';
 import { useDashboard } from '../../../hooks/useDashboard';
 import { useSSE } from '../../../hooks/useSSE';
+import { estadisticasService } from '../../../services/estadisticas.service';
 import { useAuth } from '../../../context/AuthContext';
 import { ReportModal } from '../../organisms/ReportModal';
 import styles from './DashboardTemplate.module.css';
@@ -29,8 +30,11 @@ export function DashboardTemplate({ filtros }: DashboardTemplateProps) {
   // Todos pueden generar reportes; el backend filtra PUBLICA/PRIVADA según el rol
   const canGenerateReports = true;
 
-  // Refrescar el dashboard cuando llegue un evento SSE del servidor
+  // Refrescar el dashboard cuando llegue un evento SSE del servidor.
+  // Hay que invalidar la caché primero: si no, refetch con los mismos filtros
+  // devuelve el valor cacheado (TTL 3 min) y no se ve el cambio.
   const handleSSE = useCallback(() => {
+    estadisticasService.invalidarCache();
     refetch(currentFiltros);
   }, [refetch, currentFiltros]);
 
