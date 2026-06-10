@@ -57,6 +57,9 @@ export function UsersManagementPage() {
   const [totalPages,     setTotalPages]     = useState(0);
   const [totalElements,  setTotalElements]  = useState(0);
   const [search,         setSearch]         = useState("");
+  const [filterRol,      setFilterRol]      = useState<"" | "ADMIN" | "OPERADOR">("");
+  const [filterEstado,   setFilterEstado]   = useState<"" | "ACTIVO" | "INACTIVO">("");
+  const [filterMunicipio,setFilterMunicipio] = useState<string>("");
 
   // ── Municipios (para el drawer) ───────────────────────────────────────────
   const [municipios, setMunicipios] = useState<MunicipioDTORespuesta[]>([]);
@@ -161,15 +164,34 @@ export function UsersManagementPage() {
 
   // ── Search filter ─────────────────────────────────────────────────────────
   const q = search.trim().toLowerCase();
-  const filtered = q
-    ? usuarios.filter(
-        (u) =>
-          u.nombre.toLowerCase().includes(q) ||
-          u.username.toLowerCase().includes(q) ||
-          u.email.toLowerCase().includes(q) ||
-          u.cedula.includes(q),
-      )
-    : usuarios;
+  const filtered = usuarios.filter((u) => {
+    if (q) {
+      const matches =
+        u.nombre.toLowerCase().includes(q) ||
+        u.username.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        u.cedula.includes(q);
+      if (!matches) return false;
+    }
+    if (filterRol && u.rol !== filterRol) return false;
+    if (filterEstado && u.estado !== filterEstado) return false;
+    if (filterMunicipio && (u.municipio?.nombre ?? "") !== filterMunicipio) return false;
+    return true;
+  });
+
+  const hasActiveFilters = Boolean(search || filterRol || filterEstado || filterMunicipio);
+  const resetFilters = () => {
+    setSearch("");
+    setFilterRol("");
+    setFilterEstado("");
+    setFilterMunicipio("");
+    setPage(0);
+  };
+
+  // Lista única de municipios presentes para el dropdown
+  const municipiosDisponibles = Array.from(
+    new Set(usuarios.map((u) => u.municipio?.nombre).filter(Boolean) as string[])
+  ).sort();
 
   // ── Metrics ───────────────────────────────────────────────────────────────
   const totalActivos   = usuarios.filter((u) => u.estado === "ACTIVO").length;
@@ -241,22 +263,75 @@ export function UsersManagementPage() {
       mainPanelClassName={styles.tablePanel}
       mainPanel={
         <>
-          <div className={styles.tableToolbar}>
+          <div className={styles.toolbar}>
+            <div className={styles.toolbarLeft}>
+              <h2 className={styles.title}>USUARIOS</h2>
+              {!loading && (
+                <span className={styles.count}>{filtered.length} registros</span>
+              )}
+            </div>
+            <div className={styles.toolbarRight}>
+              <Button type="button" className={styles.createBtn} onClick={() => setIsCreateDrawerOpen(true)}>
+                + CREAR USUARIO
+              </Button>
+            </div>
+          </div>
+
+          <div className={styles.filtersBar}>
             <div className={styles.searchBox}>
               <span className={styles.searchIcon} aria-hidden="true" />
               <input
                 className={styles.searchInput}
-                placeholder="Buscar usuario..."
+                placeholder="Buscar por nombre, usuario, correo..."
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(0); }}
               />
             </div>
-            <span className={styles.counter}>
-              {loading ? "Cargando..." : `${totalElements} usuarios`}
-            </span>
-            <Button type="button" className={styles.createBtn} onClick={() => setIsCreateDrawerOpen(true)}>
-              + CREAR USUARIO
-            </Button>
+
+            <select
+              className={styles.filterSelect}
+              value={filterRol}
+              onChange={(e) => { setFilterRol(e.target.value as any); setPage(0); }}
+            >
+              <option value="">Rol</option>
+              <option value="ADMIN">Admin</option>
+              <option value="OPERADOR">Operador</option>
+            </select>
+
+            <select
+              className={styles.filterSelect}
+              value={filterMunicipio}
+              onChange={(e) => { setFilterMunicipio(e.target.value); setPage(0); }}
+            >
+              <option value="">Municipio</option>
+              {municipiosDisponibles.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+
+            <label className={[styles.checkboxLabel, filterEstado === "ACTIVO" ? styles.checkboxLabelActive : ""].filter(Boolean).join(" ")}>
+              <input
+                type="checkbox"
+                checked={filterEstado === "ACTIVO"}
+                onChange={(e) => { setFilterEstado(e.target.checked ? "ACTIVO" : ""); setPage(0); }}
+              />
+              <span>Solo activos</span>
+            </label>
+
+            <label className={[styles.checkboxLabel, filterEstado === "INACTIVO" ? styles.checkboxLabelInactive : ""].filter(Boolean).join(" ")}>
+              <input
+                type="checkbox"
+                checked={filterEstado === "INACTIVO"}
+                onChange={(e) => { setFilterEstado(e.target.checked ? "INACTIVO" : ""); setPage(0); }}
+              />
+              <span>Solo inactivos</span>
+            </label>
+
+            {hasActiveFilters && (
+              <button className={styles.resetBtn} onClick={resetFilters}>
+                ✕ Limpiar
+              </button>
+            )}
           </div>
 
           {loadError && (
@@ -358,6 +433,10 @@ export function UsersManagementPage() {
             usuario={selectedUsuario}
             onEdit={handleEditClick}
             onRefresh={loadUsuarios}
+            onUsuarioUpdate={(u) => {
+              setSelectedUsuario(u);
+              setSelectedUsuarioId(u.idUsuario);
+            }}
           />
         ) : (
           <>

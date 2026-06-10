@@ -73,7 +73,7 @@ export function AuditoriasListPanel({ onSelect, selectedId }: Props) {
     try {
       let data: AuditoriaDTORespuesta[] = [];
       if (modo === 'reciente') {
-        data = await auditoriaService.obtenerActividadReciente(200);
+        data = await auditoriaService.obtenerTodas();
       } else if (modo === 'novedad' && busquedaId.trim()) {
         data = await auditoriaService.obtenerHistorialNovedad(busquedaId.trim());
       } else if (modo === 'usuario' && busquedaId.trim()) {

@@ -113,7 +113,9 @@ services:
       retries: 5
 
   keycloak:
-    image: quay.io/keycloak/keycloak:24.0.3
+    build:
+      context: ./Backend-Vigia/Keycloak
+      dockerfile: Dockerfile
     container_name: keycloak
     restart: unless-stopped
     command: start-dev --import-realm
@@ -141,13 +143,32 @@ services:
   keycloak-init:
     image: alpine:3.19
     container_name: keycloak-init
+    environment:
+      SMTP_HOST:              ${SMTP_HOST}
+      SMTP_PORT:              ${SMTP_PORT}
+      SMTP_SSL:               ${SMTP_SSL}
+      SMTP_STARTTLS:          ${SMTP_STARTTLS}
+      SMTP_AUTH:              ${SMTP_AUTH}
+      SMTP_FROM:              ${SMTP_FROM}
+      SMTP_FROM_DISPLAY_NAME: ${SMTP_FROM_DISPLAY_NAME}
+      SMTP_USER:              ${SMTP_USER}
+      SMTP_PASSWORD:          ${SMTP_PASSWORD}
+      USUARIOS_DB_HOST:       postgres-usuarios
+      USUARIOS_DB_NAME:       ${USUARIOS_DB}
+      USUARIOS_DB_USER:       ${USUARIOS_DB_USER}
+      USUARIOS_DB_PASSWORD:   ${USUARIOS_DB_PASSWORD}
     volumes:
       - ./Backend-Vigia/Keycloak/init-admin-user.sh:/init-admin-user.sh:ro
-    command: sh -c "apk add --no-cache curl -q && sh /init-admin-user.sh"
+    command: sh -c "apk add --no-cache curl postgresql-client -q && sh /init-admin-user.sh"
     networks:
       - backend
     depends_on:
-      - keycloak
+      keycloak:
+        condition: service_started
+      postgres-usuarios:
+        condition: service_healthy
+      micro-usuarios:
+        condition: service_started
     restart: on-failure
 
   # ─────────────────────────────────────────

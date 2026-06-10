@@ -101,12 +101,6 @@ public class KeycloakService implements IamService {
     @Override
     public void actualizarUsuario(String userId, UsuarioUpdateDTO dto) {
         try {
-            // Actualizar contraseña
-            CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
-            credentialRepresentation.setTemporary(false);
-            credentialRepresentation.setType(OAuth2Constants.PASSWORD);
-            credentialRepresentation.setValue(dto.getPassword());
-
             UserRepresentation userRepresentation = new UserRepresentation();
 
             if (dto.getEmail() != null) {
@@ -117,10 +111,16 @@ public class KeycloakService implements IamService {
                 userRepresentation.setUsername(dto.getUsername());
             }
 
-            userRepresentation.setCredentials(Collections.singletonList(credentialRepresentation));
+            // Solo actualizar contraseña si viene una nueva
+            if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+                CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
+                credentialRepresentation.setTemporary(false);
+                credentialRepresentation.setType(OAuth2Constants.PASSWORD);
+                credentialRepresentation.setValue(dto.getPassword());
+                userRepresentation.setCredentials(Collections.singletonList(credentialRepresentation));
+            }
 
             UserResource userResource = keycloakProvider.getUsersResource().get(userId);
-
             userResource.update(userRepresentation);
 
         } catch (Exception e) {

@@ -22,4 +22,7 @@ public interface AuditoriaNovedadRepository extends JpaRepository<AuditoriaNoved
     // Actividad reciente global (últimas N auditorías)
     @Query("SELECT a FROM AuditoriaNovedadEntity a ORDER BY a.fecha DESC")
     Page<AuditoriaNovedadEntity> obtenerActividadReciente(Pageable pageable);
+
+    // Todas las auditorías ordenadas por fecha descendente
+    List<AuditoriaNovedadEntity> findAllByOrderByFechaDesc();
 }
