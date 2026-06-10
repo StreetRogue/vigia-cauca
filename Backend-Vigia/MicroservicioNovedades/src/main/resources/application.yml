@@ -5,6 +5,12 @@ spring:
   application:
     name: micro-novedades
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI}
+
   servlet:
     multipart:
       max-file-size: 5MB
@@ -108,6 +114,12 @@ clients:
 rabbitmq:
   queue:
     name: ${RABBITMQ_QUEUE_NAME:cola.novedades.notificaciones}
+
+jwt:
+  auth:
+    converter:
+      principle-attribute: preferred_username
+      api-client: ${KEYCLOAK_CLIENT_ID}
 
 # Logging
 logging:
