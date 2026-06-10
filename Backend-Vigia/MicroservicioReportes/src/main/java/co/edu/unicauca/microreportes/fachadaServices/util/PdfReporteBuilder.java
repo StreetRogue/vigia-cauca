@@ -14,6 +14,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -56,6 +57,21 @@ public final class PdfReporteBuilder {
     private static final Font F_PIE_PG    = new Font(Font.HELVETICA,  7, Font.NORMAL, C_PIE);
 
     private static final DateTimeFormatter DT_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    // ── Marca de agua (logo Gobernación del Cauca) ──────────────────────────────
+    private static final String LOGO_RECURSO  = "/reportes/logo-gobernacion-cauca.png";
+    private static final float  LOGO_ANCHO_PT = 320f;   // tamaño objetivo de la marca de agua
+    private static final float  LOGO_OPACIDAD = 0.08f;  // ~8 % → se ve tenue al fondo
+    private static final byte[] LOGO_BYTES    = cargarLogo();
+
+    /** Carga el logo una sola vez desde el classpath. Devuelve null si no está disponible. */
+    private static byte[] cargarLogo() {
+        try (InputStream in = PdfReporteBuilder.class.getResourceAsStream(LOGO_RECURSO)) {
+            return in != null ? in.readAllBytes() : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
     private PdfReporteBuilder() {}
 
@@ -413,6 +429,29 @@ public final class PdfReporteBuilder {
     private static class PiePaginaEvent extends PdfPageEventHelper {
         @Override
         public void onEndPage(PdfWriter writer, Document document) {
+            // Marca de agua: logo de la Gobernación centrado y tenue, por DEBAJO del
+            // contenido. Si el logo no carga, el PDF se genera igual sin marca de agua.
+            if (LOGO_BYTES != null) {
+                try {
+                    Image logo = Image.getInstance(LOGO_BYTES);
+                    logo.scaleToFit(LOGO_ANCHO_PT, LOGO_ANCHO_PT);
+                    float x = (document.getPageSize().getWidth()  - logo.getScaledWidth())  / 2f;
+                    float y = (document.getPageSize().getHeight() - logo.getScaledHeight()) / 2f;
+                    logo.setAbsolutePosition(x, y);
+
+                    PdfContentByte fondo = writer.getDirectContentUnder();
+                    PdfGState gs = new PdfGState();
+                    gs.setFillOpacity(LOGO_OPACIDAD);
+                    gs.setStrokeOpacity(LOGO_OPACIDAD);
+                    fondo.saveState();
+                    fondo.setGState(gs);
+                    fondo.addImage(logo);
+                    fondo.restoreState();
+                } catch (Exception ignorado) {
+                    // marca de agua opcional: nunca debe interrumpir la generación
+                }
+            }
+
             PdfContentByte cb = writer.getDirectContent();
             Phrase pie = new Phrase(
                     "Vigía Cauca — Gobernación del Cauca  |  Documento de inteligencia — Pág. " + writer.getPageNumber(),
