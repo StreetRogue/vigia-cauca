@@ -41,7 +41,7 @@ function CopyableId({ id }: { id: string | null }) {
 const ACCION_LABELS: Record<string, string> = {
   CREATE:       'Creación',
   UPDATE:       'Actualización',
-  DELETE:       'Eliminación',
+  DELETE:       'Archivado',
   EXCEL_IMPORT: 'Importación Excel',
 };
 
@@ -94,7 +94,7 @@ export function AuditoriasListPanel({ onSelect, selectedId }: Props) {
         const map: Record<string, string> = {};
         res.content.forEach(u => {
           if (u.idUsuario) map[u.idUsuario.toLowerCase()] = u.cedula;
-          if (u.idIam) map[u.idIam.toLowerCase()] = u.cedula;
+          if (u.idKeycloak) map[u.idKeycloak.toLowerCase()] = u.cedula;
         });
         setUsersMap(map);
       })
@@ -235,7 +235,7 @@ function getResumen(r: AuditoriaDTORespuesta): string {
             <option value="TODAS">Todas</option>
             <option value="CREATE">Creación</option>
             <option value="UPDATE">Actualización</option>
-            <option value="DELETE">Eliminación</option>
+            <option value="DELETE">Archivado</option>
             <option value="EXCEL_IMPORT">Importación Excel</option>
           </select>
         </div>
