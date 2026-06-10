@@ -51,6 +51,7 @@ public class NovedadEventConsumer {
                 case "NOVEDAD_CREADA" -> proyeccionService.procesarNovedadCreada(evento);
                 case "NOVEDAD_ACTUALIZADA" -> proyeccionService.procesarNovedadActualizada(evento);
                 case "NOVEDAD_ELIMINADA" -> proyeccionService.procesarNovedadEliminada(evento);
+                case "NOVEDAD_DESOCULTADA" -> proyeccionService.procesarNovedadDesocultada(evento);
                 case "IMPORTACION_EXCEL" -> {
                     // Para importaciones en lote, procesar como creación individual
                     proyeccionService.procesarNovedadCreada(evento);
