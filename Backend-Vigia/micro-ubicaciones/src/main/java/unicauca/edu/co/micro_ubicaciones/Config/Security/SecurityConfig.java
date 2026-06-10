@@ -23,7 +23,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/municipios/public/**").permitAll()
                         .requestMatchers("/municipios/admin/**").hasAuthority("ADMIN")
-                        .requestMatchers("/municipios/**").hasAnyAuthority("ADMIN", "OPERADOR")
+                        // El gateway expone /microUbicaciones/** como público; las consultas
+                        // (incluida la llamada interna /municipios/batch desde micro-usuarios)
+                        // no requieren token. Las escrituras siguen bajo /municipios/admin/**.
+                        .requestMatchers("/municipios/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
