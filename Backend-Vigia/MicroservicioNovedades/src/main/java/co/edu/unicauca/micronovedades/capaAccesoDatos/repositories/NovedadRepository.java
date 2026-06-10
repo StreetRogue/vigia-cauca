@@ -74,6 +74,8 @@ public interface NovedadRepository extends JpaRepository<NovedadEntity, UUID> {
     // Filtrar por nivel de visibilidad
     List<NovedadEntity> findByNivelVisibilidad(NivelVisibilidad nivelVisibilidad);
 
+    long countByOcultoFalse();
+
     @Query("SELECT n FROM NovedadEntity n WHERE n.oculto = false")
     List<NovedadEntity> findAllVisible();
 
