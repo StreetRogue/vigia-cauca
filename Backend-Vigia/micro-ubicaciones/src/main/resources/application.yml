@@ -6,6 +6,17 @@ spring:
         name: micro-ubicaciones
     profiles:
         active: ${SPRING_PROFILES_ACTIVE:dev}
+    security:
+        oauth2:
+            resourceserver:
+                jwt:
+                    issuer-uri: ${KEYCLOAK_ISSUER_URI}
+
+jwt:
+    auth:
+        converter:
+            principle-attribute: preferred_username
+            api-client: ${KEYCLOAK_CLIENT_ID}
 
 logging:
     level:

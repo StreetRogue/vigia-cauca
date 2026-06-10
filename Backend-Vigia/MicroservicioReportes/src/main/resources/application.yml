@@ -5,6 +5,12 @@ spring:
   application:
     name: micro-reportes
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI}
+
   datasource:
     url: ${REPORTES_DB_URL:jdbc:postgresql://localhost:5432/estadisticas_db}
     username: ${REPORTES_DB_USER:postgres}
@@ -90,6 +96,12 @@ sse:
 # Reportes
 reportes:
   temp-dir: ${REPORTES_TEMP_DIR:/tmp/reportes}
+
+jwt:
+  auth:
+    converter:
+      principle-attribute: preferred_username
+      api-client: ${KEYCLOAK_CLIENT_ID}
 
 # Logging
 logging:
