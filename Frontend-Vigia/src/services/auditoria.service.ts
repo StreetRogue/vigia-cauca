@@ -26,4 +26,12 @@ export const auditoriaService = {
     );
     return data;
   },
+
+  /** Obtiene todas las auditorías sin límite */
+  async obtenerTodas(): Promise<AuditoriaDTORespuesta[]> {
+    const { data } = await novedadesClient.get<AuditoriaDTORespuesta[]>(
+      `/api/v1/microNovedades/auditorias/todas`
+    );
+    return data;
+  },
 };

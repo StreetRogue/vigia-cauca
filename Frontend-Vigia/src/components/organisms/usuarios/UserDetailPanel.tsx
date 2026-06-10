@@ -7,6 +7,7 @@ interface Props {
   usuario: UsuarioResponseDTO | null;
   onEdit: (user: UsuarioResponseDTO) => void;
   onRefresh: () => void;
+  onUsuarioUpdate?: (user: UsuarioResponseDTO) => void;
 }
 
 function formatDate(iso: string) {
@@ -23,7 +24,7 @@ function getInitials(nombre: string): string {
     .join("");
 }
 
-export function UserDetailPanel({ usuario, onEdit, onRefresh }: Props) {
+export function UserDetailPanel({ usuario, onEdit, onRefresh, onUsuarioUpdate }: Props) {
   const [toggling, setToggling] = useState(false);
   const [creadoPorNombre, setCreadoPorNombre] = useState<string | null>(null);
   const [editadoPorNombre, setEditadoPorNombre] = useState<string | null>(null);
@@ -71,19 +72,11 @@ export function UserDetailPanel({ usuario, onEdit, onRefresh }: Props) {
     setToggling(true);
     try {
       const nuevoEstado = usuario.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
-      console.log('Intentando cambiar estado:', {
-        idUsuario: usuario.idUsuario,
-        nuevoEstado,
-        usuarioCompleto: usuario
-      });
-      await usuariosService.update(usuario.idUsuario, { estado: nuevoEstado });
+      const actualizado = await usuariosService.update(usuario.idUsuario, { estado: nuevoEstado });
+      onUsuarioUpdate?.(actualizado);
       onRefresh();
     } catch (error: any) {
-      console.error('Error al cambiar estado:', {
-        error,
-        response: error?.response?.data,
-        message: error?.message
-      });
+      console.error('Error al cambiar estado:', error);
       alert(`Error: ${error?.response?.data?.message || error?.message || 'Error al cambiar estado del usuario'}`);
     } finally {
       setToggling(false);

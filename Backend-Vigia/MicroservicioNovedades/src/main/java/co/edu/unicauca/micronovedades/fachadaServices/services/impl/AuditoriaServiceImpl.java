@@ -44,4 +44,11 @@ public class AuditoriaServiceImpl implements IAuditoriaService {
                 .getContent();
         return mapper.toAuditoriaDTOList(reciente);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AuditoriaNovedadDTORespuesta> obtenerTodas() {
+        List<AuditoriaNovedadEntity> todas = auditoriaRepository.findAllByOrderByFechaDesc();
+        return mapper.toAuditoriaDTOList(todas);
+    }
 }

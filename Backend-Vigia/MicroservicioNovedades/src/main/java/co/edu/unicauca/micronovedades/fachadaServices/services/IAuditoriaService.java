@@ -12,4 +12,6 @@ public interface IAuditoriaService {
     List<AuditoriaNovedadDTORespuesta> obtenerHistorialPorUsuario(UUID usuarioId);
 
     List<AuditoriaNovedadDTORespuesta> obtenerActividadReciente(int limite);
+
+    List<AuditoriaNovedadDTORespuesta> obtenerTodas();
 }

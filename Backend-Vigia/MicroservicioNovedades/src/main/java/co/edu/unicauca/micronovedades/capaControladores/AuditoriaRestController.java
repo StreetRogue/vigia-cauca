@@ -48,4 +48,13 @@ public class AuditoriaRestController {
     ) {
         return ResponseEntity.ok(auditoriaService.obtenerActividadReciente(limite));
     }
+
+    /**
+     * GET /api/v1/microNovedades/auditorias/todas
+     * Todas las auditorías sin límite, ordenadas por fecha descendente.
+     */
+    @GetMapping("/todas")
+    public ResponseEntity<List<AuditoriaNovedadDTORespuesta>> todas() {
+        return ResponseEntity.ok(auditoriaService.obtenerTodas());
+    }
 }

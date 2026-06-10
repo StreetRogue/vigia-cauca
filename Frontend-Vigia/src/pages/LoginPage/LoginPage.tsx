@@ -28,8 +28,9 @@ export function LoginPage() {
   const handleForgotPassword = () => {
     const keycloakUrl = import.meta.env.VITE_KEYCLOAK_URL;
     const realm = import.meta.env.VITE_KEYCLOAK_REALM;
+    const clientId = import.meta.env.VITE_KEYCLOAK_CLIENT_ID;
     window.open(
-      `${keycloakUrl}/realms/${realm}/login-actions/reset-credentials`,
+      `${keycloakUrl}/realms/${realm}/login-actions/reset-credentials?client_id=${clientId}`,
       "_blank",
     );
   };
