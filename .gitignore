@@ -143,3 +143,7 @@ vite.config.ts.timestamp-*
 # Carpetas de agentes / IDE de Claude Code (no se suben al repo)
 .claude/
 .claire/
+
+# Configuracion local de IDEs (no se sube al repo)
+.idea/
+.vscode/
