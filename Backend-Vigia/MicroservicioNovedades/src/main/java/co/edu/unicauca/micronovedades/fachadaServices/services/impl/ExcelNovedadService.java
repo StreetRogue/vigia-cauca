@@ -6,6 +6,7 @@ import co.edu.unicauca.micronovedades.capaAccesoDatos.repositories.NovedadReposi
 import co.edu.unicauca.micronovedades.capaControladores.controladorExcepciones.BadRequestException;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion.AfectacionHumanaDTOPeticion;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion.NovedadDTOPeticion;
+import co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion.VictimaDTOPeticion;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.respuesta.NovedadDTORespuesta;
 import co.edu.unicauca.micronovedades.fachadaServices.services.INovedadService;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +59,8 @@ public class ExcelNovedadService {
             "HERIDOS_TOTALES",
             "HERIDOS_CIVILES",
             "DESPLAZADOS_TOTALES",
-            "CONFINADOS_TOTALES"
+            "CONFINADOS_TOTALES",
+            "VICTIMAS"
     };
 
     // ==========================================
@@ -100,7 +102,7 @@ public class ExcelNovedadService {
                     "Puente vial afectado", "Patrullaje inmediato",
                     "Se registró enfrentamiento entre grupos armados y fuerza pública",
                     "CONFIRMADO", "PUBLICA",
-                    "2", "1", "1", "3", "2", "0", "0"
+                    "2", "1", "1", "3", "2", "0", "0", "nombre: Juan Perez, genero: MASCULINO, edad: 35, grupo poblacional: CAMPESINO, ocupacion: Agricultor;nombre: Maria Gomez, genero: FEMENINO, edad: 28, grupo poblacional: ADULTO, ocupacion: Docente"
             };
             for (int i = 0; i < valores.length; i++) {
                 Cell cell = ejemploRow.createCell(i);
@@ -244,6 +246,11 @@ public class ExcelNovedadService {
         String descripcion = getCellString(row, idx.get("DESCRIPCION"));
         String confStr    = getCellString(row, idx.get("NIVEL_CONFIANZA"));
         String visStr     = getCellString(row, idx.get("NIVEL_VISIBILIDAD"));
+        String victimasStr = idx.containsKey("VICTIMAS")
+        ? getCellString(row, idx.get("VICTIMAS"))
+        : "";
+        List<VictimaDTOPeticion> victimas =
+        parsearVictimas(victimasStr);
 
         // Validaciones de campos obligatorios
         requireNonBlank(fechaStr,   "FECHA_HECHO");
@@ -308,7 +315,114 @@ public class ExcelNovedadService {
                 .nivelConfianza(nivelConfianza)
                 .nivelVisibilidad(nivelVisibilidad)
                 .afectacionHumana(afectacion)
+                .victimas(victimas)
                 .build();
+    }
+
+    private List<VictimaDTOPeticion> parsearVictimas(String victimasStr) {
+
+        if (victimasStr == null || victimasStr.isBlank()) {
+            return Collections.emptyList();
+        }
+
+        List<VictimaDTOPeticion> victimas = new ArrayList<>();
+
+        String[] registrosVictimas = victimasStr.split(";");
+
+        for (int i = 0; i < registrosVictimas.length; i++) {
+
+            String registro = registrosVictimas[i].trim();
+
+            if (registro.isBlank()) {
+                continue;
+            }
+
+            Map<String, String> campos = new HashMap<>();
+
+            String[] atributos = registro.split(",");
+
+            for (String atributo : atributos) {
+
+                String[] kv = atributo.split(":", 2);
+
+                if (kv.length != 2) {
+                    continue;
+                }
+
+                String clave = kv[0].trim().toLowerCase();
+                String valor = kv[1].trim();
+
+                campos.put(clave, valor);
+            }
+
+            String nombre = campos.get("nombre");
+            String genero = campos.get("genero");
+            String grupo = campos.get("grupo poblacional");
+            String ocupacion = campos.get("ocupacion");
+            String edad = campos.get("edad");
+
+            // Validaciones obligatorias
+            if (nombre == null || nombre.isBlank()) {
+                throw new BadRequestException(
+                        "Víctima #" + (i + 1) + ": el campo nombre es obligatorio"
+                );
+            }
+
+            if (genero == null || genero.isBlank()) {
+                throw new BadRequestException(
+                        "Víctima #" + (i + 1) + ": el campo genero es obligatorio"
+                );
+            }
+
+            if (grupo == null || grupo.isBlank()) {
+                throw new BadRequestException(
+                        "Víctima #" + (i + 1) + ": el campo grupo poblacional es obligatorio"
+                );
+            }
+
+            if (ocupacion == null || ocupacion.isBlank()) {
+                throw new BadRequestException(
+                        "Víctima #" + (i + 1) + ": el campo ocupacion es obligatorio"
+                );
+            }
+
+            VictimaDTOPeticion dto = new VictimaDTOPeticion();
+
+            dto.setNombreVictima(nombre);
+
+            dto.setGeneroVictima(
+                    parseEnum(
+                            GeneroVictima.class,
+                            genero,
+                            "GENERO_VICTIMA"
+                    )
+            );
+
+            dto.setGrupoPoblacional(
+                    parseEnum(
+                            GrupoPoblacional.class,
+                            grupo,
+                            "GRUPO_POBLACIONAL"
+                    )
+            );
+
+            dto.setOcupacionVictima(ocupacion);
+
+            if (edad != null && !edad.isBlank()) {
+
+                try {
+                    dto.setEdadVictima(Integer.parseInt(edad));
+                } catch (NumberFormatException e) {
+                    throw new BadRequestException(
+                            "Víctima #" + (i + 1) + ": la edad debe ser numérica"
+                    );
+                }
+            }
+
+            victimas.add(dto);
+        }
+
+        return victimas;
     }
 
     private List<Actor> parsearActores(String actoresStr) {
@@ -458,7 +572,7 @@ public class ExcelNovedadService {
 
     private void validarHeadersObligatorios(Map<String, Integer> colIndex) {
         String[] obligatorios = {"FECHA_HECHO","HORA_INICIO","HORA_FIN","MUNICIPIO","LOCALIDAD",
-                "CATEGORIA","ACTORES","DESCRIPCION","NIVEL_CONFIANZA","NIVEL_VISIBILIDAD"};
+                "CATEGORIA","ACTORES","DESCRIPCION","NIVEL_CONFIANZA","NIVEL_VISIBILIDAD","VICTIMAS"};
         List<String> faltantes = new ArrayList<>();
         for (String h : obligatorios) {
             if (!colIndex.containsKey(h)) faltantes.add(h);
@@ -635,8 +749,37 @@ public class ExcelNovedadService {
                 {"ACTORES (separados por coma)", Arrays.stream(Actor.values()).map(Enum::name).reduce((a,b)->a+", "+b).orElse("")},
                 {"NIVEL_CONFIANZA", Arrays.stream(NivelConfianza.values()).map(Enum::name).reduce((a,b)->a+", "+b).orElse("")},
                 {"NIVEL_VISIBILIDAD", Arrays.stream(NivelVisibilidad.values()).map(Enum::name).reduce((a,b)->a+", "+b).orElse("")},
-                {"FECHA_HECHO", "Formato: YYYY-MM-DD  (ej: 2025-06-15)"},
-                {"HORA_INICIO / HORA_FIN", "Formato: HH:mm  (ej: 08:30)"},
+                {"FECHA_HECHO", "Formato: YYYY-MM-DD (ej: 2025-06-15)"},
+                {"HORA_INICIO / HORA_FIN", "Formato: HH:mm (ej: 08:30)"},
+                {"VICTIMAS",
+                        """
+                        Opcional. Dejar vacío si no existen víctimas.
+
+                        Formato:
+                        nombre: VALOR, genero: VALOR, edad: VALOR, grupo poblacional: VALOR, ocupacion: VALOR
+
+                        Varias víctimas se separan con ';'
+
+                        Ejemplo una víctima:
+                        nombre: Juan Perez, genero: MASCULINO, edad: 35, grupo poblacional: CAMPESINO, ocupacion: Agricultor
+
+                        Ejemplo varias víctimas:
+                        nombre: Juan Perez, genero: MASCULINO, edad: 35, grupo poblacional: CAMPESINO, ocupacion: Agricultor;
+                        nombre: Maria Gomez, genero: FEMENINO, grupo poblacional: ADULTO, ocupacion: Docente
+                        """
+                },
+                {"GENERO_VICTIMA",
+                        Arrays.stream(GeneroVictima.values())
+                                .map(Enum::name)
+                                .reduce((a,b)->a+", "+b)
+                                .orElse("")
+                },
+                {"GRUPO_POBLACIONAL",
+                        Arrays.stream(GrupoPoblacional.values())
+                                .map(Enum::name)
+                                .reduce((a,b)->a+", "+b)
+                                .orElse("")
+                }
         };
 
         CellStyle headerStyle = wb.createCellStyle();
@@ -649,7 +792,7 @@ public class ExcelNovedadService {
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         headerStyle.setAlignment(HorizontalAlignment.CENTER);
         headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-
+        
         Row titulo = ref.createRow(0);
         titulo.setHeightInPoints(22);
         Cell t = titulo.createCell(0); t.setCellValue("CAMPO"); t.setCellStyle(headerStyle);
@@ -684,9 +827,13 @@ public class ExcelNovedadService {
             ws.setBorderLeft(BorderStyle.THIN);
             ws.setBorderRight(BorderStyle.THIN);
             vc.setCellStyle(ws);
+            if ("VICTIMAS".equals(datos[i][0])) {
+                row.setHeightInPoints(180);
+            }
         }
         ref.setColumnWidth(0, 4000);
-        ref.setColumnWidth(1, 20000);
+        ref.setColumnWidth(1, 40000);
+        
     }
 
     // ==========================================

@@ -8,6 +8,7 @@ import co.edu.unicauca.micronovedades.capaControladores.controladorExcepciones.B
 import co.edu.unicauca.micronovedades.capaControladores.controladorExcepciones.ResourceNotFoundException;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion.FiltroNovedadDTO;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion.NovedadDTOPeticion;
+import co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion.VictimaDTOPeticion;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.respuesta.NovedadDTORespuesta;
 import co.edu.unicauca.micronovedades.fachadaServices.mapper.NovedadMapper;
 import co.edu.unicauca.micronovedades.fachadaServices.services.INovedadService;
@@ -314,6 +315,50 @@ public class NovedadServiceImpl implements INovedadService {
             }
             if (ah.getConfinadosTotales() != null && ah.getConfinadosTotales() < 0) {
                 throw new BadRequestException("El conteo de confinados no puede ser negativo");
+            }
+        }
+        if (peticion.getVictimas() != null) {
+
+            for (VictimaDTOPeticion v : peticion.getVictimas()) {
+                
+
+                if (v.getNombreVictima() == null ||
+                        v.getNombreVictima().isBlank()) {
+
+                    throw new BadRequestException(
+                            "Toda víctima debe tener nombre"
+                    );
+                }
+
+                if (v.getGeneroVictima() == null) {
+
+                    throw new BadRequestException(
+                            "Toda víctima debe tener género"
+                    );
+                }
+
+                if (v.getEdadVictima() != null &&
+                        v.getEdadVictima() < 0) {
+
+                    throw new BadRequestException(
+                            "La edad de una víctima no puede ser negativa"
+                    );
+                }
+
+                if (v.getGrupoPoblacional() == null) {
+
+                    throw new BadRequestException(
+                            "Toda víctima debe tener grupo poblacional"
+                    );
+                }
+
+                if (v.getOcupacionVictima() == null
+                        || v.getOcupacionVictima().isBlank()) {
+
+                    throw new BadRequestException(
+                            "Toda víctima debe tener ocupación"
+                    );
+                }
             }
         }
     }
