@@ -25,6 +25,15 @@ export function LoginPage() {
   });
   const [status, setStatus] = useState<"idle" | "error" | "submitting">("idle");
 
+  const handleForgotPassword = () => {
+    const keycloakUrl = import.meta.env.VITE_KEYCLOAK_URL;
+    const realm = import.meta.env.VITE_KEYCLOAK_REALM;
+    window.open(
+      `${keycloakUrl}/realms/${realm}/login-actions/reset-credentials`,
+      "_blank",
+    );
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -67,6 +76,7 @@ export function LoginPage() {
           onPasswordChange={setPassword}
           onTogglePassword={() => setShowPassword((currentValue) => !currentValue)}
           onSubmit={handleSubmit}
+          onForgotPassword={handleForgotPassword}
         />
       }
     />
