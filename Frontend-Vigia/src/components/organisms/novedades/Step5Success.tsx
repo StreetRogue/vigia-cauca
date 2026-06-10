@@ -18,8 +18,10 @@ export function Step5Success({ onViewNovedad }: Step5SuccessProps) {
     createdNovedad
   } = useNovedades();
 
-  // Usa el ID real de la novedad creada si está disponible
-  const idNovedad = createdNovedad?.novedadId || `NOV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+  // ID real (UUID) de la novedad creada/actualizada: es el que abre el panel.
+  const realNovedadId = createdNovedad?.novedadId ?? null;
+  // Código mostrado: el UUID real si existe; si no, un placeholder solo visual.
+  const idNovedad = realNovedadId ?? `NOV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
 
   const isConfirmed = nivelConfianza.toUpperCase() === 'CONFIRMADO';
 
@@ -81,7 +83,11 @@ export function Step5Success({ onViewNovedad }: Step5SuccessProps) {
       </div>
 
       <div className="success-actions">
-        <button className="btn-primary" onClick={() => onViewNovedad?.(idNovedad)}>
+        <button
+          className="btn-primary"
+          disabled={!realNovedadId}
+          onClick={() => { if (realNovedadId) onViewNovedad?.(realNovedadId); }}
+        >
           VER NOVEDAD
         </button>
         <button className="btn-outline-primary" onClick={resetForm}>

@@ -8,7 +8,7 @@ export interface MunicipioDTO {
 
 export interface UsuarioResponseDTO {
   idUsuario:          string;          // UUID
-  idIam:              string | null;
+  idKeycloak:         string | null;   // sub de Keycloak (lo que guarda la auditoría)
   cedula:             string;
   nombre:             string;
   telefono:           string;

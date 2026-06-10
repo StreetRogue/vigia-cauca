@@ -51,7 +51,7 @@ const ENUM_LABELS: Record<string, string> = {
 const ACCION_CONFIG: Record<string, { label: string; icon: string; color: string }> = {
   CREATE:       { label: 'Creación',           icon: '✦', color: 'green'  },
   UPDATE:       { label: 'Actualización',       icon: '⟳', color: 'yellow' },
-  DELETE:       { label: 'Eliminación',         icon: '✕', color: 'red'   },
+  DELETE:       { label: 'Archivado',           icon: '🗄', color: 'red'   },
   EXCEL_IMPORT: { label: 'Importación Excel',   icon: '↑', color: 'purple' },
 };
 
@@ -220,7 +220,7 @@ export function AuditoriasDetailPanel({ auditoria }: Props) {
         if (!data) return <p className={styles.noData}>Sin datos disponibles</p>;
         return (
           <>
-            <p className={styles.sectionTitle}>DATOS ELIMINADOS</p>
+            <p className={styles.sectionTitle}>DATOS ARCHIVADOS</p>
             <div className={styles.fieldList}>
               {DISPLAY_FIELDS.map(key => (
                 <FieldRow

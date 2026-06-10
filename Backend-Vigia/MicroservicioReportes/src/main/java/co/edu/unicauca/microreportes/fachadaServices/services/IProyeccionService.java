@@ -13,4 +13,6 @@ public interface IProyeccionService {
     void procesarNovedadActualizada(NovedadEventoDTO evento);
 
     void procesarNovedadEliminada(NovedadEventoDTO evento);
+
+    void procesarNovedadDesocultada(NovedadEventoDTO evento);
 }

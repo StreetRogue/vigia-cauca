@@ -44,6 +44,8 @@ const PAGE_SIZE = 10;
 export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowClick, selectedId, userRole, onChanged }: Props) {
   const isAdmin = userRole === 'ADMIN';
   const { user } = useAuth();
+  // ADMIN puede archivar/desarchivar cualquier novedad; el OPERADOR solo las que él creó.
+  const puedeGestionar = (nov: NovedadDTORespuesta) => isAdmin || nov.usuarioId === user?.sub;
   const [novedades, setNovedades] = useState<NovedadDTORespuesta[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -302,8 +304,8 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
                   onClick={e => e.stopPropagation()}
                 >
                   {verArchivadas ? (
-                    // En el modo archivadas: solo ADMIN puede restaurar
-                    isAdmin && (
+                    // En el modo archivadas: ADMIN restaura cualquiera; OPERADOR solo las suyas
+                    puedeGestionar(nov) && (
                       <button
                         className={styles.restoreBtn}
                         onClick={() => handleDesarchivar(nov)}
@@ -321,8 +323,8 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
                       >
                         ✎
                       </button>
-                      {/* Solo ADMIN puede archivar novedades (HU-2.5) */}
-                      {isAdmin && (
+                      {/* ADMIN archiva cualquiera; OPERADOR solo las suyas (HU-2.5) */}
+                      {puedeGestionar(nov) && (
                         <button
                           className={styles.archiveBtn}
                           onClick={() => setArchiveTarget(nov)}

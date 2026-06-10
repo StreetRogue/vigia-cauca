@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { NovedadesProvider, useNovedades } from '../context/NovedadesContext';
 import { novedadesService } from '../services/novedades.service';
+import { estadisticasService } from '../services/estadisticas.service';
 import { cacheService } from '../services/cache.service';
+import { useSSE } from '../hooks/useSSE';
 import { ManagementTemplate } from '../components/templates/ManagementTemplate/ManagementTemplate';
 import { UserDropdownSection } from '../components/organisms/UserDropdownSection/UserDropdownSection';
 import { ExcelUploadModal } from '../components/organisms/ExcelUploadModal/ExcelUploadModal';
@@ -35,6 +37,14 @@ function NovedadesContent() {
   const [selectedNovedadId, setSelectedNovedadId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Tiempo real: cuando el backend confirma un cambio (incluida la proyección
+  // async de estadísticas), refrescamos lista y KPIs sin recargar la página.
+  const handleSSE = useCallback(() => {
+    estadisticasService.invalidarCache();
+    setRefreshKey(k => k + 1);
+  }, []);
+  useSSE({ onMessage: handleSSE });
+
   function handleNew() {
     resetForm();
     setMode('form');
@@ -53,6 +63,7 @@ function NovedadesContent() {
   function handleFormDone() {
     resetForm();
     cacheService.invalidate('novedades-paginado');
+    estadisticasService.invalidarCache(); // refresca KPIs del panel de resumen
     setRefreshKey(k => k + 1);
     setSelectedNovedad(null);
     setSelectedNovedadId(null);
@@ -186,7 +197,7 @@ function NovedadesContent() {
             onRowClick={handleRowClick}
             selectedId={selectedNovedadId}
             userRole={user?.rol}
-            onChanged={() => setRefreshKey(k => k + 1)}
+            onChanged={() => { estadisticasService.invalidarCache(); setRefreshKey(k => k + 1); }}
           />
         }
         rightPanel={
@@ -211,6 +222,7 @@ function NovedadesContent() {
         onClose={() => {
           setShowExcelModal(false);
           cacheService.invalidate('novedades-paginado');
+          estadisticasService.invalidarCache(); // refresca KPIs tras la carga
           setRefreshKey(k => k + 1); // refresca tabla y resumen tras la carga
         }}
         onUpload={handleExcelFile}

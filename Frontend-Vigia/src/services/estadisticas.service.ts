@@ -25,6 +25,7 @@ function toParams(filtros?: FiltrosDashboard): Record<string, string> {
   if (filtros.nivelConfianza)          params.nivelConfianza  = filtros.nivelConfianza;
   if (filtros.genero)                  params.genero          = filtros.genero;
   if (filtros.grupoPoblacional)        params.grupoPoblacional = filtros.grupoPoblacional;
+  if (filtros.usuarioId)               params.usuarioId       = filtros.usuarioId;
   return params;
 }
 

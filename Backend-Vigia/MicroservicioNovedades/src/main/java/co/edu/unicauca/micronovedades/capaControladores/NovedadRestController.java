@@ -5,6 +5,7 @@ import co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.NivelConfianz
 import co.edu.unicauca.micronovedades.capaAccesoDatos.models.enums.NivelVisibilidad;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion.FiltroNovedadDTO;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.peticion.NovedadDTOPeticion;
+import co.edu.unicauca.micronovedades.capaControladores.controladorExcepciones.ForbiddenException;
 import co.edu.unicauca.micronovedades.fachadaServices.DTO.respuesta.NovedadDTORespuesta;
 import co.edu.unicauca.micronovedades.fachadaServices.services.INovedadService;
 import co.edu.unicauca.micronovedades.fachadaServices.services.impl.EvidenciaStorageService;
@@ -171,8 +172,11 @@ public class NovedadRestController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(
             @PathVariable UUID id,
-            @RequestParam UUID usuarioId
+            @RequestParam UUID usuarioId,
+            @RequestHeader(value = "X-User-Role", defaultValue = "VISITANTE") String rol
     ) {
+        // Un OPERADOR solo puede archivar las novedades que él mismo creó; ADMIN cualquiera.
+        verificarPropiedadSiNoEsAdmin(id, usuarioId, rol, "archivar");
         novedadService.eliminarNovedad(id, usuarioId);
         return ResponseEntity.noContent().build();
     }
@@ -184,9 +188,26 @@ public class NovedadRestController {
     @PatchMapping("/{id}/desocultar")
     public ResponseEntity<NovedadDTORespuesta> desocultar(
             @PathVariable UUID id,
-            @RequestParam UUID usuarioId
+            @RequestParam UUID usuarioId,
+            @RequestHeader(value = "X-User-Role", defaultValue = "VISITANTE") String rol
     ) {
+        // Un OPERADOR solo puede desarchivar las novedades que él mismo creó; ADMIN cualquiera.
+        verificarPropiedadSiNoEsAdmin(id, usuarioId, rol, "desarchivar");
         return ResponseEntity.ok(novedadService.desocultarNovedad(id, usuarioId));
+    }
+
+    /**
+     * Verifica que, si el solicitante no es ADMIN, la novedad le pertenezca.
+     * Lanza {@link ForbiddenException} (HTTP 403) en caso contrario.
+     */
+    private void verificarPropiedadSiNoEsAdmin(UUID novedadId, UUID usuarioId, String rol, String accion) {
+        if ("ADMIN".equalsIgnoreCase(rol)) {
+            return;
+        }
+        NovedadDTORespuesta novedad = novedadService.obtenerPorId(novedadId);
+        if (!novedad.getUsuarioId().equals(usuarioId)) {
+            throw new ForbiddenException("No puede " + accion + " una novedad que no le pertenece");
+        }
     }
 
     /**

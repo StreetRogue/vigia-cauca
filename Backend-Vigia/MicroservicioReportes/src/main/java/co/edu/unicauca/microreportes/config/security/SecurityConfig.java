@@ -22,6 +22,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/reportes/public/**").permitAll()
+                        // Públicos: el gateway ya los expone sin token e inyecta X-User-Role.
+                        // El backend filtra PÚBLICA/PRIVADA según ese rol (dashboard visible sin login).
+                        .requestMatchers("/api/v1/reportes/estadisticas/**").permitAll()
+                        .requestMatchers("/api/v1/reportes/documentos/**").permitAll()
+                        .requestMatchers("/api/v1/reportes/sse/**").permitAll()
                         .requestMatchers("/api/v1/reportes/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/v1/reportes/**").hasAnyAuthority("ADMIN", "OPERADOR")
                         .anyRequest().authenticated()

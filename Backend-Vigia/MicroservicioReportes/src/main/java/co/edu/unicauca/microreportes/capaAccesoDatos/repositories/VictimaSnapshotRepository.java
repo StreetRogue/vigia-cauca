@@ -116,4 +116,9 @@ public interface VictimaSnapshotRepository extends JpaRepository<VictimaSnapshot
     @Modifying
     @Query("UPDATE VictimaSnapshotEntity v SET v.oculto = true WHERE v.novedadId = :novedadId")
     void ocultarByNovedadId(@Param("novedadId") UUID novedadId);
+
+    /** Vuelve a mostrar las víctimas de una novedad desarchivada (revierte el soft delete). */
+    @Modifying
+    @Query("UPDATE VictimaSnapshotEntity v SET v.oculto = false WHERE v.novedadId = :novedadId")
+    void mostrarByNovedadId(@Param("novedadId") UUID novedadId);
 }

@@ -131,21 +131,58 @@ public class ProyeccionServiceImpl implements IProyeccionService {
         if (existenteOpt.isPresent()) {
             NovedadSnapshotEntity existente = existenteOpt.get();
 
-            // RESTAR del agregado cuando se marca como oculto
-            // Esto es eliminación lógica: el registro no desaparece pero no se cuenta en estadísticas
-            actualizarAgregacion(existente, false);
+            // Solo restar si estaba contando (evita doble descuento en reentregas o snapshots ya ocultos)
+            if (!Boolean.TRUE.equals(existente.getOculto())) {
+                // RESTAR del agregado cuando se marca como oculto
+                // Esto es eliminación lógica: el registro no desaparece pero no se cuenta en estadísticas
+                actualizarAgregacion(existente, false);
 
-            // Marcar el snapshot como oculto
-            existente.setOculto(true);
-            snapshotRepository.save(existente);
+                // Marcar el snapshot como oculto
+                existente.setOculto(true);
+                snapshotRepository.save(existente);
 
-            // Ocultar también las víctimas asociadas (soft delete)
-            victimaSnapshotRepository.ocultarByNovedadId(novedadId);
+                // Ocultar también las víctimas asociadas (soft delete)
+                victimaSnapshotRepository.ocultarByNovedadId(novedadId);
+            }
         }
 
         registrarEventoProcesado(evento, TipoEvento.NOVEDAD_ELIMINADA, generarIdempotencyKey(evento));
         invalidarCaches();
         log.info("Snapshot marcado como OCULTO (eliminación lógica): {}", novedadId);
+    }
+
+    @Override
+    @Transactional
+    public void procesarNovedadDesocultada(NovedadEventoDTO evento) {
+        String idempotencyKey = generarIdempotencyKey(evento);
+        if (yaFueProcesado(idempotencyKey)) {
+            log.warn("Evento duplicado ignorado: {}", idempotencyKey);
+            return;
+        }
+
+        UUID novedadId = UUID.fromString(evento.getNovedadId());
+        Optional<NovedadSnapshotEntity> existenteOpt = snapshotRepository.findById(novedadId);
+
+        if (existenteOpt.isPresent()) {
+            NovedadSnapshotEntity existente = existenteOpt.get();
+
+            // Solo re-contar si efectivamente estaba oculta (evita doble conteo en reentregas)
+            if (Boolean.TRUE.equals(existente.getOculto())) {
+                // VOLVER A SUMAR al agregado: la novedad se desarchivó y cuenta de nuevo
+                actualizarAgregacion(existente, true);
+
+                // Marcar el snapshot como visible otra vez
+                existente.setOculto(false);
+                snapshotRepository.save(existente);
+
+                // Mostrar de nuevo las víctimas asociadas
+                victimaSnapshotRepository.mostrarByNovedadId(novedadId);
+            }
+        }
+
+        registrarEventoProcesado(evento, TipoEvento.NOVEDAD_DESOCULTADA, idempotencyKey);
+        invalidarCaches();
+        log.info("Snapshot RE-VISIBLE (desarchivado, vuelve a contar): {}", novedadId);
     }
 
     // ==========================================
