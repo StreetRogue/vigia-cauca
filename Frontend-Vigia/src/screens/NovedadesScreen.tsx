@@ -84,8 +84,8 @@ function NovedadesContent() {
     <div className={styles.sidebarUser}>
       <div className={styles.sidebarAvatar}>{initials}</div>
       <div>
-        <p className={styles.sidebarName}>{user?.name ?? user?.username}</p>
-        <p className={styles.sidebarRole}>{user?.rol ?? 'OPERADOR'}</p>
+        <p className={styles.sidebarName}>{displayName}</p>
+        <p className={styles.sidebarRole}>{displayRole}</p>
       </div>
     </div>
   );

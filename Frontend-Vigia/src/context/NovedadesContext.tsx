@@ -209,7 +209,7 @@ export function NovedadesProvider({ children }: { children: ReactNode }) {
     const e3 = required(nivelConfianza);
     const e4 = required(nivelVisibilidad);
     const e5 = descripcion.trim().length < 20 ? (descripcion.trim() === '' ? 'Campo obligatorio' : 'Mínimo 20 caracteres') : '';
-    const e6 = infraestructura.trim().length > 0 && infraestructura.trim().length < 20 ? 'Mínimo 20 caracteres' : '';
+    const e6 = '';
     const e7 = accionInstitucional.trim().length < 20 ? (accionInstitucional.trim() === '' ? 'Campo obligatorio' : 'Mínimo 20 caracteres') : '';
     setErrCategoria(e1); setErrActores(e2); setErrNivelConfianza(e3); setErrNivelVisibilidad(e4);
     setErrDescripcion(e5); setErrInfraestructura(e6); setErrAccionInstitucional(e7);

@@ -117,7 +117,7 @@ export function Step2Caracterizacion() {
             placeholder="Describa la infraestructura afectada, si aplica"
             value={infraestructura}
             onChange={e => setInfraestructura(e.target.value)}
-            onBlur={() => setErrInfraestructura(infraestructura.trim().length > 0 && infraestructura.trim().length < 20 ? 'Mínimo 20 caracteres' : '')}
+            onBlur={() => setErrInfraestructura('')}
           />
           {errInfraestructura && <span className="field-error">{errInfraestructura}</span>}
         </div>
