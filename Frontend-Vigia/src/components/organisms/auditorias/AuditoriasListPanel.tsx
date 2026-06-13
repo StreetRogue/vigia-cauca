@@ -55,6 +55,7 @@ export function AuditoriasListPanel({ onSelect, selectedId }: Props) {
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState('');
   const [usersMap, setUsersMap]     = useState<Record<string, string>>({});
+  const [cedulaToId, setCedulaToId] = useState<Record<string, string>>({});
 
   // Filtros
   const [modo, setModo]                   = useState<Modo>('reciente');
@@ -67,17 +68,17 @@ export function AuditoriasListPanel({ onSelect, selectedId }: Props) {
 
   const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (queryId?: string) => {
     setLoading(true);
     setError('');
     try {
       let data: AuditoriaDTORespuesta[] = [];
       if (modo === 'reciente') {
         data = await auditoriaService.obtenerTodas();
-      } else if (modo === 'novedad' && busquedaId.trim()) {
-        data = await auditoriaService.obtenerHistorialNovedad(busquedaId.trim());
-      } else if (modo === 'usuario' && busquedaId.trim()) {
-        data = await auditoriaService.obtenerHistorialPorUsuario(busquedaId.trim());
+      } else if (modo === 'novedad' && queryId) {
+        data = await auditoriaService.obtenerHistorialNovedad(queryId);
+      } else if (modo === 'usuario' && queryId) {
+        data = await auditoriaService.obtenerHistorialPorUsuario(queryId);
       }
       setRegistros(data);
     } catch {
@@ -85,18 +86,23 @@ export function AuditoriasListPanel({ onSelect, selectedId }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [modo, busquedaId]);
+  }, [modo]);
 
-  // Cargar mapa de usuarios (idUsuario -> cedula)
+  // Cargar mapa de usuarios (idUsuario/idKeycloak -> cedula) y el inverso (cedula -> id que usa la auditoría)
   useEffect(() => {
     usuariosService.list({ size: 1000 })
       .then(res => {
         const map: Record<string, string> = {};
+        const porCedula: Record<string, string> = {};
         res.content.forEach(u => {
           if (u.idUsuario) map[u.idUsuario.toLowerCase()] = u.cedula;
           if (u.idKeycloak) map[u.idKeycloak.toLowerCase()] = u.cedula;
+          // La auditoría guarda el idKeycloak; si no existe, se usa el idUsuario.
+          const idAuditoria = u.idKeycloak ?? u.idUsuario;
+          if (u.cedula && idAuditoria) porCedula[u.cedula.trim()] = idAuditoria;
         });
         setUsersMap(map);
+        setCedulaToId(porCedula);
       })
       .catch(err => console.warn('No se pudo cargar el mapa de usuarios', err));
   }, []);
@@ -108,16 +114,37 @@ export function AuditoriasListPanel({ onSelect, selectedId }: Props) {
 
   function handleBuscar() {
     if (modo !== 'novedad' && modo !== 'usuario') return;
-    const id = busquedaId.trim();
-    if (!id) {
-      setError('Ingrese un ID para buscar.');
+    const termino = busquedaId.trim();
+    if (!termino) {
+      setError(modo === 'usuario' ? 'Ingrese una cédula o ID para buscar.' : 'Ingrese un ID para buscar.');
       return;
     }
-    if (!UUID_REGEX.test(id)) {
+
+    // En "Por usuario" se puede buscar por cédula (solo números) o por UUID.
+    if (modo === 'usuario') {
+      if (UUID_REGEX.test(termino)) {
+        load(termino);
+        return;
+      }
+      if (/^\d+$/.test(termino)) {
+        const id = cedulaToId[termino];
+        if (!id) {
+          setError('No se encontró ningún usuario con esa cédula.');
+          return;
+        }
+        load(id);
+        return;
+      }
+      setError('Ingrese la cédula del usuario (solo números) o su UUID completo.');
+      return;
+    }
+
+    // modo === 'novedad'
+    if (!UUID_REGEX.test(termino)) {
       setError('El ID debe ser un UUID completo. Ejemplo: 34384a2c-1234-5678-abcd-ef0123456789');
       return;
     }
-    load();
+    load(termino);
   }
 
   function handleModoChange(nuevoModo: Modo) {
@@ -208,12 +235,14 @@ function getResumen(r: AuditoriaDTORespuesta): string {
         {(modo === 'novedad' || modo === 'usuario') && (
           <div className={styles.filterGroup}>
             <label className={styles.filterLabel}>
-              {modo === 'novedad' ? 'ID NOVEDAD' : 'ID USUARIO'}
+              {modo === 'novedad' ? 'ID NOVEDAD' : 'CÉDULA USUARIO'}
             </label>
             <div className={styles.searchRow}>
               <input
                 className={styles.searchInput}
-                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                placeholder={modo === 'usuario'
+                  ? 'Cédula del usuario'
+                  : 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'}
                 value={busquedaId}
                 onChange={e => setBusquedaId(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleBuscar()}

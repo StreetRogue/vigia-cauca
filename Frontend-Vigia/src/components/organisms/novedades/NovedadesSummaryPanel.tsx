@@ -53,7 +53,7 @@ export function NovedadesSummaryPanel({ refreshKey = 0, userRole, userId }: Prop
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    const timers: ReturnType<typeof setTimeout>[] = [];
 
     const params: any = { page: 0, size: 5, sort: 'fechaHecho,desc' };
     const filtrosStats: any = {};
@@ -64,26 +64,50 @@ export function NovedadesSummaryPanel({ refreshKey = 0, userRole, userId }: Prop
       if (userRole !== 'ADMIN') filtrosStats.usuarioId = userId;
     }
 
-    Promise.all([
-      novedadesService.listarPaginado(params),
-      estadisticasService.getResumen(filtrosStats)
-    ])
-      .then(([resNovedades, resStats]) => {
+    async function cargar() {
+      try {
+        const [resNovedades, resStats] = await Promise.all([
+          novedadesService.listarPaginado(params),
+          estadisticasService.getResumen(filtrosStats),
+        ]);
         if (!cancelled) {
           setNovedades(resNovedades.content || []);
           setResumen(resStats);
         }
-      })
-      .catch(err => {
+      } catch (err) {
         console.error('[SummaryPanel] Error cargando resumen:', err);
         if (!cancelled) {
           setNovedades([]);
           setResumen(null);
         }
-      })
-      .finally(() => { if (!cancelled) setLoading(false); });
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
 
-    return () => { cancelled = true; };
+    setLoading(true);
+    cargar();
+
+    // Los KPIs viven en el microservicio de reportes y se actualizan de forma
+    // ASÍNCRONA (RabbitMQ → proyección CQRS). Tras una acción del usuario
+    // (refreshKey > 0: crear/editar/archivar/desarchivar) la proyección puede
+    // tardar ~1-3 s, por lo que una sola reconsulta inmediata trae datos viejos.
+    // Reconsultamos invalidando la caché en varios momentos para converger al
+    // valor correcto sin depender del SSE (que puede estar desconectado).
+    if (refreshKey > 0) {
+      for (const delay of [1000, 2500, 5000]) {
+        timers.push(setTimeout(() => {
+          if (cancelled) return;
+          estadisticasService.invalidarCache();
+          cargar();
+        }, delay));
+      }
+    }
+
+    return () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+    };
   }, [refreshKey, userRole, userId]);
 
   // ── KPIs derivados del backend ───────────────────────────────────────────────
