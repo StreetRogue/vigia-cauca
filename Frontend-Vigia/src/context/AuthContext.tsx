@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as authService from '../services/auth.service';
+import { cacheService } from '../services/cache.service';
 import { parseJwt, getRolFromJwt, isTokenExpiringSoon, type JwtPayload } from '../utils/jwt';
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
@@ -182,6 +183,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!payload) throw new Error('Token inválido recibido');
 
       const user = buildUser(payload);
+      // Limpia cualquier caché en memoria de una sesión anterior (perfil propio,
+      // listas, estadísticas) para que no se filtren datos del usuario previo.
+      cacheService.clear();
       saveTokens(tokens.access_token, tokens.refresh_token, user.rol);
       setState({ user, accessToken: tokens.access_token, refreshToken: tokens.refresh_token, isAuthenticated: true, isLoading: false });
       scheduleRefresh(payload, tokens.refresh_token);
@@ -199,6 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await authService.logout(currentRefresh).catch(() => {});
     }
     clearTokens();
+    cacheService.clear(); // borra perfil/listas/estadísticas cacheadas de esta sesión
     setState({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false, isLoading: false });
   }, []);
 

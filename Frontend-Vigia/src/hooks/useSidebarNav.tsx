@@ -35,11 +35,14 @@ export function useSidebarNav(selectedItem: string) {
   const [nombreReal, setNombreReal] = useState<string | null>(null);
   useEffect(() => {
     let activo = true;
+    // Resetea el nombre al cambiar de usuario para no mostrar el de la sesión previa
+    // mientras llega el nuevo getMe (que ahora parte de caché limpia tras el login).
+    setNombreReal(null);
     usuariosService.getMe()
       .then((data) => { if (activo) setNombreReal(data.nombre ?? null); })
       .catch(() => {/* fail silently: se usa el nombre del token como respaldo */});
     return () => { activo = false; };
-  }, []);
+  }, [user?.sub]);
 
   const role = resolveAppRole([user?.rol ?? '']);
   const items = getMenuItemsForRole(role).map((item) => ({
