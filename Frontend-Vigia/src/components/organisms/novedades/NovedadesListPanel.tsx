@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { novedadesService } from '../../../services/novedades.service';
 import { cacheService } from '../../../services/cache.service';
-import { MUNICIPIOS_CAUCA } from '../../../constants/dominios';
+import { ubicacionesService } from '../../../services/ubicaciones.service';
+import type { MunicipioDTORespuesta } from '../../../types/ubicaciones.types';
 import type { NovedadDTORespuesta } from '../../../types/novedad.types';
 import { useAuth } from '../../../context/AuthContext';
 import styles from './NovedadesListPanel.module.css';
@@ -27,6 +28,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   HOMICIDIO:             'Homicidio',
   SECUESTRO:             'Secuestro',
   RETEN_ILEGAL:          'Retén Ilegal',
+  BLOQUEO_DE_VIA:        'Bloqueo de Vía',
   RECLUTAMIENTO_ILICITO: 'Reclutamiento',
   ACCION_DE_PROTESTA:    'Protesta',
   HALLAZGO_DE_MATERIAL:  'Hallazgo',
@@ -55,6 +57,9 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
   const [archiveTarget, setArchiveTarget] = useState<NovedadDTORespuesta | null>(null);
   const [archiving, setArchiving] = useState(false);
 
+  // Municipios cargados desde el microservicio de ubicaciones
+  const [municipios, setMunicipios] = useState<MunicipioDTORespuesta[]>([]);
+
   // Filtros
   const [search, setSearch] = useState('');
   const [filterMunicipio, setFilterMunicipio] = useState('');
@@ -66,6 +71,12 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
 
   const categoriasList = Object.keys(CATEGORY_LABELS);
   const confianzaList = Object.keys(CONFIDENCE_LABELS);
+
+  useEffect(() => {
+    ubicacionesService.getMunicipios()
+      .then(setMunicipios)
+      .catch(() => {/* fail silently */});
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -195,8 +206,8 @@ export function NovedadesListPanel({ refreshKey, onNew, onEdit, onExcel, onRowCl
           onChange={(e) => setFilterMunicipio(e.target.value)}
         >
           <option value="">Municipio</option>
-          {MUNICIPIOS_CAUCA.map(m => (
-            <option key={m} value={m}>{m}</option>
+          {municipios.map(m => (
+            <option key={m.idMunicipio} value={m.nombre}>{m.nombre}</option>
           ))}
         </select>
 

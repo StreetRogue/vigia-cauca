@@ -36,7 +36,10 @@ const ENUM_LABELS: Record<string, string> = {
   EXTORSION: 'Extorsión', DESAPARICION_FORZADA: 'Desaparición forzada',
   RECLUTAMIENTO_FORZADO: 'Reclutamiento forzado', VIOLENCIA_SEXUAL: 'Violencia sexual',
   ACCION_DE_PROTESTA: 'Acción de protesta', INCAUTACION: 'Incautación',
-  BOMBARDEO: 'Bombardeo',
+  BOMBARDEO: 'Bombardeo', RETEN_ILEGAL: 'Retén ilegal', BLOQUEO_DE_VIA: 'Bloqueo de vía',
+  HOSTIGAMIENTO: 'Hostigamiento', ATENTADO_TERRORISTA: 'Atentado terrorista',
+  RECLUTAMIENTO_ILICITO: 'Reclutamiento ilícito', HALLAZGO_DE_MATERIAL: 'Hallazgo de material',
+  OTRO: 'Otro',
   // Confianza
   ALTA: 'Alta', MEDIA: 'Media', BAJA: 'Baja',
   // Visibilidad

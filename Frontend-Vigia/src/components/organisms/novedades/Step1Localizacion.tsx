@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import { useNovedades, formatDateInput, formatTimeInput, validateDate, required } from '../../../context/NovedadesContext';
-import { MUNICIPIOS_CAUCA } from '../../../constants/dominios';
+import { ubicacionesService } from '../../../services/ubicaciones.service';
+import type { MunicipioDTORespuesta } from '../../../types/ubicaciones.types';
 
 export function Step1Localizacion() {
   const {
@@ -9,6 +11,15 @@ export function Step1Localizacion() {
     municipio, setMunicipio, errMunicipio, setErrMunicipio,
     localidad, setLocalidad, errLocalidad, setErrLocalidad
   } = useNovedades();
+
+  // ── Municipios cargados desde el microservicio de ubicaciones ──────────────
+  const [municipios, setMunicipios] = useState<MunicipioDTORespuesta[]>([]);
+
+  useEffect(() => {
+    ubicacionesService.getMunicipios()
+      .then(setMunicipios)
+      .catch(() => {/* fail silently */});
+  }, []);
 
   return (
     <>
@@ -61,7 +72,7 @@ export function Step1Localizacion() {
             onBlur={() => setErrMunicipio(required(municipio))}
           >
             <option value="" disabled hidden>Seleccionar municipio</option>
-            {MUNICIPIOS_CAUCA.map(m => <option key={m} value={m}>{m}</option>)}
+            {municipios.map(m => <option key={m.idMunicipio} value={m.nombre}>{m.nombre}</option>)}
           </select>
           {errMunicipio && <span className="field-error">{errMunicipio}</span>}
         </div>

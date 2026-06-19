@@ -8,63 +8,13 @@
  * Última revisión: 2026-04-14
  *
  * USO:
- *   import { CATEGORIAS, ACTORES, MUNICIPIOS_CAUCA } from '../constants/dominios';
+ *   import { CATEGORIAS, ACTORES } from '../constants/dominios';
+ *
+ * NOTA: Los municipios NO se definen aquí. Se obtienen del microservicio de
+ * ubicaciones vía `ubicacionesService.getMunicipios()` para mantener una única
+ * fuente de verdad en todo el sistema.
  * ============================================================
  */
-
-// ── Geografía: Municipios del Departamento del Cauca ─────────────────────────
-
-/**
- * Lista oficial de los 42 municipios del Cauca (Colombia).
- * Fuente: DANE — División político-administrativa.
- * Popayán aparece primero por ser la capital del departamento.
- */
-export const MUNICIPIOS_CAUCA = [
-  'Popayán',
-  'Almaguer',
-  'Argelia',
-  'Balboa',
-  'Bolívar',
-  'Buenos Aires',
-  'Cajibío',
-  'Caldono',
-  'Caloto',
-  'Corinto',
-  'El Tambo',
-  'Florencia',
-  'Guachené',
-  'Guapi',
-  'Inzá',
-  'Jambaló',
-  'La Sierra',
-  'La Vega',
-  'López de Micay',
-  'Mercaderes',
-  'Miranda',
-  'Morales',
-  'Padilla',
-  'Páez',
-  'Patía',
-  'Piamonte',
-  'Piendamó',
-  'Puerto Tejada',
-  'Puracé',
-  'Rosas',
-  'San Sebastián',
-  'Santa Rosa',
-  'Santander de Quilichao',
-  'Silvia',
-  'Sotará',
-  'Sucre',
-  'Suárez',
-  'Timbío',
-  'Timbiquí',
-  'Toribío',
-  'Totoró',
-  'Villa Rica',
-] as const;
-
-export type MunicipioCauca = (typeof MUNICIPIOS_CAUCA)[number];
 
 // ── Tabla: NOVEDAD ────────────────────────────────────────────────────────────
 
@@ -79,6 +29,7 @@ export const CATEGORIAS: OpcionEnum[] = [
   { value: 'HOMICIDIO',             label: 'Homicidio' },
   { value: 'SECUESTRO',             label: 'Secuestro' },
   { value: 'RETEN_ILEGAL',          label: 'Retén Ilegal' },
+  { value: 'BLOQUEO_DE_VIA',        label: 'Bloqueo de Vía' },
   { value: 'RECLUTAMIENTO_ILICITO', label: 'Reclutamiento Ilícito' },
   { value: 'ACCION_DE_PROTESTA',    label: 'Acción de Protesta' },
   { value: 'HALLAZGO_DE_MATERIAL',  label: 'Hallazgo de Material' },
