@@ -40,6 +40,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   HOMICIDIO:             'Homicidio',
   SECUESTRO:             'Secuestro',
   RETEN_ILEGAL:          'Retén Ilegal',
+  BLOQUEO_DE_VIA:        'Bloqueo de Vía',
   RECLUTAMIENTO_ILICITO: 'Reclutamiento Ilícito',
   ACCION_DE_PROTESTA:    'Acción de Protesta',
   HALLAZGO_DE_MATERIAL:  'Hallazgo de Material',
