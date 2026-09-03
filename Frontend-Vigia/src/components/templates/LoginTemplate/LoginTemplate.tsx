@@ -1,6 +1,8 @@
 import styles from "./LoginTemplate.module.css";
 import type { LoginTemplateProps } from "./types";
 import mapImage from "../../../assets/MGN_ADM 1.svg";
+import escudoCauca from "../../../assets/imgs/escudo-cauca.png";
+import logotipoCauca from "../../../assets/imgs/gobernacion-cauca.png";
 
 export function LoginTemplate({ panel }: LoginTemplateProps) {
   return (
@@ -28,16 +30,42 @@ export function LoginTemplate({ panel }: LoginTemplateProps) {
               <span className={styles.coordinateDot} />
               0.653° N 77.885° W
             </span>
-          </div>
-
-          <div className={styles.blueprintFooter}>
-            <span>v2.1.0 · USO INTERNO RESTRINGIDO</span>
-            <span>2026 · GOBERNACION DEL CAUCA</span>
+            <span className={`${styles.cornerMark} ${styles.cornerTopRight}`} />
+            <span className={`${styles.cornerMark} ${styles.cornerBottomRight}`} />
           </div>
         </div>
+
+        <footer className={styles.institutionalBar}>
+          <span className={styles.flagLine} aria-hidden="true" />
+          <div className={styles.govLogo}>
+            <img
+              src={escudoCauca}
+              alt=""
+              aria-hidden="true"
+              className={styles.govShield}
+            />
+            <img
+              src={logotipoCauca}
+              alt="Gobernación del Cauca"
+              className={styles.govWordmark}
+            />
+            <span className={styles.govDivider} aria-hidden="true" />
+            <span className={styles.govSecretaria}>
+              Secretaría de
+              <br />
+              Gobierno
+            </span>
+          </div>
+        </footer>
       </section>
 
-      <section className={styles.panelSlot}>{panel}</section>
+      <section className={styles.panelSlot}>
+        <span className={styles.watermark} aria-hidden="true">
+          CAUCA
+        </span>
+        <span className={styles.edgeStripe} aria-hidden="true" />
+        <div className={styles.panelInner}>{panel}</div>
+      </section>
     </main>
   );
 }

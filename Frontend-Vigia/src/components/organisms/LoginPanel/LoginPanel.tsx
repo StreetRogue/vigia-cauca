@@ -1,14 +1,14 @@
 import { Badge } from "../../atoms";
-import { CredentialForm, InfoRow } from "../../molecules";
+import { CredentialForm } from "../../molecules";
 import styles from "./LoginPanel.module.css";
 import type { LoginPanelCopy, LoginPanelProps } from "./types";
 
 const defaultCopy: LoginPanelCopy = {
-  badge: "SYS-VIG-01 · MÓDULO DE AUTENTICACIÓN",
+  badge: "MÓDULO DE AUTENTICACIÓN",
   title: "ACCESO AL SISTEMA",
   description: "Ingrese sus credenciales institucionales para continuar.",
-  emailLabel: "CORREO ELECTRÓNICO O USUARIO",
-  emailPlaceholder: "usuario o correo electrónico",
+  emailLabel: "CORREO ELECTRÓNICO",
+  emailPlaceholder: "usuario@cauca.gov.co",
   passwordLabel: "CONTRASEÑA",
   passwordPlaceholder: "••••••••••",
   forgotPassword: "¿Olvidaste tu contraseña?",

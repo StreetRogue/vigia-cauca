@@ -7,6 +7,10 @@
   --color-primary-soft: rgba(34, 82, 173, 0.12);
   --color-primary-ring: rgba(34, 82, 173, 0.24);
 
+  /* Identidad institucional Gobernación del Cauca */
+  --color-cauca-green: #00793f;
+  --color-cauca-yellow: #f7c518;
+
   --color-navy-950: #040c18;
   --color-navy-900: #091629;
   --color-navy-800: #112444;
