@@ -46,7 +46,7 @@ export function CategoriesPanel({ categorias, loading }: CategoriesPanelProps) {
 
   return (
     <div className={`${styles.panel} ${loading ? styles.loading : ''}`}>
-      <CapLabel color="var(--color-primary-400)">CATEGORÍAS DE EVENTO</CapLabel>
+      <CapLabel accent color="var(--color-primary-400)">CATEGORÍAS DE EVENTO</CapLabel>
       <div className={styles.grid}>
         {sorted.map(({ categoria, totalEventos }) => {
           const name  = CAT_LABEL[categoria]  ?? categoria;

@@ -9,6 +9,22 @@
   overflow: hidden;
 }
 
+/* Franja institucional: enmarca la app igual que las piezas de la Gobernacion */
+.root::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--color-cauca-green) 0 42%,
+    var(--color-cauca-yellow) 42% 100%
+  );
+}
+
 .body {
   flex: 1;
   display: flex;

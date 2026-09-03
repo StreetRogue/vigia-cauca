@@ -26,13 +26,9 @@
 }
 
 .shieldIcon {
-  width: 34px;
-  height: 34px;
-  border: 1.5px solid var(--dash-accent);
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  height: 32px;
+  width: auto;
+  display: block;
   flex-shrink: 0;
 }
 
