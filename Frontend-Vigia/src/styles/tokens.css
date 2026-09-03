@@ -52,6 +52,17 @@
   --color-warning-500: #92400e;
   --color-warning-soft: rgba(180, 83, 9, 0.1);
 
+  /* ── Botones ────────────────────────────────────────────────────────────
+     Una sola escala para todos los modulos. La unica excepcion es el CTA
+     de pagina completa (login), que usa --btn-height-cta.                 */
+  --btn-height: 36px;
+  --btn-height-cta: 48px;
+  --btn-radius: 4px;
+  --btn-font-size: 0.6875rem;
+  --btn-font-weight: 700;
+  --btn-letter-spacing: 0.06em;
+  --btn-padding-x: 16px;
+
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;

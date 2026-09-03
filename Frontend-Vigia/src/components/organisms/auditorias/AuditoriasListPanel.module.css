@@ -26,7 +26,7 @@
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  color: #122d5d;
+  color: var(--color-primary-500);
   margin: 0;
 }
 
@@ -67,13 +67,15 @@
   gap: 6px;
 }
 
+/* Selector de vista, no accion: conserva la caja de texto normal, pero
+   comparte alto y radio con el resto de controles. */
 .modeBtn {
-  height: 36px;
+  height: var(--btn-height);
   padding: 0 14px;
   font-size: 12px;
   font-weight: 600;
-  border: 1px solid #e0e4e8;
-  border-radius: 6px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--btn-radius);
   background: var(--color-surface-card, #ffffff);
   color: #555555;
   cursor: pointer;
@@ -84,13 +86,13 @@
 .modeBtn:hover {
   border-color: #d0d4d8;
   background: #fafbfc;
-  color: #122d5d;
+  color: var(--color-primary-500);
 }
 
 .modeBtnActive,
 .modeBtnActive:hover {
-  background: #122d5d;
-  border-color: #122d5d;
+  background: var(--color-primary-500);
+  border-color: var(--color-primary-500);
   color: #ffffff;
 }
 
@@ -129,21 +131,23 @@
 }
 
 .searchBtn {
-  height: 36px;
-  padding: 0 18px;
-  font-size: 11px;
-  font-weight: 700;
-  background: #122d5d;
-  color: #ffffff;
+  height: var(--btn-height);
+  padding: 0 var(--btn-padding-x);
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
+  letter-spacing: var(--btn-letter-spacing);
+  text-transform: uppercase;
+  background: var(--color-primary-500);
+  color: var(--color-text-on-dark);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--btn-radius);
   cursor: pointer;
   transition: background 0.2s ease;
   white-space: nowrap;
 }
 
 .searchBtn:hover {
-  background: #0d1f3c;
+  background: var(--color-primary-600);
 }
 
 .filterSelect {
@@ -398,7 +402,7 @@
 
 .pageBtn:hover:not(:disabled) {
   background: #f5f5f5;
-  border-color: #122d5d;
+  border-color: var(--color-primary-500);
 }
 
 .pageBtn:disabled {

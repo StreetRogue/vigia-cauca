@@ -39,9 +39,13 @@
   position: absolute;
   left: 0;
   top: 0;
-  width: 2px;
+  width: 3px;
   height: 100%;
-  background: #2252ad;
+  background: linear-gradient(
+    180deg,
+    var(--color-cauca-green) 0 55%,
+    var(--color-cauca-yellow) 55% 100%
+  );
 }
 
 .navIcon {

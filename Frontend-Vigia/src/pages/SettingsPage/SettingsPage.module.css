@@ -90,9 +90,7 @@
 }
 
 .editBtn {
-  font-size: 12px;
-  padding: 6px 12px;
-  height: 28px;
+  flex-shrink: 0;
 }
 
 .sectionHint {

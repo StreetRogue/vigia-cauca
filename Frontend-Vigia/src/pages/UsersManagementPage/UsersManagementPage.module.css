@@ -276,12 +276,6 @@
 
 .createBtn {
   margin-left: auto;
-  min-height: 32px;
-  border-radius: 4px;
-  font-size: 11px;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.05em;
 }
 
 .table {

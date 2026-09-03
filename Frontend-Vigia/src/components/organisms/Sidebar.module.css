@@ -79,21 +79,14 @@
   position: relative;
   z-index: 1;
   margin-top: auto;
-  padding: 18px 26px 16px;
+  padding: 20px 22px 18px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
 }
 
 .institutionalRule {
   width: 46px;
   height: 3px;
   background: var(--gradient-cauca-rule);
-}
-
-.institutionalLogo {
-  max-width: 100%;
 }
 
 .sidebarFooter {
