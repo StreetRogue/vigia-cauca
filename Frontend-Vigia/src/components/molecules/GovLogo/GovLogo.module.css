@@ -1,0 +1,72 @@
+.logo {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.shield {
+  height: var(--gov-logo-height);
+  width: auto;
+  display: block;
+}
+
+.wordmark {
+  display: block;
+}
+
+.secretaria {
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+/* ── Horizontal: escudo · logotipo | secretaría ─────────────────────────── */
+.horizontal {
+  align-items: center;
+  gap: calc(var(--gov-logo-height) * 0.27);
+}
+
+.horizontal .wordmark {
+  height: calc(var(--gov-logo-height) * 0.66);
+  width: auto;
+}
+
+.horizontal .divider {
+  width: 1px;
+  align-self: stretch;
+  margin: calc(var(--gov-logo-height) * 0.07) 0;
+}
+
+.horizontal .secretaria {
+  font-size: calc(var(--gov-logo-height) * 0.21);
+  line-height: 1.15;
+}
+
+/* ── Apilado: escudo sobre logotipo ─────────────────────────────────────── */
+.stacked {
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--gov-logo-height) * 0.18);
+  text-align: center;
+}
+
+.stacked .wordmark {
+  width: 100%;
+  height: auto;
+}
+
+.stacked .divider {
+  width: 62%;
+  height: 1px;
+  margin: calc(var(--gov-logo-height) * 0.04) 0;
+}
+
+.stacked .secretaria {
+  font-size: calc(var(--gov-logo-height) * 0.19);
+  line-height: 1.25;
+}
+
+/* ── Tonos ──────────────────────────────────────────────────────────────── */
+.dark .divider    { background: var(--color-navy-950); }
+.dark .secretaria { color: var(--color-navy-950); }
+
+.light .divider    { background: rgba(255, 255, 255, 0.45); }
+.light .secretaria { color: var(--color-text-on-dark); }

@@ -1,8 +1,7 @@
 import styles from "./LoginTemplate.module.css";
 import type { LoginTemplateProps } from "./types";
 import mapImage from "../../../assets/MGN_ADM 1.svg";
-import escudoCauca from "../../../assets/imgs/escudo-cauca.png";
-import logotipoCauca from "../../../assets/imgs/gobernacion-cauca.png";
+import { GovLogo } from "../../molecules";
 
 export function LoginTemplate({ panel }: LoginTemplateProps) {
   return (
@@ -37,25 +36,7 @@ export function LoginTemplate({ panel }: LoginTemplateProps) {
 
         <footer className={styles.institutionalBar}>
           <span className={styles.flagLine} aria-hidden="true" />
-          <div className={styles.govLogo}>
-            <img
-              src={escudoCauca}
-              alt=""
-              aria-hidden="true"
-              className={styles.govShield}
-            />
-            <img
-              src={logotipoCauca}
-              alt="Gobernación del Cauca"
-              className={styles.govWordmark}
-            />
-            <span className={styles.govDivider} aria-hidden="true" />
-            <span className={styles.govSecretaria}>
-              Secretaría de
-              <br />
-              Gobierno
-            </span>
-          </div>
+          <GovLogo height={30} />
         </footer>
       </section>
 

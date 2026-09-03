@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import escudoCauca from "../../assets/imgs/escudo-cauca.png";
+import { GovLogo } from "../molecules";
 import styles from "./Sidebar.module.css";
 
 export interface SidebarProps {
@@ -21,6 +22,12 @@ export function Sidebar({ title, subtitle, nav, footer }: SidebarProps) {
         </div>
       </div>
       {nav ? <div className={styles.sidebarContent}>{nav}</div> : null}
+
+      <div className={styles.institutionalBlock}>
+        <span className={styles.institutionalRule} aria-hidden="true" />
+        <GovLogo tone="light" layout="stacked" height={44} className={styles.institutionalLogo} />
+      </div>
+
       {footer ? <div className={styles.sidebarFooter}>{footer}</div> : null}
     </aside>
   );
