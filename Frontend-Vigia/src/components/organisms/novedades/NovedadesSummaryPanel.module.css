@@ -100,7 +100,7 @@
   align-items: center;
   gap: 8px;
   margin: 0 0 16px;
-  font-size: 10px;
+  font-size: var(--panel-font-section);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-text-muted);
@@ -118,7 +118,7 @@
 
 .statLabel {
   color: var(--color-text-label);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .statValue {

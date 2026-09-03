@@ -22,6 +22,12 @@
     var(--color-cauca-green) 0 42%,
     var(--color-cauca-yellow) 42% 100%
   );
+  /* La misma franja en vertical, para bordes laterales */
+  --gradient-cauca-frame-v: linear-gradient(
+    180deg,
+    var(--color-cauca-green) 0 42%,
+    var(--color-cauca-yellow) 42% 100%
+  );
 
   --color-navy-950: #040c18;
   --color-navy-900: #091629;
@@ -51,6 +57,17 @@
 
   --color-warning-500: #92400e;
   --color-warning-soft: rgba(180, 83, 9, 0.1);
+
+  /* ── Paneles laterales ──────────────────────────────────────────────────
+     Escala tipografica unica para los paneles de resumen/detalle de todos
+     los modulos. Tomada del panel de usuarios.                            */
+  --panel-font-label: 9px;    /* etiqueta de metrica, en caja alta        */
+  --panel-font-hint: 9px;     /* aclaracion bajo la etiqueta              */
+  --panel-font-body: 11px;    /* texto corrido de listas                  */
+  --panel-font-value: 12px;   /* valor de un campo                        */
+  --panel-font-section: 11px; /* titulo de seccion, en caja alta          */
+  --panel-tracking-label: 0.05em;
+  --panel-tracking-section: 0.1em;
 
   /* ── Botones ────────────────────────────────────────────────────────────
      Una sola escala para todos los modulos. La unica excepcion es el CTA
