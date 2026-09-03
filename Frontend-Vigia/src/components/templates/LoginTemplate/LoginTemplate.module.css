@@ -160,11 +160,7 @@
   flex: 1;
   min-width: 40px;
   height: 4px;
-  background: linear-gradient(
-    90deg,
-    var(--color-cauca-green) 0 55%,
-    var(--color-cauca-yellow) 55% 100%
-  );
+  background: var(--gradient-cauca-rule);
 }
 
 .govLogo {

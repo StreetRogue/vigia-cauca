@@ -10,6 +10,18 @@
   /* Identidad institucional Gobernación del Cauca */
   --color-cauca-green: #00793f;
   --color-cauca-yellow: #f7c518;
+  /* Regla verde/amarilla: acento institucional reutilizable */
+  --gradient-cauca-rule: linear-gradient(
+    90deg,
+    var(--color-cauca-green) 0 55%,
+    var(--color-cauca-yellow) 55% 100%
+  );
+  /* Franja de encuadre superior del shell */
+  --gradient-cauca-frame: linear-gradient(
+    90deg,
+    var(--color-cauca-green) 0 42%,
+    var(--color-cauca-yellow) 42% 100%
+  );
 
   --color-navy-950: #040c18;
   --color-navy-900: #091629;

@@ -5,6 +5,18 @@
   margin-left: 220px;
 }
 
+/* Franja institucional: mismo encuadre que dashboard y estadisticas */
+.page::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  height: 3px;
+  background: var(--gradient-cauca-frame);
+}
+
 .workspace {
   position: relative;
   min-width: 0;

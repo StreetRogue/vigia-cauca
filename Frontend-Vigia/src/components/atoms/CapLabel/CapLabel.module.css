@@ -17,9 +17,5 @@
   flex-shrink: 0;
   width: 22px;
   height: 3px;
-  background: linear-gradient(
-    90deg,
-    var(--color-cauca-green) 0 55%,
-    var(--color-cauca-yellow) 55% 100%
-  );
+  background: var(--gradient-cauca-rule);
 }

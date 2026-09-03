@@ -11,6 +11,7 @@ import { StatsCategoriesPanel } from '../../organisms/StatsCategoriesPanel/Stats
 import { StatsDemographicsPanel } from '../../organisms/StatsDemographicsPanel/StatsDemographicsPanel';
 import { GrupoPoblacionalPanel } from '../../organisms/GrupoPoblacionalPanel/GrupoPoblacionalPanel';
 import type { FiltrosDashboard } from '../../../types/estadisticas.types';
+import escudoCauca from '../../../assets/imgs/escudo-cauca.png';
 import styles from './EstadisticasTemplate.module.css';
 
 const ANIOS  = [2023, 2024, 2025, 2026];
@@ -58,6 +59,7 @@ export function EstadisticasTemplate() {
       <header className={styles.navbar}>
         {/* Izquierda: volver + título */}
         <div className={styles.navLeft}>
+          <img src={escudoCauca} alt="" aria-hidden="true" className={styles.navShield} />
           <button className={styles.backBtn} onClick={() => navigate('/dashboard')}>
             <svg viewBox="0 0 16 16" width={14} height={14} fill="none">
               <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />

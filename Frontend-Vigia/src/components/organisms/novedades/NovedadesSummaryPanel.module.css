@@ -6,6 +6,9 @@
 }
 
 .panelTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 16px;
   font-size: 11px;
   text-transform: uppercase;
@@ -93,6 +96,9 @@
 }
 
 .blockTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 16px;
   font-size: 10px;
   text-transform: uppercase;
@@ -202,4 +208,20 @@
   margin: 4px 0 0;
   font-size: 9px;
   color: var(--color-text-muted);
+}
+
+.panelTitle::before {
+  content: "";
+  flex-shrink: 0;
+  width: 20px;
+  height: 3px;
+  background: var(--gradient-cauca-rule);
+}
+
+.blockTitle::before {
+  content: "";
+  flex-shrink: 0;
+  width: 20px;
+  height: 3px;
+  background: var(--gradient-cauca-rule);
 }

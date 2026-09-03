@@ -5,7 +5,6 @@ import type { ManagementTemplateProps } from "./types";
 export function ManagementTemplate({
   sidebarTitle,
   sidebarSubtitle,
-  sidebarMark = "VC",
   sidebarNav,
   sidebarFooter,
   breadcrumb,
@@ -21,7 +20,6 @@ export function ManagementTemplate({
       <Sidebar
         title={sidebarTitle}
         subtitle={sidebarSubtitle}
-        mark={sidebarMark}
         nav={sidebarNav}
         footer={sidebarFooter}
       />

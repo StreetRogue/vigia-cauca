@@ -1,11 +1,31 @@
 /* ── Root ────────────────────────────────────────────────────────────────── */
 .root {
+  position: relative;
   min-height: 100vh;
   background: var(--dash-bg);
   display: flex;
   flex-direction: column;
   color: var(--dash-text-0);
   font-family: 'Geomanist', 'Inter', sans-serif;
+}
+
+/* Franja institucional: mismo encuadre que el dashboard */
+.root::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  height: 3px;
+  background: var(--gradient-cauca-frame);
+}
+
+.navShield {
+  height: 30px;
+  width: auto;
+  display: block;
+  flex-shrink: 0;
 }
 
 /* ── Navbar ──────────────────────────────────────────────────────────────── */
