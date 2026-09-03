@@ -96,11 +96,23 @@
 }
 
 .title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 14px;
   font-weight: 700;
-  color: #122d5d;
+  color: var(--color-primary-500);
   letter-spacing: 0.5px;
+  text-transform: uppercase;
   margin: 0;
+}
+
+.title::before {
+  content: "";
+  flex-shrink: 0;
+  width: 22px;
+  height: 3px;
+  background: var(--gradient-cauca-rule);
 }
 
 .count {
@@ -419,6 +431,9 @@
 }
 
 .panelTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 16px;
   font-size: 11px;
   text-transform: uppercase;
@@ -486,8 +501,11 @@
 }
 
 .blockTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 16px;
-  font-size: 10px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-text-muted);
@@ -561,4 +579,20 @@
   margin: 4px 0 0;
   font-size: 9px;
   color: var(--color-text-muted);
+}
+
+.panelTitle::before {
+  content: "";
+  flex-shrink: 0;
+  width: 20px;
+  height: 3px;
+  background: var(--gradient-cauca-rule);
+}
+
+.blockTitle::before {
+  content: "";
+  flex-shrink: 0;
+  width: 20px;
+  height: 3px;
+  background: var(--gradient-cauca-rule);
 }

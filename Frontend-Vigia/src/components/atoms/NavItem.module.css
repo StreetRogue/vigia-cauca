@@ -10,6 +10,7 @@
   align-items: center;
   gap: 10px;
   padding: 0 16px 0 22px;
+  overflow: hidden;
   text-align: left;
   font-size: 11px;
   letter-spacing: 0.04em;
@@ -24,8 +25,8 @@
 }
 
 .navItem:focus-visible {
-  outline: 1px solid #2252ad;
-  outline-offset: -1px;
+  outline: 2px solid var(--color-cauca-green);
+  outline-offset: -2px;
 }
 
 .selected {
@@ -65,4 +66,15 @@
 
 .navLabel {
   line-height: 1;
+}
+
+/* ── Recogida: solo iconos ─────────────────────────────────────────────── */
+.compact {
+  padding: 0;
+  justify-content: center;
+  gap: 0;
+}
+
+.compact .navLabel {
+  display: none;
 }

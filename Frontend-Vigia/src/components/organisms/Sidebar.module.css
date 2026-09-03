@@ -1,6 +1,7 @@
 .sidebar {
   position: fixed;
-  width: 220px;
+  width: var(--sidebar-width);
+  transition: width 180ms ease, transform 180ms ease;
   height: 100vh;
   background: #0d1f3c;
   border-right: 1px solid #112a54;
@@ -44,6 +45,10 @@
   border-bottom: 1px solid var(--color-primary-600);
 }
 
+.sidebarHeading {
+  min-width: 0;
+}
+
 .markBox {
   height: 30px;
   width: auto;
@@ -84,7 +89,7 @@
 }
 
 .institutionalRule {
-  width: 46px;
+  width: 100%;
   height: 3px;
   background: var(--gradient-cauca-rule);
 }
@@ -97,4 +102,48 @@
   display: flex;
   align-items: center;
   padding: 0 22px;
+}
+
+/* ── Recogida: solo el escudo y los iconos ─────────────────────────────── */
+.collapsed .sidebarHeader {
+  padding: 0;
+  justify-content: center;
+  gap: 0;
+}
+
+.collapsed .sidebarHeading,
+.collapsed .sidebarFooter > * > *:not(:first-child) {
+  display: none;
+}
+
+.collapsed .institutionalBlock {
+  padding: 20px 12px 18px;
+}
+
+.collapsed .sidebarFooter {
+  padding: 0;
+  justify-content: center;
+}
+
+/* ── Angosto: la barra deja de ocupar espacio y se superpone ───────────── */
+@media (max-width: 900px) {
+  .sidebar {
+    width: 220px;
+    box-shadow: 0 0 40px rgba(4, 12, 24, 0.45);
+  }
+
+  .collapsed {
+    transform: translateX(-100%);
+  }
+
+  .collapsed .sidebarHeader,
+  .collapsed .sidebarFooter {
+    padding: 0 22px;
+    justify-content: flex-start;
+  }
+
+  .collapsed .sidebarHeading,
+  .collapsed .sidebarFooter > * > *:not(:first-child) {
+    display: block;
+  }
 }

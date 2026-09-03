@@ -14,7 +14,7 @@
 }
 
 .button:focus-visible {
-  outline: 2px solid var(--color-primary-500);
+  outline: 2px solid var(--color-cauca-green);
   outline-offset: 2px;
 }
 
@@ -25,7 +25,8 @@
 
 /* Acciones: misma altura, tipografia y radio en todos los modulos. */
 .primary,
-.secondary {
+.secondary,
+.confirm {
   min-height: var(--btn-height);
   padding: 0 var(--btn-padding-x);
   font-size: var(--btn-font-size);
@@ -55,6 +56,18 @@
 .secondary:hover:not(:disabled) {
   background: var(--color-primary-500);
   color: var(--color-text-on-dark);
+}
+
+/* Confirmar / activar. Verde institucional: 5.9:1 con texto blanco. */
+.confirm {
+  background: var(--color-cauca-green);
+  color: var(--color-text-on-dark);
+  border: 1px solid var(--color-cauca-green);
+}
+
+.confirm:hover:not(:disabled) {
+  background: #00602f;
+  border-color: #00602f;
 }
 
 .ghost {
