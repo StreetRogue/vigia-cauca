@@ -1,12 +1,10 @@
 export interface GovLogoProps {
-  /** `light` para fondos oscuros (logotipo en blanco). */
-  tone?: 'dark' | 'light';
   /**
-   * `horizontal`: escudo · logotipo | secretaría. Para barras anchas.
-   * `stacked`: escudo sobre el logotipo. Para columnas angostas (sidebar).
+   * Sitúa el logotipo sobre una placa blanca. El logotipo oficial es de
+   * tipografía oscura, así que sobre fondos oscuros necesita la placa.
    */
-  layout?: 'horizontal' | 'stacked';
-  /** Alto del escudo en px; el resto escala en proporción. */
+  plate?: boolean;
+  /** Alto del logotipo en px. El ancho escala en proporción. */
   height?: number;
   className?: string;
 }

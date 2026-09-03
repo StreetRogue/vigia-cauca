@@ -25,7 +25,7 @@ export function Sidebar({ title, subtitle, nav, footer }: SidebarProps) {
 
       <div className={styles.institutionalBlock}>
         <span className={styles.institutionalRule} aria-hidden="true" />
-        <GovLogo tone="light" layout="stacked" height={44} className={styles.institutionalLogo} />
+        <GovLogo plate height={30} className={styles.institutionalLogo} />
       </div>
 
       {footer ? <div className={styles.sidebarFooter}>{footer}</div> : null}

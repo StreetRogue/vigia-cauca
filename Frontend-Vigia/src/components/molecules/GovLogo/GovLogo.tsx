@@ -1,49 +1,25 @@
 import type { CSSProperties } from 'react';
-import escudoCauca from '../../../assets/imgs/escudo-cauca.png';
-import logotipoOscuro from '../../../assets/imgs/gobernacion-cauca.png';
-import logotipoClaro from '../../../assets/imgs/gobernacion-cauca-blanco.png';
+import logoGobernacion from '../../../assets/imgs/logo-gobernacion-horizontal.png';
 import styles from './GovLogo.module.css';
 import type { GovLogoProps } from './types';
 
 /**
- * Lockup institucional de la Gobernación del Cauca:
- * escudo · "Gobernación del CAUCA" · divisor · "Secretaría de Gobierno".
- *
- * `tone="light"` usa el logotipo en blanco, para fondos oscuros.
- * `layout="stacked"` apila escudo y logotipo, para columnas angostas.
+ * Logotipo institucional de la Gobernación del Cauca — Secretaría de Gobierno.
+ * Usa el archivo oficial tal cual; no se recompone por partes.
  */
-export function GovLogo({
-  tone = 'dark',
-  layout = 'horizontal',
-  height = 30,
-  className,
-}: GovLogoProps) {
-  const isLight = tone === 'light';
-
+export function GovLogo({ plate = false, height = 30, className }: GovLogoProps) {
   return (
     <div
-      className={[
-        styles.logo,
-        styles[layout],
-        isLight ? styles.light : styles.dark,
-        className,
-      ]
+      className={[styles.logo, plate ? styles.plate : null, className]
         .filter(Boolean)
         .join(' ')}
       style={{ '--gov-logo-height': `${height}px` } as CSSProperties}
     >
-      <img src={escudoCauca} alt="" aria-hidden="true" className={styles.shield} />
       <img
-        src={isLight ? logotipoClaro : logotipoOscuro}
-        alt="Gobernación del Cauca"
-        className={styles.wordmark}
+        src={logoGobernacion}
+        alt="Gobernación del Cauca · Secretaría de Gobierno"
+        className={styles.image}
       />
-      <span className={styles.divider} aria-hidden="true" />
-      <span className={styles.secretaria}>
-        Secretaría de
-        <br />
-        Gobierno
-      </span>
     </div>
   );
 }

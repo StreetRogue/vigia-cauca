@@ -36,7 +36,7 @@ export function LoginTemplate({ panel }: LoginTemplateProps) {
 
         <footer className={styles.institutionalBar}>
           <span className={styles.flagLine} aria-hidden="true" />
-          <GovLogo height={30} />
+          <GovLogo height={26} />
         </footer>
       </section>
 
