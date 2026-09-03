@@ -93,13 +93,12 @@
 
 .mapImage {
   position: absolute;
-  inset: 62px;
-  width: calc(100% - 124px);
-  height: calc(100% - 124px);
+  inset: 34px 18px;
+  width: calc(100% - 36px);
+  height: calc(100% - 68px);
   object-fit: contain;
   object-position: center;
-  opacity: 0.88;
-  filter: saturate(1.05) brightness(1.05);
+  opacity: 1;
 }
 
 .coordinateTop,
