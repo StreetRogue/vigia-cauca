@@ -57,7 +57,7 @@
   border-bottom: 1px solid #eeeeee;
   flex-shrink: 0;
   flex-wrap: wrap;
-  background: var(--color-surface-body, #f5f7fa);
+  background: var(--color-surface-body);
 }
 
 .filterGroup {
@@ -88,7 +88,7 @@
   font-weight: 600;
   border: 1px solid var(--color-border-soft);
   border-radius: var(--btn-radius);
-  background: var(--color-surface-card, #ffffff);
+  background: var(--color-surface-card);
   color: var(--color-text-label);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -117,7 +117,7 @@
   height: 36px;
   padding: 0 12px;
   font-size: 13px;
-  background: var(--color-surface-card, #ffffff);
+  background: var(--color-surface-card);
   border: 1px solid #e0e4e8;
   border-radius: 6px;
   color: var(--color-text-primary, var(--color-text-primary));
@@ -138,7 +138,7 @@
 }
 
 .searchInput:focus {
-  border-color: var(--color-primary-500, #1461c2);
+  border-color: var(--color-primary-500);
   box-shadow: 0 0 0 3px rgba(20, 97, 194, 0.1);
 }
 
@@ -166,7 +166,7 @@
   height: 36px;
   padding: 0 12px;
   font-size: 13px;
-  background: var(--color-surface-card, #ffffff);
+  background: var(--color-surface-card);
   border: 1px solid #e0e4e8;
   border-radius: 6px;
   color: var(--color-text-primary, var(--color-text-primary));
@@ -181,7 +181,7 @@
 }
 
 .filterSelect:focus {
-  border-color: var(--color-primary-500, #1461c2);
+  border-color: var(--color-primary-500);
   box-shadow: 0 0 0 3px rgba(20, 97, 194, 0.1);
 }
 
@@ -227,8 +227,8 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-text-muted);
-  background: var(--color-surface-body, #f8f9fb);
-  border-bottom: 1px solid var(--color-border-soft, #eeeeee);
+  background: var(--color-surface-body);
+  border-bottom: 1px solid var(--color-border-soft);
   white-space: nowrap;
 }
 
@@ -236,7 +236,7 @@
 
 .table tbody td {
   padding: 12px;
-  border-bottom: 1px solid var(--color-border-soft, #f0f0f0);
+  border-bottom: 1px solid var(--color-border-soft);
   color: var(--color-text-primary, var(--color-text-primary));
   font-size: 13px;
   vertical-align: middle;
@@ -296,7 +296,7 @@
 
 .rowSelected {
   background: rgba(34, 82, 173, 0.07) !important;
-  border-left: 3px solid var(--color-primary-500, #2252ad);
+  border-left: 3px solid var(--color-primary-500);
 }
 
 /* ── Acción badges ── */
@@ -395,7 +395,7 @@
   justify-content: center;
   gap: 16px;
   padding: 16px 24px;
-  background: var(--color-surface-card, #ffffff);
+  background: var(--color-surface-card);
   border-top: 1px solid #eeeeee;
   flex-shrink: 0;
 }

@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--color-surface-body, #f5f7fa);
+  background: var(--color-surface-body);
 }
 
 /* Toolbar */
@@ -11,8 +11,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px 16px;
-  background: var(--color-surface-card, #ffffff);
-  border-bottom: 1px solid var(--color-border-soft, #eeeeee);
+  background: var(--color-surface-card);
+  border-bottom: 1px solid var(--color-border-soft);
 }
 
 /* Filters bar */
@@ -21,8 +21,8 @@
   align-items: center;
   gap: 12px;
   padding: 12px 24px;
-  background: var(--color-surface-body, #f5f7fa);
-  border-bottom: 1px solid var(--color-border-soft, #eeeeee);
+  background: var(--color-surface-body);
+  border-bottom: 1px solid var(--color-border-soft);
   flex-wrap: wrap;
 }
 
@@ -258,7 +258,7 @@
 .tableWrap {
   flex: 1;
   overflow: auto;
-  background: var(--color-surface-card, #ffffff);
+  background: var(--color-surface-card);
 }
 
 .table {
@@ -482,7 +482,7 @@
   justify-content: center;
   gap: 16px;
   padding: 16px 24px;
-  background: var(--color-surface-card, #ffffff);
+  background: var(--color-surface-card);
   border-top: 1px solid #eeeeee;
 }
 

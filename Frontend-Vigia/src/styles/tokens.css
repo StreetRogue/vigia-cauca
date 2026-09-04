@@ -22,12 +22,6 @@
     var(--color-cauca-green) 0 42%,
     var(--color-cauca-yellow) 42% 100%
   );
-  /* La misma franja en vertical, para bordes laterales */
-  --gradient-cauca-frame-v: linear-gradient(
-    180deg,
-    var(--color-cauca-green) 0 42%,
-    var(--color-cauca-yellow) 42% 100%
-  );
 
   --color-navy-950: #040c18;
   --color-navy-900: #091629;
