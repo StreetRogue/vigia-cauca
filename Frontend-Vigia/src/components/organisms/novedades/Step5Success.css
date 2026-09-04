@@ -48,7 +48,7 @@
 
 .success-description {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--color-text-label);
   margin-bottom: 32px;
   line-height: 1.5;
 }
@@ -76,18 +76,18 @@
 .success-summary-label {
   font-size: 10px;
   font-weight: 700;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   text-transform: uppercase;
 }
 
 .success-summary-value {
   font-size: 12px;
   font-weight: 500;
-  color: #111827;
+  color: var(--color-text-primary);
 }
 
 .success-summary-value.confirmed {
-  color: #16a34a;
+  color: var(--color-success-500);
   font-weight: 700;
 }
 
@@ -99,9 +99,9 @@
 
 .btn-outline-primary {
   padding: 12px 24px;
-  border: 1px solid #122d5d;
+  border: 1px solid var(--color-primary-500);
   background: #ffffff;
-  color: #122d5d;
+  color: var(--color-primary-500);
   font-size: 11px;
   font-weight: 700;
   border-radius: 4px;
@@ -111,6 +111,6 @@
 }
 
 .btn-outline-primary:hover {
-  background: #122d5d;
+  background: var(--color-primary-500);
   color: #ffffff;
 }

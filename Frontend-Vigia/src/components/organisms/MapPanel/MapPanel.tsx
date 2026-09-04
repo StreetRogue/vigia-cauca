@@ -226,7 +226,7 @@ export function MapPanel({ municipios, loading, selectedMunicipio, onMunicipioSe
     <div className={`${styles.panel} ${loading ? styles.loading : ''}`}>
       {/* Header */}
       <div className={styles.header}>
-        <CapLabel color="var(--color-primary-400)">INTELIGENCIA GEOESPACIAL · CAUCA</CapLabel>
+        <CapLabel accent color="var(--color-primary-400)">INTELIGENCIA GEOESPACIAL · CAUCA</CapLabel>
         <div className={styles.headerRight}>
           {selectedMunicipio && (
             <button className={styles.clearBtn} onClick={() => onMunicipioSelect?.(null)}>

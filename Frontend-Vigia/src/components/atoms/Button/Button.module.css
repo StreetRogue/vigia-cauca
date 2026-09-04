@@ -3,45 +3,71 @@
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--btn-radius);
   font: inherit;
   cursor: pointer;
   transition:
-    transform 160ms ease,
-    box-shadow 160ms ease,
-    opacity 160ms ease,
     background-color 160ms ease,
-    color 160ms ease;
+    border-color 160ms ease,
+    color 160ms ease,
+    opacity 160ms ease;
 }
 
 .button:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
+  outline: 2px solid var(--color-cauca-green);
+  outline-offset: 2px;
 }
 
 .button:disabled {
   cursor: not-allowed;
   opacity: 0.72;
-  transform: none;
-  box-shadow: none;
+}
+
+/* Acciones: misma altura, tipografia y radio en todos los modulos. */
+.primary,
+.secondary,
+.confirm {
+  min-height: var(--btn-height);
+  padding: 0 var(--btn-padding-x);
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
+  letter-spacing: var(--btn-letter-spacing);
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .primary {
-  min-height: 44px;
-  padding: 0 18px;
   background: var(--color-primary-500);
   color: var(--color-text-on-dark);
-  font-size: 0.875rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  box-shadow: none;
+  border: 1px solid var(--color-primary-500);
 }
 
 .primary:hover:not(:disabled) {
   background: var(--color-primary-600);
-  transform: none;
-  box-shadow: none;
+  border-color: var(--color-primary-600);
+}
+
+.secondary {
+  background: transparent;
+  color: var(--color-primary-500);
+  border: 1px solid var(--color-primary-500);
+}
+
+.secondary:hover:not(:disabled) {
+  background: var(--color-primary-500);
+  color: var(--color-text-on-dark);
+}
+
+/* Confirmar / activar. Verde institucional: 5.9:1 con texto blanco. */
+.confirm {
+  background: var(--color-cauca-green);
+  color: var(--color-text-on-dark);
+  border: 1px solid var(--color-cauca-green);
+}
+
+.confirm:hover:not(:disabled) {
+  background: #00602f;
+  border-color: #00602f;
 }
 
 .ghost {
@@ -53,6 +79,6 @@
 }
 
 .ghost:hover:not(:disabled) {
-  color: var(--color-primary-500);
+  color: var(--color-primary-600);
   background: transparent;
 }

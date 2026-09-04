@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 export interface ManagementTemplateProps {
   sidebarTitle: string;
   sidebarSubtitle: string;
-  sidebarMark?: string;
   sidebarNav?: ReactNode;
   sidebarFooter?: ReactNode;
   breadcrumb: ReactNode;

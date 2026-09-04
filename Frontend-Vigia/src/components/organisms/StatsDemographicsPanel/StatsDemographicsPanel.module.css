@@ -18,11 +18,22 @@
 }
 
 .panelTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   color: var(--dash-text-1);
   text-transform: uppercase;
+}
+
+.panelTitle::before {
+  content: "";
+  flex-shrink: 0;
+  width: 22px;
+  height: 3px;
+  background: var(--gradient-cauca-rule);
 }
 
 .panelTotal {

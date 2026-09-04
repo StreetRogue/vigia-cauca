@@ -57,7 +57,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #122d5d;
+  background: var(--color-primary-500);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -75,12 +75,12 @@
 .topbarUserName {
   font-size: 12px;
   font-weight: 700;
-  color: #333333;
+  color: var(--color-text-primary);
 }
 
 .topbarUserRole {
   font-size: 10px;
-  color: #888888;
+  color: var(--color-text-muted);
 }
 
 /* Breadcrumb override for Novedades */

@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-export type ButtonVariant = "primary" | "ghost";
+export type ButtonVariant = "primary" | "secondary" | "confirm" | "ghost";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;

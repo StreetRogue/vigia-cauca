@@ -9,11 +9,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #cccccc;
+  color: var(--color-text-muted);
 }
 
 .step.active {
-  color: #122d5d;
+  color: var(--color-primary-500);
 }
 
 .step-circle {
@@ -29,7 +29,7 @@
 }
 
 .step.active .step-circle {
-  background: #122d5d;
+  background: var(--color-primary-500);
   color: #ffffff;
 }
 

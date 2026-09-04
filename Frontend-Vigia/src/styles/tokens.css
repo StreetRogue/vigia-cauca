@@ -7,6 +7,23 @@
   --color-primary-soft: rgba(34, 82, 173, 0.12);
   --color-primary-ring: rgba(34, 82, 173, 0.24);
 
+  /* Identidad institucional Gobernación del Cauca */
+  --color-cauca-green: #00793f;
+  --color-cauca-yellow: #f7c518;
+  --color-cauca-gold: #d19a1c;   /* el mismo relleno del mapa del Cauca */
+  /* Regla verde/amarilla: acento institucional reutilizable */
+  --gradient-cauca-rule: linear-gradient(
+    90deg,
+    var(--color-cauca-green) 0 55%,
+    var(--color-cauca-yellow) 55% 100%
+  );
+  /* Franja de encuadre superior del shell */
+  --gradient-cauca-frame: linear-gradient(
+    90deg,
+    var(--color-cauca-green) 0 42%,
+    var(--color-cauca-yellow) 42% 100%
+  );
+
   --color-navy-950: #040c18;
   --color-navy-900: #091629;
   --color-navy-800: #112444;
@@ -35,6 +52,28 @@
 
   --color-warning-500: #92400e;
   --color-warning-soft: rgba(180, 83, 9, 0.1);
+
+  /* ── Paneles laterales ──────────────────────────────────────────────────
+     Escala tipografica unica para los paneles de resumen/detalle de todos
+     los modulos. Tomada del panel de usuarios.                            */
+  --panel-font-label: 9px;    /* etiqueta de metrica, en caja alta        */
+  --panel-font-hint: 9px;     /* aclaracion bajo la etiqueta              */
+  --panel-font-body: 11px;    /* texto corrido de listas                  */
+  --panel-font-value: 12px;   /* valor de un campo                        */
+  --panel-font-section: 11px; /* titulo de seccion, en caja alta          */
+  --panel-tracking-label: 0.05em;
+  --panel-tracking-section: 0.1em;
+
+  /* ── Botones ────────────────────────────────────────────────────────────
+     Una sola escala para todos los modulos. La unica excepcion es el CTA
+     de pagina completa (login), que usa --btn-height-cta.                 */
+  --btn-height: 36px;
+  --btn-height-cta: 48px;
+  --btn-radius: 4px;
+  --btn-font-size: 0.6875rem;
+  --btn-font-weight: 700;
+  --btn-letter-spacing: 0.06em;
+  --btn-padding-x: 16px;
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
