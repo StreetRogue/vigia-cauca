@@ -49,7 +49,7 @@
 }
 
 .metricRed {
-  border-top-color: #e74c3c;
+  border-top-color: var(--color-danger-500);
 }
 
 .metricBox strong {
@@ -69,7 +69,7 @@
 }
 
 .metricRed strong {
-  color: #e74c3c;
+  color: var(--color-danger-500);
 }
 
 .metricTextGroup {
@@ -187,7 +187,7 @@
 }
 
 .dot.red {
-  background: #e74c3c;
+  background: var(--color-danger-500);
 }
 
 .dot.blue {

@@ -117,7 +117,7 @@
 
 .count {
   font-size: 11px;
-  color: #888888;
+  color: var(--color-text-muted);
 }
 
 .filtersBar {
@@ -173,12 +173,12 @@
 }
 
 .checkboxLabelActive {
-  color: #127850;
+  color: var(--color-success-500);
   font-weight: 600;
 }
 
 .checkboxLabelActive input[type="checkbox"] {
-  accent-color: #127850;
+  accent-color: var(--color-success-500);
 }
 
 .checkboxLabelInactive {
@@ -354,7 +354,7 @@
 }
 
 .table tbody tr.green td:first-child::before {
-  background: #127850;
+  background: var(--color-success-500);
 }
 
 .table tbody tr.orange td:first-child::before {
@@ -390,7 +390,7 @@
 }
 
 .initial.blue { background: var(--color-primary-500); }
-.initial.green { background: #127850; }
+.initial.green { background: var(--color-success-500); }
 .initial.orange { background: #d35400; }
 
 .muted {
@@ -409,7 +409,7 @@
 }
 
 .adminTag { background: #f8e4f7; color: #9122ad; }
-.operatorTag { background: #dcf5eb; color: #127850; }
+.operatorTag { background: #dcf5eb; color: var(--color-success-500); }
 .activeTag { background: #d9f5e5; color: #27ae60; }
 .inactiveTag { background: var(--color-border-soft); color: var(--color-text-muted); }
 
@@ -565,7 +565,7 @@
 
 .dot.green { background: #27ae60; }
 .dot.orange { background: #f39c12; }
-.dot.red { background: #e74c3c; }
+.dot.red { background: var(--color-danger-500); }
 .dot.blue { background: var(--color-primary-500); }
 .dot.gray { background: #9aa1ab; }
 

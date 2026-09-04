@@ -116,14 +116,8 @@
   min-width: 0;
 }
 
-/* El panel lateral se separa del contenido con la regla institucional en
-   vertical, en lugar de un borde gris. Es el mismo gesto de la franja
-   superior, asi que suma identidad sin agregar un elemento nuevo. */
 .rightPanelSlot {
-  position: relative;
   min-width: 0;
-  border-left: 3px solid transparent;
-  border-image: var(--gradient-cauca-frame-v) 1;
 }
 
 .overlayLayer {
@@ -137,11 +131,6 @@
     grid-template-columns: 1fr;
   }
 
-  .rightPanelSlot {
-    border-left: 0;
-    border-top: 3px solid transparent;
-    border-image: var(--gradient-cauca-frame) 1;
-  }
 }
 
 @media (max-width: 900px) {
