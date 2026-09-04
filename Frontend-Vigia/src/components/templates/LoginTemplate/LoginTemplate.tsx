@@ -1,6 +1,7 @@
 import styles from "./LoginTemplate.module.css";
 import type { LoginTemplateProps } from "./types";
 import mapImage from "../../../assets/MGN_ADM 1.svg";
+import escudoCauca from "../../../assets/imgs/escudo-cauca.png";
 import { GovLogo } from "../../molecules";
 
 export function LoginTemplate({ panel }: LoginTemplateProps) {
@@ -10,7 +11,7 @@ export function LoginTemplate({ panel }: LoginTemplateProps) {
         <div className={styles.blueprintContent}>
           <div>
             <div className={styles.brandRow}>
-              <div className={styles.brandMark}>VC</div>
+              <img src={escudoCauca} alt="" aria-hidden="true" className={styles.brandMark} />
               <div>
                 <p className={styles.brandTitle}>VIGIA CAUCA</p>
                 <p className={styles.brandSubtitle}>SISTEMA DE GESTION · GOBERNACION DEL CAUCA</p>

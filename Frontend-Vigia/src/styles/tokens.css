@@ -10,6 +10,7 @@
   /* Identidad institucional Gobernación del Cauca */
   --color-cauca-green: #00793f;
   --color-cauca-yellow: #f7c518;
+  --color-cauca-gold: #d19a1c;   /* el mismo relleno del mapa del Cauca */
   /* Regla verde/amarilla: acento institucional reutilizable */
   --gradient-cauca-rule: linear-gradient(
     90deg,
