@@ -40,7 +40,7 @@ export function ActorsPanel({ actores, loading }: ActorsPanelProps) {
 
   return (
     <div className={`${styles.panel} ${loading ? styles.loading : ''}`}>
-      <CapLabel color="var(--color-primary-400)">ACTORES ARMADOS</CapLabel>
+      <CapLabel accent color="var(--color-primary-400)">ACTORES ARMADOS</CapLabel>
       <div className={styles.list}>
         {sorted.map(({ actor, totalEventos }) => {
           const name  = ACTOR_LABEL[actor]  ?? actor;

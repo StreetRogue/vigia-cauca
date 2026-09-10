@@ -6,6 +6,9 @@
 }
 
 .panelTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 16px;
   font-size: 11px;
   text-transform: uppercase;
@@ -46,7 +49,7 @@
 }
 
 .metricRed {
-  border-top-color: #e74c3c;
+  border-top-color: var(--color-danger-500);
 }
 
 .metricBox strong {
@@ -66,7 +69,7 @@
 }
 
 .metricRed strong {
-  color: #e74c3c;
+  color: var(--color-danger-500);
 }
 
 .metricTextGroup {
@@ -93,8 +96,11 @@
 }
 
 .blockTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 16px;
-  font-size: 10px;
+  font-size: var(--panel-font-section);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-text-muted);
@@ -112,7 +118,7 @@
 
 .statLabel {
   color: var(--color-text-label);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .statValue {
@@ -181,7 +187,7 @@
 }
 
 .dot.red {
-  background: #e74c3c;
+  background: var(--color-danger-500);
 }
 
 .dot.blue {
@@ -202,4 +208,20 @@
   margin: 4px 0 0;
   font-size: 9px;
   color: var(--color-text-muted);
+}
+
+.panelTitle::before {
+  content: "";
+  flex-shrink: 0;
+  width: 20px;
+  height: 3px;
+  background: var(--gradient-cauca-rule);
+}
+
+.blockTitle::before {
+  content: "";
+  flex-shrink: 0;
+  width: 20px;
+  height: 3px;
+  background: var(--gradient-cauca-rule);
 }

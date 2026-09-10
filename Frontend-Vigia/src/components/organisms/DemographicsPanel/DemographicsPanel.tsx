@@ -55,7 +55,7 @@ export function DemographicsPanel({ victimas, loading }: DemographicsPanelProps)
 
   return (
     <div className={`${styles.panel} ${loading ? styles.loading : ''}`}>
-      <CapLabel color="var(--color-primary-400)">DEMOGRAFÍA DE VÍCTIMAS</CapLabel>
+      <CapLabel accent color="var(--color-primary-400)">DEMOGRAFÍA DE VÍCTIMAS</CapLabel>
       <div className={styles.content}>
         {/* Donut + gender legend */}
         <div className={styles.donutSection}>

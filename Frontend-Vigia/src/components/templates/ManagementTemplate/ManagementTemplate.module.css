@@ -1,8 +1,26 @@
 .page {
+  --sidebar-width: 220px;
   min-height: 100vh;
   display: flex;
   background: var(--color-surface-body);
-  margin-left: 220px;
+  margin-left: var(--sidebar-width);
+  transition: margin-left 180ms ease;
+}
+
+.pageCollapsed {
+  --sidebar-width: 60px;
+}
+
+/* Franja institucional: mismo encuadre que dashboard y estadisticas */
+.page::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  height: 3px;
+  background: var(--gradient-cauca-frame);
 }
 
 .workspace {
@@ -22,6 +40,50 @@
   justify-content: space-between;
   padding: 0 24px;
   gap: 16px;
+}
+
+.topbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.collapseBtn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--dash-border-hi);
+  border-radius: var(--btn-radius);
+  background: transparent;
+  color: var(--dash-text-1);
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.collapseBtn:hover {
+  background: var(--dash-panel2);
+  color: var(--dash-text-0);
+}
+
+.collapseBtn:focus-visible {
+  outline: 2px solid var(--color-cauca-green);
+  outline-offset: 2px;
+}
+
+/* Cierra el menu al tocar fuera; solo existe donde la barra se superpone. */
+.backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  border: 0;
+  padding: 0;
+  background: rgba(4, 12, 24, 0.5);
+  cursor: pointer;
 }
 
 .breadcrumb {
@@ -68,14 +130,28 @@
   .contentGrid {
     grid-template-columns: 1fr;
   }
+
 }
 
 @media (max-width: 900px) {
-  .page {
+  /* La barra se superpone: deja de reservar espacio en el flujo. */
+  .page,
+  .pageCollapsed {
     margin-left: 0;
   }
 
-  .sidebar {
-    display: none;
+  .backdrop {
+    display: block;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    padding: 0 14px;
+    gap: 10px;
+  }
+
+  .topbarLeft {
+    gap: 10px;
   }
 }

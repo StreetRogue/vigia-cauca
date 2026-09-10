@@ -5,6 +5,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { ubicacionesService } from '../../../services/ubicaciones.service';
 import type { FiltrosDashboard } from '../../../types/estadisticas.types';
 import type { CategoriaEvento, NivelConfianza } from '../../../types/novedad.types';
+import escudoCauca from '../../../assets/imgs/escudo-cauca.png';
 import styles from './DashboardNavbar.module.css';
 
 // ── Opciones de filtros ────────────────────────────────────────────────────────
@@ -38,15 +39,7 @@ const normalizeText = (text: string) =>
 // ── Ícono escudo ───────────────────────────────────────────────────────────────
 
 function ShieldIcon() {
-  return (
-    <div className={styles.shieldIcon}>
-      <svg viewBox="0 0 16 18" width={14} height={14} fill="none">
-        <path d="M8 1L1 4v5c0 4.4 3 7.5 7 8.5C15 16.5 15 9 15 9V4L8 1z"
-          stroke="var(--dash-accent)" strokeWidth="1.2" fill="rgba(255,79,0,0.12)" />
-        <path d="M5 9l2 2 4-4" stroke="var(--dash-accent)" strokeWidth="1.2" strokeLinecap="round" />
-      </svg>
-    </div>
-  );
+  return <img src={escudoCauca} alt="" aria-hidden="true" className={styles.shieldIcon} />;
 }
 
 // ── UserSection con dropdown de navegación ─────────────────────────────────────

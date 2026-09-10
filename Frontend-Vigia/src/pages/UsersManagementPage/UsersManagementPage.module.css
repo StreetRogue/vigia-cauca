@@ -80,8 +80,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px 16px;
-  background: var(--color-surface-card, #ffffff);
-  border-bottom: 1px solid var(--color-border-soft, #eeeeee);
+  background: var(--color-surface-card);
+  border-bottom: 1px solid var(--color-border-soft);
 }
 
 .toolbarLeft {
@@ -96,16 +96,28 @@
 }
 
 .title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 14px;
   font-weight: 700;
-  color: #122d5d;
+  color: var(--color-primary-500);
   letter-spacing: 0.5px;
+  text-transform: uppercase;
   margin: 0;
+}
+
+.title::before {
+  content: "";
+  flex-shrink: 0;
+  width: 22px;
+  height: 3px;
+  background: var(--gradient-cauca-rule);
 }
 
 .count {
   font-size: 11px;
-  color: #888888;
+  color: var(--color-text-muted);
 }
 
 .filtersBar {
@@ -113,8 +125,8 @@
   align-items: center;
   gap: 12px;
   padding: 12px 24px;
-  background: var(--color-surface-body, #f5f7fa);
-  border-bottom: 1px solid var(--color-border-soft, #eeeeee);
+  background: var(--color-surface-body);
+  border-bottom: 1px solid var(--color-border-soft);
   flex-wrap: wrap;
 }
 
@@ -161,12 +173,12 @@
 }
 
 .checkboxLabelActive {
-  color: #127850;
+  color: var(--color-success-500);
   font-weight: 600;
 }
 
 .checkboxLabelActive input[type="checkbox"] {
-  accent-color: #127850;
+  accent-color: var(--color-success-500);
 }
 
 .checkboxLabelInactive {
@@ -276,12 +288,6 @@
 
 .createBtn {
   margin-left: auto;
-  min-height: 32px;
-  border-radius: 4px;
-  font-size: 11px;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.05em;
 }
 
 .table {
@@ -348,7 +354,7 @@
 }
 
 .table tbody tr.green td:first-child::before {
-  background: #127850;
+  background: var(--color-success-500);
 }
 
 .table tbody tr.orange td:first-child::before {
@@ -384,7 +390,7 @@
 }
 
 .initial.blue { background: var(--color-primary-500); }
-.initial.green { background: #127850; }
+.initial.green { background: var(--color-success-500); }
 .initial.orange { background: #d35400; }
 
 .muted {
@@ -403,7 +409,7 @@
 }
 
 .adminTag { background: #f8e4f7; color: #9122ad; }
-.operatorTag { background: #dcf5eb; color: #127850; }
+.operatorTag { background: #dcf5eb; color: var(--color-success-500); }
 .activeTag { background: #d9f5e5; color: #27ae60; }
 .inactiveTag { background: var(--color-border-soft); color: var(--color-text-muted); }
 
@@ -425,6 +431,9 @@
 }
 
 .panelTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 16px;
   font-size: 11px;
   text-transform: uppercase;
@@ -492,8 +501,11 @@
 }
 
 .blockTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 16px;
-  font-size: 10px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-text-muted);
@@ -553,7 +565,7 @@
 
 .dot.green { background: #27ae60; }
 .dot.orange { background: #f39c12; }
-.dot.red { background: #e74c3c; }
+.dot.red { background: var(--color-danger-500); }
 .dot.blue { background: var(--color-primary-500); }
 .dot.gray { background: #9aa1ab; }
 
@@ -567,4 +579,20 @@
   margin: 4px 0 0;
   font-size: 9px;
   color: var(--color-text-muted);
+}
+
+.panelTitle::before {
+  content: "";
+  flex-shrink: 0;
+  width: 20px;
+  height: 3px;
+  background: var(--gradient-cauca-rule);
+}
+
+.blockTitle::before {
+  content: "";
+  flex-shrink: 0;
+  width: 20px;
+  height: 3px;
+  background: var(--gradient-cauca-rule);
 }

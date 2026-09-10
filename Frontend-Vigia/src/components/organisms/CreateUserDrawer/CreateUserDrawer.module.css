@@ -61,7 +61,7 @@
 .title {
   margin: 0;
   font-size: 20px;
-  color: #1e293b;
+  color: var(--color-text-primary);
   font-weight: 800;
   line-height: 1.3;
   letter-spacing: -0.02em;
@@ -95,7 +95,7 @@
 .formError {
   margin: 0;
   font-size: 11px;
-  color: #e74c3c;
+  color: var(--color-danger-500);
   background: #fdebea;
   border: 1px solid #f3b4af;
   border-radius: 4px;
@@ -150,7 +150,7 @@
 }
 
 .togglePasswordBtn:disabled {
-  color: #cbd5e1;
+  color: var(--color-border-medium);
   cursor: not-allowed;
 }
 
@@ -159,11 +159,11 @@
   box-sizing: border-box;
   width: 100%;
   height: 44px;
-  border: 1px solid var(--color-border-medium, #cad3e4);
+  border: 1px solid var(--color-border-medium);
   border-radius: 8px;
   padding: 0 36px 0 14px;
-  background: var(--color-surface-body, #ffffff);
-  color: var(--color-text-primary, #1e293b);
+  background: var(--color-surface-body);
+  color: var(--color-text-primary, var(--color-text-primary));
   font: inherit;
   font-size: 0.9375rem;
   line-height: 1.5;
@@ -185,19 +185,19 @@
 
 .select:focus-visible {
   outline: none;
-  border-color: var(--color-primary-500, #3168c4);
+  border-color: var(--color-primary-500);
   box-shadow: 0 0 0 3px rgba(49, 104, 196, 0.15);
 }
 
 .selectInvalid {
-  border-color: #e74c3c;
+  border-color: var(--color-danger-500);
   background-color: #fef8f7;
 }
 
 .audit {
   margin: 12px 0 0;
   background: #eef4fc;
-  color: #334155;
+  color: var(--color-text-label);
   font-size: 11px;
   font-weight: 500;
   padding: 12px 16px;
@@ -214,9 +214,9 @@
 /* Sobrescribiendo el estilo para que "Cancelar" tenga borde */
 .cancelBtn {
   min-height: 44px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border-medium);
   border-radius: 6px;
-  color: #475569;
+  color: var(--color-text-label);
   background: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -229,8 +229,8 @@
 
 .cancelBtn:hover {
   background: #f8fafc;
-  border-color: #94a3b8;
-  color: #1e293b;
+  border-color: var(--color-text-muted);
+  color: var(--color-text-primary);
 }
 
 .saveBtn {

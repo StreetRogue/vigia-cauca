@@ -1,7 +1,7 @@
 .panel {
   height: 100%;
-  background: var(--color-surface-card, #ffffff);
-  border-left: 1px solid var(--color-border-soft, #eeeeee);
+  background: var(--color-surface-card);
+  border-left: 1px solid var(--color-border-soft);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -16,7 +16,7 @@
   justify-content: center;
   gap: 12px;
   padding: 32px;
-  color: #bbbbbb;
+  color: var(--color-text-muted);
 }
 
 .placeholderIcon {
@@ -51,7 +51,7 @@
 .headerId {
   font-size: 10px;
   font-weight: 700;
-  color: #aaaaaa;
+  color: var(--color-text-muted);
   letter-spacing: 1px;
 }
 
@@ -62,9 +62,9 @@
   justify-content: center;
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border-medium);
   background: #ffffff;
-  color: #6b7280;
+  color: var(--color-text-label);
   font-size: 10px;
   cursor: pointer;
   opacity: 0;
@@ -79,41 +79,47 @@
 
 .copyBtn:hover {
   background: #f3f4f6;
-  color: #111827;
-  border-color: #9ca3af;
+  color: var(--color-text-primary);
+  border-color: var(--color-text-muted);
 }
 
 .copyBtnDone {
   opacity: 1 !important;
   background: rgba(34, 197, 94, 0.1) !important;
-  color: #15803d !important;
+  color: var(--color-success-500) !important;
   border-color: rgba(34, 197, 94, 0.3) !important;
 }
 
 .headerTitle {
   font-size: 14px;
   font-weight: 700;
-  color: #122d5d;
+  color: var(--color-primary-500);
   margin: 0;
 }
 
 .editBtn {
-  padding: 6px 14px;
-  background: #122d5d;
-  color: #ffffff;
-  border: none;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--btn-height);
+  padding: 0 var(--btn-padding-x);
+  background: var(--color-primary-500);
+  color: var(--color-text-on-dark);
+  border: 1px solid var(--color-primary-500);
+  border-radius: var(--btn-radius);
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
+  letter-spacing: var(--btn-letter-spacing);
+  text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.16s, border-color 0.16s;
   white-space: nowrap;
   flex-shrink: 0;
-  margin-top: 2px;
 }
 
 .editBtn:hover {
-  background: #0d1f3c;
+  background: var(--color-primary-600);
+  border-color: var(--color-primary-600);
 }
 
 /* Body */
@@ -131,7 +137,7 @@
 .sectionTitle {
   font-size: 9px;
   font-weight: 700;
-  color: #aaaaaa;
+  color: var(--color-text-muted);
   letter-spacing: 1px;
   text-transform: uppercase;
   margin: 0 0 10px;
@@ -158,14 +164,14 @@
 
 .infoLabel {
   font-size: 11px;
-  color: #888888;
+  color: var(--color-text-muted);
   flex-shrink: 0;
 }
 
 .infoValue {
   font-size: 12px;
   font-weight: 600;
-  color: #333333;
+  color: var(--color-text-primary);
   text-align: right;
 }
 
@@ -213,7 +219,7 @@
 .actorChip {
   padding: 3px 8px;
   background: #f1f5f9;
-  color: #334155;
+  color: var(--color-text-label);
   font-size: 10px;
   font-weight: 600;
   border-radius: 3px;
@@ -222,7 +228,7 @@
 /* Description */
 .descText {
   font-size: 12px;
-  color: #555555;
+  color: var(--color-text-label);
   line-height: 1.6;
   margin: 0;
 }
@@ -247,12 +253,12 @@
 .statValue {
   font-size: 22px;
   font-weight: 700;
-  color: #122d5d;
+  color: var(--color-primary-500);
   line-height: 1;
 }
 
 .statDanger {
-  color: #e53e3e;
+  color: var(--color-danger-500);
 }
 
 .statWarn {
@@ -262,7 +268,7 @@
 .statLabel {
   font-size: 9px;
   font-weight: 700;
-  color: #888888;
+  color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -284,12 +290,12 @@
 .victimaName {
   font-size: 12px;
   font-weight: 600;
-  color: #333333;
+  color: var(--color-text-primary);
 }
 
 .victimaInfo {
   font-size: 10px;
-  color: #888888;
+  color: var(--color-text-muted);
   text-align: right;
 }
 
@@ -308,7 +314,7 @@
   text-decoration: none;
   border-radius: 6px;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border-soft);
   transition: box-shadow 0.15s;
 }
 
@@ -325,7 +331,7 @@
 
 .evidenciaName {
   font-size: 10px;
-  color: #6b7280;
+  color: var(--color-text-label);
   padding: 4px 8px 6px;
   white-space: nowrap;
   overflow: hidden;
@@ -339,7 +345,7 @@
   gap: 8px;
   padding: 8px 10px;
   background: #f8fafc;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border-soft);
   border-radius: 6px;
   text-decoration: none;
   color: #1d4ed8;
@@ -372,7 +378,7 @@
   animation: shimmer 1.2s infinite;
   border-radius: 6px;
   font-size: 10px;
-  color: #aaaaaa;
+  color: var(--color-text-muted);
   display: flex;
   align-items: center;
   padding: 0 10px;
@@ -386,7 +392,7 @@
 /* Error al cargar */
 .evidenciaError {
   font-size: 11px;
-  color: #b91c1c;
+  color: var(--color-danger-500);
   background: #fef2f2;
   border: 1px solid #fecaca;
   border-radius: 6px;

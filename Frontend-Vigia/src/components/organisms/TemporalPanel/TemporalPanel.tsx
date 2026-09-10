@@ -23,7 +23,7 @@ export function TemporalPanel({ serie, loading }: TemporalPanelProps) {
   return (
     <div className={`${styles.panel} ${loading ? styles.loading : ''}`}>
       <div className={styles.header}>
-        <CapLabel color="var(--color-primary-400)">TENDENCIA MENSUAL · EVENTOS</CapLabel>
+        <CapLabel accent color="var(--color-primary-400)">TENDENCIA MENSUAL · EVENTOS</CapLabel>
         <div className={styles.legend}>
           <div className={styles.legendItem}>
             <div className={styles.legendBar} style={{ background: 'var(--color-primary-500)' }} />

@@ -45,8 +45,9 @@ export function CredentialField({
             onClick={onToggle}
             disabled={disabled}
             aria-label={toggleStateLabel ?? toggleLabel}
+            aria-pressed={type === "text"}
           >
-            {toggleLabel}
+            <EyeIcon crossed={type === "text"} />
           </Button>
         ) : null}
       </div>
@@ -54,5 +55,27 @@ export function CredentialField({
         {errorMessage}
       </div>
     </div>
+  );
+}
+
+function EyeIcon({ crossed }: { crossed: boolean }) {
+  return (
+    <svg
+      className={styles.toggleIcon}
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z" />
+      <circle cx="12" cy="12" r="2.75" />
+      {crossed ? <path d="m4 20 16-16" /> : null}
+    </svg>
   );
 }

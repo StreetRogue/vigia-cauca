@@ -73,26 +73,41 @@
   margin-bottom: 0;
 }
 
+/* Mismo remate que la barra de titulo de novedades, usuarios y auditorias:
+   linea inferior a todo lo ancho. Los margenes negativos compensan el
+   padding del panel para que la linea llegue a los bordes. */
 .sectionHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
   gap: 12px;
+  margin: -28px -32px 24px;
+  padding: 20px 32px 16px;
+  border-bottom: 1px solid var(--color-border-soft);
 }
 
 .sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin: 0;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--color-text-primary);
-  letter-spacing: 0.02em;
+  color: var(--color-primary-500);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.sectionTitle::before {
+  content: "";
+  flex-shrink: 0;
+  width: 22px;
+  height: 3px;
+  background: var(--gradient-cauca-rule);
 }
 
 .editBtn {
-  font-size: 12px;
-  padding: 6px 12px;
-  height: 28px;
+  flex-shrink: 0;
 }
 
 .sectionHint {
@@ -131,7 +146,7 @@
 
 .avatarName {
   margin: 0 0 6px;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--color-text-primary);
 }
@@ -155,7 +170,7 @@
 
 .roleOperador {
   background: #dcf5eb;
-  color: #127850;
+  color: var(--color-success-500);
 }
 
 /* ── Info grid ── */
@@ -186,17 +201,17 @@
 }
 
 .infoLabel {
-  font-size: 9px;
+  font-size: var(--panel-font-label);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-muted);
+  letter-spacing: var(--panel-tracking-label);
+  color: var(--color-text-label);
 }
 
 .infoValue {
-  font-size: 12px;
+  font-size: var(--panel-font-value);
   color: var(--color-text-primary);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .editInput {
@@ -269,7 +284,7 @@
 .messageSuccess {
   background: #eafaf1;
   border-color: #a9dfbf;
-  color: #1e8449;
+  color: var(--color-success-500);
 }
 
 .messageError {
@@ -295,7 +310,7 @@
   border: 1px solid #a9dfbf;
   border-radius: 3px;
   font-size: 12px;
-  color: #1e8449;
+  color: var(--color-success-500);
 }
 
 .editActions {
@@ -323,11 +338,15 @@
 
 /* ── Right panel ── */
 .panelTitle {
-  margin: 0 0 14px;
-  font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--color-text-label);
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
+  font-weight: 700;
 }
 
 .accountCard {
@@ -366,7 +385,7 @@
 
 .accountEmail {
   margin: 0;
-  font-size: 11px;
+  font-size: var(--panel-font-body);
   color: var(--color-text-muted);
   text-align: center;
   word-break: break-all;
@@ -412,15 +431,15 @@
 }
 
 .infoCardLabel {
-  font-size: 10px;
+  font-size: var(--panel-font-label);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--color-text-muted);
+  letter-spacing: var(--panel-tracking-label);
+  color: var(--color-text-label);
 }
 
 .infoCardValue {
-  font-size: 11px;
+  font-size: var(--panel-font-value);
   font-weight: 600;
   color: var(--color-text-primary);
 }
@@ -442,4 +461,12 @@
 .logoutBtn:hover {
   color: #c0392b !important;
   border-color: rgba(192, 57, 43, 0.4) !important;
+}
+
+.panelTitle::before {
+  content: "";
+  flex-shrink: 0;
+  width: 20px;
+  height: 3px;
+  background: var(--gradient-cauca-rule);
 }

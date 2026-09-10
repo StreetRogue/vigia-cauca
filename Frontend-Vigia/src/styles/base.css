@@ -29,3 +29,22 @@ h5,
 h6 {
   margin: 0;
 }
+
+/* Foco de teclado: verde institucional en toda la app. Solo aparece al
+   navegar con el teclado, nunca al hacer clic. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-cauca-green);
+  outline-offset: 2px;
+}
+
+/* Los controles de formulario no heredan la tipografia del documento: el
+   navegador les impone su fuente por defecto (Arial). Sin esto, cada
+   componente tenia que acordarse de repetir font-family, y los que no lo
+   hacian se veian con otra letra. */
+button,
+input,
+select,
+textarea,
+optgroup {
+  font-family: inherit;
+}

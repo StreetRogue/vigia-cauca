@@ -40,7 +40,7 @@
 
 .btn:hover:not(:disabled) {
   background: var(--color-surface-body);
-  border-color: var(--color-border-dark);
+  border-color: var(--color-border-medium);
   color: var(--color-text-primary);
 }
 

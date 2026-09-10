@@ -6,3 +6,16 @@
   text-transform: uppercase;
   color: var(--dash-text-bone);
 }
+
+.withAccent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.accentRule {
+  flex-shrink: 0;
+  width: 22px;
+  height: 3px;
+  background: var(--gradient-cauca-rule);
+}

@@ -335,7 +335,7 @@ export function UsersManagementPage() {
           </div>
 
           {loadError && (
-            <div style={{ padding: "12px 24px", fontSize: 12, color: "var(--color-danger, #e74c3c)" }}>
+            <div style={{ padding: "12px 24px", fontSize: 12, color: "var(--color-danger-500)" }}>
               {loadError}
             </div>
           )}

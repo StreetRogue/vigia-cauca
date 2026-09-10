@@ -1,0 +1,21 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  max-width: 100%;
+}
+
+.image {
+  height: var(--gov-logo-height);
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Placa blanca para fondos oscuros: el logotipo oficial es de trazo oscuro. */
+.plate {
+  background: var(--color-surface-card);
+  border-radius: 4px;
+  padding: calc(var(--gov-logo-height) * 0.22) calc(var(--gov-logo-height) * 0.3);
+}
